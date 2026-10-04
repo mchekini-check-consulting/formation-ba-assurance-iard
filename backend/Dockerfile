@@ -22,3 +22,4 @@ USER nonroot
 EXPOSE 3000
 # ENTRYPOINT de l'image : ["/nodejs/bin/node"]
 CMD ["dist/main.js"]
+# Image construite par la CI (.github/workflows/ci.yaml), taguée avec le sha court du commit
