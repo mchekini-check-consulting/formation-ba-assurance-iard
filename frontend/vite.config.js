@@ -7,4 +7,11 @@ export default defineConfig({
   server: {
     port: 5173,
   },
+  // Tests unitaires (vitest) : DOM simulé par jsdom
+  test: {
+    environment: 'jsdom',
+    coverage: {
+      include: ['src/**/*.{js,jsx}'], // pas les css / images importés
+    },
+  },
 })
