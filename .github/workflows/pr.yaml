@@ -1,0 +1,73 @@
+# Pull request vers main, sur tous les dossiers avec Dockerfile (commandes : Makefile du dossier) :
+#   lint + gitleaks  ->  tests unitaires + quality gate SonarQube  ->  tests d'intégration
+# Les étapes viennent de formation-ba-gitops/ci-template.
+name: pr
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  components:
+    runs-on: ubuntu-latest
+    outputs:
+      components: ${{ steps.list.outputs.components }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: list
+        uses: mchekini-check-consulting/formation-ba-gitops/ci-template/detect-changes@main
+        with:
+          all: true
+
+  gitleaks:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: mchekini-check-consulting/formation-ba-gitops/ci-template/gitleaks@main
+
+  lint:
+    needs: components
+    strategy:
+      matrix:
+        component: ${{ fromJSON(needs.components.outputs.components) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mchekini-check-consulting/formation-ba-gitops/ci-template/lint@main
+        with:
+          component: ${{ matrix.component }}
+
+  # Tests unitaires puis SonarQube dans le même job : la couverture reste sur place.
+  unit-test:
+    needs: [components, lint, gitleaks]   # pas de tests si le lint ou gitleaks échoue
+    strategy:
+      matrix:
+        component: ${{ fromJSON(needs.components.outputs.components) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0       # SonarQube : blame / nouveau code
+      - uses: mchekini-check-consulting/formation-ba-gitops/ci-template/unit-test@main
+        with:
+          component: ${{ matrix.component }}
+      - uses: mchekini-check-consulting/formation-ba-gitops/ci-template/sonarqube@main
+        with:
+          component: ${{ matrix.component }}
+          token: ${{ secrets.SONAR_TOKEN }}
+          # Limite de l'édition Community : elle ne sait pas analyser les PR ni les branches. Chaque analyse lancée depuis une PR écrase l'analyse de main dans SonarQube, et l'onglet « New Code » ne correspond donc pas vraiment à la PR.
+          
+  integration-test:
+    needs: [components, unit-test]        # après les tests unitaires (+ quality gate)
+    strategy:
+      matrix:
+        component: ${{ fromJSON(needs.components.outputs.components) }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: mchekini-check-consulting/formation-ba-gitops/ci-template/integration-test@main
+        with:
+          component: ${{ matrix.component }}
+
