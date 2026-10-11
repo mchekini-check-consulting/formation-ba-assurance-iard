@@ -6,7 +6,7 @@ applications:
   - name: backend
     type: backend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/backend
-    tag: {dev: "70b68f7", qualif: "", prod: ""} # dev : écrit par la CI ; qualif/prod : promotion manuelle (PR)
+    tag: {dev: "7616898", qualif: "", prod: ""} # dev : écrit par la CI ; qualif/prod : promotion manuelle (PR)
     containerPort: 3000
     replicas: {dev: 1, qualif: 2, prod: 3}
     service:
@@ -21,7 +21,7 @@ applications:
   - name: frontend
     type: frontend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/frontend
-    tag: {dev: "70b68f7", qualif: "", prod: ""} # dev : écrit par la CI ; qualif/prod : promotion manuelle (PR)
+    tag: {dev: "7616898", qualif: "", prod: ""} # dev : écrit par la CI ; qualif/prod : promotion manuelle (PR)
     containerPort: 8080
     replicas: {dev: 1, qualif: 2, prod: 3}
     service:
