@@ -1,7 +1,8 @@
 # Microservices de ce dépôt, déployés par formation-ba-gitops sur chaque environnement.
 # Valeurs littérales uniquement. replicas, tag et envList[].value acceptent
 # une valeur unique ou une map par environnement : { dev: ..., qualif: ..., preprod: ..., prod: ... }
-# URL : https://<application>.formation-ba-assurance-iard.<env>.check-consulting.net (ex. backend.formation-ba-assurance-iard.dev.check-consulting.net)
+# URL : frontend https://<application>.formation-ba-assurance-iard.<env>.check-consulting.net ;
+#       backend  https://api.<env>.check-consulting.net/formation-ba-assurance-iard/<application>
 applications:
   - name: backend
     type: backend
@@ -18,13 +19,20 @@ applications:
     replicas: {dev: 1, qualif: 1, preprod: 2, prod: 2}
     service:
       port: 80
+    # Exposé par la passerelle de l'environnement (préfixe retiré avant le pod) :
+    #   https://api.<env>.check-consulting.net/formation-ba-assurance-iard/backend/...
+    # Appelable depuis le navigateur uniquement par le frontend du projet (CORS).
     ingress:
       enabled: true
-      path: /
-      stripPrefix: false
-    # Base PostgreSQL "backend" créée automatiquement (Cluster app-db du namespace,
-    # sauvegardée sur S3) ; connexion injectée : SPRING_DATASOURCE_*, PG*, DATABASE_URL
-    database: true
+    # Base PostgreSQL assurance_iard : créée et sauvegardée automatiquement.
+    # Consigne : dans le code (backend/src/database/database.module.ts), donner à
+    # TypeORM la variable injectée DATABASE_URL :
+    #   url: process.env.DATABASE_URL
+    # DATABASE_URL (postgresql://<user>:<password>@<hôte>:<port>/<base>) contient déjà
+    # l'utilisateur et le mot de passe. Valeurs séparées, injectées aussi :
+    #   PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+    database:
+      name: assurance_iard
     envList:
       - key: LOG_LEVEL
         value: {dev: debug, qualif: info, preprod: info, prod: warn}
