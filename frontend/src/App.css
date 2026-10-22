@@ -182,3 +182,34 @@
     border-right-color: var(--border);
   }
 }
+
+/* Écran Items (liste GET + formulaire POST) */
+.items {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  text-align: left;
+}
+
+.items form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+  margin-bottom: 1rem;
+}
+
+.items label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.9rem;
+}
+
+.items .erreur {
+  color: #b3261e;
+}
+
+.items .vide {
+  opacity: 0.6;
+}
