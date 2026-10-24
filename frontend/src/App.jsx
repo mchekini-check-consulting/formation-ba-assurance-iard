@@ -3,6 +3,7 @@ import { creerItem, listerItems } from './api'
 import './App.css'
 
 // Liste des items du backend (GET) et formulaire d'ajout (POST)
+// Petit commentaire ajouté pour feat/testfonc
 function App() {
   const [items, setItems] = useState([])
   const [nom, setNom] = useState('')
@@ -34,7 +35,7 @@ function App() {
 
       <form onSubmit={ajouter}>
         <label>
-          Nom
+          Nom{' '}
           <input
             name="nom"
             value={nom}
@@ -44,7 +45,7 @@ function App() {
           />
         </label>
         <label>
-          Description
+          Description{' '}
           <input
             name="description"
             value={description}
@@ -60,6 +61,8 @@ function App() {
           {erreur}
         </p>
       )}
+
+      <p className="compteur">Total : {items.length} item{items.length > 1 ? 's' : ''}</p>
 
       <ul>
         {items.length === 0 && <li className="vide">Aucun item</li>}
