@@ -40,15 +40,38 @@ Pour chaque composant modifié, dans l'ordre, en s'arrêtant au premier échec :
 4. Si la commande `gitleaks` est disponible (`command -v gitleaks`) :
    `gitleaks detect --source . -v --no-banner`. Si absent, ne pas bloquer —
    dire simplement que GitHub le vérifiera à la prochaine étape.
-
 En cas d'échec : traduire l'erreur en langage clair (quel fichier, quel test,
 quelle règle), s'arrêter et proposer de l'aide pour corriger. Ne jamais
 committer/pousser du code dont les contrôles locaux échouent.
 
-Note sur le quality gate SonarQube : il ne peut pas être vérifié fiablement
-en local (nécessite le serveur SonarQube). Le dire au BA : "le dernier
-contrôle (qualité du code via SonarQube) se fera automatiquement une fois le
-code envoyé sur GitHub, je le surveillerai."
+#### Quality gate SonarQube — approximation locale sans jeton
+
+Le `SONAR_TOKEN` utilisé par la CI est un secret GitHub : il ne peut jamais
+être relu (ni par ce skill, ni par personne — c'est volontaire, pour la
+sécurité). Lancer le vrai scanner SonarQube en local est donc impossible
+sans qu'un humain crée et transmette un jeton personnel.
+
+À la place, relancer les tests unitaires du composant modifié avec un seuil
+de couverture de 80 %, passé en option de ligne de commande (pas de
+modification des fichiers du projet) :
+```
+npm run test:cov -- --coverage.reporter=lcov \
+  --coverage.thresholds.lines=80 --coverage.thresholds.branches=80 \
+  --coverage.thresholds.functions=80 --coverage.thresholds.statements=80
+```
+La commande échoue d'elle-même si la couverture descend sous 80 %, sans
+contacter aucun serveur. C'est une approximation (couverture globale du
+composant, alors que Sonar regarde la couverture du *nouveau* code) mais
+elle attrape la plupart des régressions avant de pousser.
+
+- En cas d'échec : le message de vitest indique le fichier et le
+  pourcentage insuffisant. Traduire simplement ("le fichier X n'est pas
+  assez testé, il faudrait un test de plus pour telle ligne"), proposer
+  d'ajouter le test manquant, ne pas pousser avant.
+- Même quand ce seuil passe, le vrai quality gate GitHub (étape 5) reste la
+  référence finale : le dire au BA une fois ("ce contrôle local approche
+  d'assez près le vrai contrôle SonarQube, mais le contrôle définitif reste
+  celui de GitHub, que je surveillerai après l'envoi").
 
 ### 3. Commit et push
 
