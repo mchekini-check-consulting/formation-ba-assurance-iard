@@ -1,3 +1,4 @@
+// test pipeline : vérifie lint/unit-test/sonarqube/integration-test sur backend
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service.js';
 
