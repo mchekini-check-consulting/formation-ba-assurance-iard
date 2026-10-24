@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Gère tout le cycle de mise en ligne pour un Business Analyst (BA) qui ne maîtrise pas git — vérifie lint/gitleaks/tests/quality gate Sonar en local, commit, push, attend que les contrôles GitHub passent au vert, merge la PR vers main (avec confirmation), puis suit le pipeline (build image, promotion Kargo, synchronisation ArgoCD) jusqu'au déploiement effectif sur dev. À utiliser quand le BA dit qu'il a terminé son développement et veut déployer / mettre en ligne / passer en dev.
+description: Gère tout le cycle de mise en ligne pour un Business Analyst (BA) qui ne maîtrise pas git — vérifie lint/gitleaks/tests/quality gate Sonar en local, commit, push, attend que les contrôles GitHub passent au vert, merge la PR vers main (avec confirmation, sans supprimer la branche), attend que la pipeline GitHub Actions sur main soit au vert, puis donne le lien de l'application frontend sur dev et le lien de promotion vers qualif dans Kargo. À utiliser quand le BA dit qu'il a terminé son développement et veut déployer / mettre en ligne / passer en dev.
 ---
 
 # Déployer sur dev
@@ -14,9 +14,12 @@ Rappel du pipeline réel de ce dépôt (cf. `ci-template/README.md` et
 et push vers ECR (`ci.yaml`) → Kargo détecte la nouvelle image et la promeut
 automatiquement vers la Stage `dev` (il écrit le tag dans `helm.yaml` et
 pousse un commit sur `main`) → ArgoCD synchronise l'Application `dev-<repo>`.
-Le déploiement sur dev est donc **automatique après le merge** : le rôle de
-ce skill est de sécuriser tout ce qui précède le merge, puis de vérifier que
-la suite se déroule bien.
+Le déploiement sur dev est donc **automatique après le merge**, mais pas
+instantané (Kargo scrute ECR périodiquement). Le rôle de ce skill s'arrête
+une fois la pipeline GitHub Actions sur `main` au vert : il ne surveille pas
+activement la promotion Kargo ni la synchronisation ArgoCD, il se contente
+de donner au BA les deux liens utiles pour qu'il vérifie lui-même, à son
+rythme.
 
 ## Étapes
 
@@ -64,10 +67,17 @@ contacter aucun serveur. C'est une approximation (couverture globale du
 composant, alors que Sonar regarde la couverture du *nouveau* code) mais
 elle attrape la plupart des régressions avant de pousser.
 
-- En cas d'échec : le message de vitest indique le fichier et le
-  pourcentage insuffisant. Traduire simplement ("le fichier X n'est pas
-  assez testé, il faudrait un test de plus pour telle ligne"), proposer
-  d'ajouter le test manquant, ne pas pousser avant.
+- En cas d'échec, ce seuil est bloquant : le message de vitest indique le
+  fichier et les lignes non couvertes. Identifier ce que fait ce code et
+  ajouter directement le(s) test(s) manquant(s) qui l'exercent (pas
+  seulement le proposer), puis relancer la commande jusqu'à passer le
+  seuil, avant de continuer. Dire simplement au BA ce qui a été ajouté et
+  pourquoi ("j'ai ajouté un test pour telle ligne, elle n'était pas encore
+  vérifiée"). Ne pousser qu'une fois ce seuil franchi.
+- Si la ligne non couverte ne peut raisonnablement pas être testée (ex. code
+  de démarrage/câblage) ou si son comportement attendu n'est pas évident :
+  s'arrêter et demander au BA plutôt que de deviner un test qui ne
+  vérifierait rien d'utile.
 - Même quand ce seuil passe, le vrai quality gate GitHub (étape 5) reste la
   référence finale : le dire au BA une fois ("ce contrôle local approche
   d'assez près le vrai contrôle SonarQube, mais le contrôle définitif reste
@@ -113,42 +123,62 @@ Une fois tout vert et aucun conflit en attente :
 
 - Résumer au BA en une phrase ce qui va se passer : "Tout est vérifié ✅. Si
   vous confirmez, votre travail va être intégré à la version principale, ce
-  qui déclenchera automatiquement sa mise en ligne sur dev. La branche
-  `<nom>` sera ensuite supprimée. Je confirme ?"
+  qui déclenchera automatiquement sa mise en ligne sur dev. Votre branche
+  `<nom>` ne sera pas supprimée. Je confirme ?"
 - **Attendre une confirmation explicite** avant de merger. Ne jamais merger
   automatiquement.
-- Sur confirmation : `gh pr merge <branche-courante> --merge --delete-branch`
-  (merge classique, pas de squash : convention déjà utilisée dans l'historique
-  de ce dépôt — commits "Merge pull request #N").
-- `git switch main && git pull --ff-only`
+- Sur confirmation : `gh pr merge <branche-courante> --merge` (merge
+  classique, pas de squash, **sans** `--delete-branch` : convention déjà
+  utilisée dans l'historique de ce dépôt — commits "Merge pull request #N" —
+  et la branche locale/distante reste en place après le merge). Ce merge se
+  fait côté GitHub (distant) uniquement.
+- Séparation des responsabilités : ce skill ne touche pas à la branche
+  locale après ce merge (pas de `git switch main`, pas de `git pull`) — le
+  BA reste sur sa branche de fonctionnalité. C'est le skill
+  `nouvelle-fonctionnalite` qui synchronisera `main` en local, la prochaine
+  fois qu'il sera lancé.
 
-### 7. Suivre le déploiement jusqu'à dev (meilleur effort)
+### 7. Attendre que la pipeline GitHub Actions sur main soit au vert
 
-- Build de l'image : `gh run list --branch main --limit 1` puis
-  `gh run watch <id>` pour `ci.yaml`.
-- Promotion Kargo vers la Stage dev : si `kubectl` est configuré sur le
-  cluster, surveiller les ressources Kargo du Project concerné
-  (`kubectl get promotions,stages -n <namespace-du-projet>`) jusqu'à ce que
-  la promotion vers `dev` soit terminée. Si pas d'accès cluster depuis cette
-  session, le dire simplement et indiquer que Kargo fait ça automatiquement
-  en quelques minutes (scrute ECR périodiquement).
-- Synchronisation ArgoCD : si accessible (`argocd` CLI ou `kubectl`),
-  vérifier que l'Application `dev-<repo>` est `Synced` + `Healthy`. Sinon,
-  l'indiquer au BA avec l'URL de l'UI ArgoCD dev pour vérifier lui-même.
-- Si une étape échoue (build, promotion bloquée, synchro en échec) : remonter
-  la cause en langage clair, ne pas tenter de réparer seul sans en parler au
-  BA (ou à son encadrant technique) si ça touche à l'infrastructure.
+- `gh run list --branch main --limit 1` pour repérer le run `ci.yaml`
+  déclenché par le merge, puis `gh run watch <id>`.
+- Si ce run échoue : récupérer le détail (`gh run view <id> --log-failed`),
+  traduire en langage simple ce qui a échoué, s'arrêter — ne pas aller plus
+  loin et ne pas relancer en boucle à l'aveugle.
+- Dès que ce run est vert, le rôle du skill s'arrête ici : il ne surveille
+  pas la promotion Kargo vers dev ni la synchronisation ArgoCD (c'est
+  automatique côté plateforme, et peut prendre quelques minutes).
 
-### 8. Conclure
+### 8. Donner les deux liens utiles au BA
 
-Rapport final en langage simple : ce qui a été mis en ligne, l'URL de
-l'environnement dev, et le statut (ok / en cours / à surveiller).
+Liens statiques de cette plateforme (ne changent pas d'un déploiement à
+l'autre, pas besoin de les chercher via `kubectl`) :
+
+- Application frontend sur dev :
+  `https://frontend.formation-ba-assurance-iard.dev.check-consulting.net`.
+  Le BA peut l'ouvrir pour constater lui-même quand sa mise en ligne est
+  visible (le temps que Kargo promeuve et qu'ArgoCD synchronise).
+- Stage `qualif` dans l'interface Kargo, pour que le BA puisse cliquer sur
+  "Promote" quand il le souhaite (la promotion vers qualif n'est pas
+  automatique, cf. `helm.yaml` : "qualif/preprod/prod : promotion par
+  clic") :
+  `https://kargo.dev.check-consulting.net/project/formation-ba-assurance-iard/stage/qualif`.
+- Conclure en une phrase simple : ce qui a été mis en ligne (résumé du
+  changement), et les deux liens ci-dessus.
 
 ## Ce que ce skill ne fait jamais
 
 - Ne merge jamais sans confirmation explicite à l'étape 6.
+- Ne supprime jamais la branche de la fonctionnalité, ni en local ni sur
+  GitHub, après le merge.
+- Ne synchronise jamais `main` en local après le merge — ça reste le rôle du
+  skill `nouvelle-fonctionnalite`, la prochaine fois qu'il sera lancé.
 - Ne résout jamais un conflit en modifiant le contenu du code à la place du
   BA — seulement des choix "garder ma version / garder l'autre" par fichier,
   validés par le BA.
 - Ne force jamais un push sans qu'un rebase propre ait précédé.
 - Ne relance jamais une CI en échec en boucle sans comprendre la cause.
+- Ne surveille pas activement la promotion Kargo vers dev ni la
+  synchronisation ArgoCD après le merge : il s'arrête une fois la pipeline
+  GitHub Actions au vert et donne les liens au BA pour qu'il vérifie
+  lui-même.

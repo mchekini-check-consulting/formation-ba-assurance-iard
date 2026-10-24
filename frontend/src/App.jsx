@@ -31,7 +31,7 @@ function App() {
 
   return (
     <main className="items">
-      <h1>Items</h1>
+      <h1>Item</h1>
 
       <form onSubmit={ajouter}>
         <label>
