@@ -18,8 +18,9 @@ cp -r .claude/skills formation-ba-<projet>/.claude/
 
 | Skill | Rôle |
 |---|---|
-| [nouvelle-fonctionnalite](nouvelle-fonctionnalite/SKILL.md) | synchronise `main`, demande le nom de la fonctionnalité, crée la branche et une PR en brouillon |
-| [deploy](deploy/SKILL.md) | contrôles locaux (lint/gitleaks/tests), commit, push, attente CI verte, merge vers `main` (avec confirmation), suivi du pipeline jusqu'à dev |
+| [nouvelle-fonctionnalite](nouvelle-fonctionnalite/SKILL.md) | synchronise `main`, demande le nom de la fonctionnalité, crée la branche |
+| [nouveau-backend](nouveau-backend/SKILL.md) | crée la branche, duplique `backend/` comme modèle vivant (squelette minimal, sans l'exemple « items »), sa propre base de données, et l'ajoute à `helm.yaml` |
+| [deploy](deploy/SKILL.md) | contrôles locaux (lint/gitleaks/tests/quality gate 80% approximé), commit, push, attente CI verte, merge vers `main` (avec confirmation, branche conservée), puis liens dev/qualif |
 
 ## Hypothèses à vérifier par dépôt
 
