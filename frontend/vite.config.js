@@ -9,7 +9,8 @@ export default defineConfig({
     port: 5173,
     // Appels aux backends en local : /api/<backend> -> backend lancé sur le
     // poste, chacun sur son port (src/api.js). Lancer microservice1 avec
-    // PORT=3001 npm run start:dev pour le tester en même temps que backend.
+    // PORT=3001 npm run start:dev pour le tester en même temps que backend
+    // (contrats : PORT=3002).
     proxy: {
       '/api/backend': {
         target: 'http://localhost:3000',
@@ -18,6 +19,10 @@ export default defineConfig({
       '/api/microservice1': {
         target: 'http://localhost:3001',
         rewrite: (path) => path.replace(/^\/api\/microservice1/, ''),
+      },
+      '/api/contrats': {
+        target: 'http://localhost:3002',
+        rewrite: (path) => path.replace(/^\/api\/contrats/, ''),
       },
     },
   },
