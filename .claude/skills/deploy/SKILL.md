@@ -151,18 +151,25 @@ Une fois tout vert et aucun conflit en attente :
 
 ### 8. Donner les deux liens utiles au BA
 
-Liens statiques de cette plateforme (ne changent pas d'un déploiement à
-l'autre, pas besoin de les chercher via `kubectl`) :
+**Ce skill est copié tel quel dans plusieurs dépôts métier**
+(`formation-ba-assurance-iard`, `formation-ba-compte-unique`,
+`formation-ba-gestion-financiere`, `formation-ba-quali-formation`, ...) :
+ne jamais écrire le nom d'un dépôt en dur dans ces liens. Détecter le nom
+du dépôt courant (`gh repo view --json name -q .name`, ou à défaut
+`basename "$(git rev-parse --show-toplevel)"`) et l'utiliser pour les
+deux liens. Le domaine de la plateforme et l'hôte Kargo, eux, sont
+partagés par tous ces dépôts (une seule plateforme, un seul Kargo) — ce
+sont les seules parties à garder en dur :
 
 - Application frontend sur dev :
-  `https://frontend.formation-ba-assurance-iard.dev.check-consulting.net`.
-  Le BA peut l'ouvrir pour constater lui-même quand sa mise en ligne est
-  visible (le temps que Kargo promeuve et qu'ArgoCD synchronise).
+  `https://frontend.<nom-du-dépôt>.dev.check-consulting.net`. Le BA peut
+  l'ouvrir pour constater lui-même quand sa mise en ligne est visible (le
+  temps que Kargo promeuve et qu'ArgoCD synchronise).
 - Stage `qualif` dans l'interface Kargo, pour que le BA puisse cliquer sur
   "Promote" quand il le souhaite (la promotion vers qualif n'est pas
   automatique, cf. `helm.yaml` : "qualif/preprod/prod : promotion par
   clic") :
-  `https://kargo.dev.check-consulting.net/project/formation-ba-assurance-iard/stage/qualif`.
+  `https://kargo.dev.check-consulting.net/project/<nom-du-dépôt>/stage/qualif`.
 - Conclure en une phrase simple : ce qui a été mis en ligne (résumé du
   changement), et les deux liens ci-dessus.
 
