@@ -40,6 +40,23 @@ describe('App', () => {
     expect(fetch).toHaveBeenCalledWith('/api/items', undefined)
   })
 
+  it('affiche le total au singulier avec un seul item', async () => {
+    fetch.mockReturnValueOnce(reponse([{ id: 1, nom: 'a', description: '' }]))
+    render(<App />)
+    expect(await screen.findByText('Total : 1 item')).toBeTruthy()
+  })
+
+  it('affiche le total au pluriel avec plusieurs items', async () => {
+    fetch.mockReturnValueOnce(
+      reponse([
+        { id: 1, nom: 'a', description: '' },
+        { id: 2, nom: 'b', description: '' },
+      ]),
+    )
+    render(<App />)
+    expect(await screen.findByText('Total : 2 items')).toBeTruthy()
+  })
+
   it('ajoute un item', async () => {
     fetch
       .mockReturnValueOnce(reponse([]))
