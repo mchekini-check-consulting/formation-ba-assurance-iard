@@ -52,8 +52,12 @@ describe('AppController (e2e)', () => {
     );
   });
 
-  it('/items (POST sans nom) : 400', () => {
-    return request(app.getHttpServer()).post('/items').send({}).expect(400);
+  it('/items (POST sans nom) : 400', async () => {
+    const reponse = await request(app.getHttpServer())
+      .post('/items')
+      .send({})
+      .expect(400);
+    expect(reponse.body.message).toBe('nom obligatoire');
   });
 
   afterEach(async () => {
