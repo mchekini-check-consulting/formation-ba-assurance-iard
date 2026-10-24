@@ -1,15 +1,16 @@
-// URL du backend du projet, déduite du host du frontend :
+// URL d'un backend du projet (par son nom dans helm.yaml), déduite du host
+// du frontend :
 //   https://<application>.<projet>.<env>.<domaine>
-//   -> passerelle https://api.<env>.<domaine>/<projet>/backend
+//   -> passerelle https://gateway.<projet>.<env>.<domaine>/<backend>
 // Même image dans tous les environnements (promotion Kargo) : rien à configurer.
-// En local (localhost) : /api, relayé vers le backend par le serveur de dev
-// (server.proxy de vite.config.js).
-export function apiBase(hostname = window.location.hostname) {
+// En local (localhost) : /api/<backend>, relayé vers le backend par le
+// serveur de dev (server.proxy de vite.config.js).
+export function apiBase(backend, hostname = window.location.hostname) {
   const [, projet, env, ...domaine] = hostname.split('.')
   if (!projet || !env || domaine.length === 0) {
-    return '/api'
+    return `/api/${backend}`
   }
-  return `https://api.${env}.${domaine.join('.')}/${projet}/backend`
+  return `https://gateway.${projet}.${env}.${domaine.join('.')}/${backend}`
 }
 
 async function appeler(chemin, options, base) {
@@ -21,12 +22,12 @@ async function appeler(chemin, options, base) {
 }
 
 // Ressource générique du backend : GET /items
-export function listerItems(base = apiBase()) {
+export function listerItems(base = apiBase('backend')) {
   return appeler('/items', undefined, base)
 }
 
 // POST /items {nom, description}
-export function creerItem(item, base = apiBase()) {
+export function creerItem(item, base = apiBase('backend')) {
   return appeler(
     '/items',
     {
@@ -36,4 +37,14 @@ export function creerItem(item, base = apiBase()) {
     },
     base,
   )
+}
+
+// Vérifie que la passerelle route bien vers microservice1 (squelette minimal,
+// GET / -> texte brut "Hello World!", pas de JSON).
+export async function saluerMicroservice1(base = apiBase('microservice1')) {
+  const reponse = await fetch(base)
+  if (!reponse.ok) {
+    throw new Error(`HTTP ${reponse.status}`)
+  }
+  return reponse.text()
 }
