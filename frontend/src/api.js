@@ -3,7 +3,7 @@
 //   https://<application>.<projet>.<env>.<domaine>
 //   -> passerelle https://gateway.<projet>.<env>.<domaine>/<backend>
 // Même image dans tous les environnements (promotion Kargo) : rien à configurer.
-// En local (localhost) : /api/<backend>, relayé vers le backend par le
+// En local (localhost) : /api/<backend>, relayé vers le backend par le - 
 // serveur de dev (server.proxy de vite.config.js).
 export function apiBase(backend, hostname = window.location.hostname) {
   const [, projet, env, ...domaine] = hostname.split('.')
