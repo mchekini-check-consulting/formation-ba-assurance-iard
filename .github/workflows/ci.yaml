@@ -38,7 +38,7 @@ jobs:
           component: ${{ matrix.component }}
           tag: ${{ needs.changes.outputs.sha }}
 
-  # Désactivé : Kargo détecte l'image dans ECR et écrit tag.dev (promotion auto).
+  # Désactivé  : Kargo détecte l'image dans ECR et écrit tag.dev (promotion auto).
   # Réactivation (retour arrière) : variable d'organisation CI_UPDATE_TAG=true.
   # Ne jamais l'activer en même temps que Kargo (deux écritures de tag.dev).
   update-tag:
