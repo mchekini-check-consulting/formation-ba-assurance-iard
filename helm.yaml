@@ -87,7 +87,7 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: 4c22d60
+      dev: 43dca21
       qualif: 4c22d60
       preprod: ""
       prod: ""
