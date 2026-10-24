@@ -67,6 +67,37 @@ applications:
     envList:
       - key: LOG_LEVEL
         value: {dev: debug, qualif: info, preprod: info, prod: warn}
+  - name: contrats
+    type: backend
+    image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/contrats
+    # Écrit par Kargo (dev automatique ; qualif/preprod/prod : promotion par clic).
+    # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
+    # remplace tout jusqu'à la fin de la ligne.
+    tag:
+      dev: ""
+      qualif: ""
+      preprod: ""
+      prod: ""
+    containerPort: 3000
+    replicas: {dev: 1, qualif: 1, preprod: 2, prod: 2}
+    service:
+      port: 80
+    # Pas d'Ingress direct : Service ClusterIP seulement. Exposé par le pod
+    # "gateway" ci-dessous :
+    #   https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/contrats/...  (préfixe retiré)
+    # Appelable depuis le navigateur uniquement par les frontends de l'environnement (CORS).
+    # Base PostgreSQL contrats : créée et sauvegardée automatiquement.
+    # Consigne : dans le code (contrats/src/database/database.module.ts), donner à
+    # TypeORM la variable injectée DATABASE_URL :
+    #   url: process.env.DATABASE_URL
+    # DATABASE_URL (postgresql://<user>:<password>@<hôte>:<port>/<base>) contient déjà
+    # l'utilisateur et le mot de passe. Valeurs séparées, injectées aussi :
+    #   PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+    database:
+      name: contrats
+    envList:
+      - key: LOG_LEVEL
+        value: {dev: debug, qualif: info, preprod: info, prod: warn}
   - name: gateway
     type: gateway
     # Pas d'image/tag : fourni par la plateforme (petit Traefik autonome),
