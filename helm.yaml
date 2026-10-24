@@ -35,6 +35,37 @@ applications:
     envList:
       - key: LOG_LEVEL
         value: {dev: debug, qualif: info, preprod: info, prod: warn}
+  - name: microservice1
+    type: backend
+    image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/microservice1
+    # Écrit par Kargo (dev automatique ; qualif/preprod/prod : promotion par clic).
+    # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
+    # remplace tout jusqu'à la fin de la ligne.
+    tag:
+      dev: ""
+      qualif: ""
+      preprod: ""
+      prod: ""
+    containerPort: 3000
+    replicas: {dev: 1, qualif: 1, preprod: 2, prod: 2}
+    service:
+      port: 80
+    # Pas d'Ingress : Service ClusterIP seulement. Exposé automatiquement par la
+    # passerelle de l'environnement (type: backend détecté depuis ce helm.yaml) :
+    #   https://api.<env>.check-consulting.net/formation-ba-assurance-iard/microservice1/...  (préfixe retiré)
+    # Appelable depuis le navigateur uniquement par les frontends de l'environnement (CORS).
+    # Base PostgreSQL microservice1 : créée et sauvegardée automatiquement.
+    # Consigne : dans le code (microservice1/src/database/database.module.ts), donner à
+    # TypeORM la variable injectée DATABASE_URL :
+    #   url: process.env.DATABASE_URL
+    # DATABASE_URL (postgresql://<user>:<password>@<hôte>:<port>/<base>) contient déjà
+    # l'utilisateur et le mot de passe. Valeurs séparées, injectées aussi :
+    #   PGUSER, PGPASSWORD, PGHOST, PGPORT, PGDATABASE
+    database:
+      name: microservice1
+    envList:
+      - key: LOG_LEVEL
+        value: {dev: debug, qualif: info, preprod: info, prod: warn}
   - name: frontend
     type: frontend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/frontend
