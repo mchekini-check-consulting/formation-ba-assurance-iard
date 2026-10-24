@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { creerItem, listerItems } from './api'
+import { creerItem, listerItems, saluerMicroservice1 } from './api'
 import './App.css'
 
 // Liste des items du backend (GET) et formulaire d'ajout (POST)
@@ -9,11 +9,17 @@ function App() {
   const [nom, setNom] = useState('')
   const [description, setDescription] = useState('')
   const [erreur, setErreur] = useState('')
+  // Appel à microservice1 via la passerelle : preuve que celle-ci route bien
+  // vers un second backend du projet, pas seulement "backend".
+  const [salutMicroservice1, setSalutMicroservice1] = useState('')
 
   useEffect(() => {
     listerItems()
       .then(setItems)
       .catch((e) => setErreur(`Chargement impossible (${e.message})`))
+    saluerMicroservice1()
+      .then(setSalutMicroservice1)
+      .catch((e) => setErreur(`microservice1 inaccessible (${e.message})`))
   }, [])
 
   async function ajouter(event) {
@@ -63,6 +69,10 @@ function App() {
       )}
 
       <p className="compteur">Total : {items.length} item{items.length > 1 ? 's' : ''}</p>
+
+      {salutMicroservice1 && (
+        <p className="microservice1">microservice1 (via la passerelle) : {salutMicroservice1}</p>
+      )}
 
       <ul>
         {items.length === 0 && <li className="vide">Aucun item</li>}
