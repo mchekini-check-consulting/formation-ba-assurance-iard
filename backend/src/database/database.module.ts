@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Init1761004800000 } from '../migrations/1761004800000-init.js';
 import { Item1761091200000 } from '../migrations/1761091200000-item.js';
+import { TypeOrmLogger } from '../logging/typeorm-logger.js';
 
 // Base PostgreSQL : DATABASE_URL, injectée par la plateforme (helm.yaml : database).
 // Sans DATABASE_URL (poste de dev) : la base de compose.yaml.
@@ -19,6 +20,10 @@ import { Item1761091200000 } from '../migrations/1761091200000-item.js';
         synchronize: false,
         migrations: [Init1761004800000, Item1761091200000],
         migrationsRun: true,
+        // Requêtes en erreur et lentes (> 200 ms) en logs JSON (layer db)
+        logger: new TypeOrmLogger(),
+        logging: ['error', 'warn', 'migration'],
+        maxQueryExecutionTime: 200,
       }),
     }),
   ],

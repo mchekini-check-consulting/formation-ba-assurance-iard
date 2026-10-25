@@ -1,6 +1,7 @@
 import { BadRequestException, Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
+import { Loggable } from '../logging/loggable.decorator.js';
 import { Item } from './item.entity.js';
 
 // Corps de POST /items
@@ -9,6 +10,8 @@ export interface ItemRequest {
   description?: string | null;
 }
 
+// Chaque méthode publique : un log métier (layer service, durée)
+@Loggable()
 @Injectable()
 export class ItemsService {
   constructor(
