@@ -17,21 +17,9 @@ gatewayConfig: |
         rule: "PathPrefix(`/backend`)"
         service: backend
         middlewares: [backend-strip, cors]
-      microservice1:
-        rule: "PathPrefix(`/microservice1`)"
-        service: microservice1
-        middlewares: [microservice1-strip, cors]
-      contrats:
-        rule: "PathPrefix(`/contrats`)"
-        service: contrats
-        middlewares: [contrats-strip, cors]
     middlewares:
       backend-strip:
         stripPrefix: {prefixes: ["/backend"]}
-      microservice1-strip:
-        stripPrefix: {prefixes: ["/microservice1"]}
-      contrats-strip:
-        stripPrefix: {prefixes: ["/contrats"]}
       cors:
         headers:
           accessControlAllowOriginList:
@@ -43,7 +31,3 @@ gatewayConfig: |
     services:
       backend:
         loadBalancer: {servers: [{url: "http://backend:80"}]}
-      microservice1:
-        loadBalancer: {servers: [{url: "http://microservice1:80"}]}
-      contrats:
-        loadBalancer: {servers: [{url: "http://contrats:80"}]}
