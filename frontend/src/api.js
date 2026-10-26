@@ -38,31 +38,3 @@ export function creerItem(item, base = apiBase('backend')) {
     base,
   )
 }
-
-// Backend contrats : GET /contrats
-export function listerContrats(base = apiBase('contrats')) {
-  return appeler('/contrats', undefined, base)
-}
-
-// POST /contrats {numero, assure}
-export function creerContrat(contrat, base = apiBase('contrats')) {
-  return appeler(
-    '/contrats',
-    {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(contrat),
-    },
-    base,
-  )
-}
-
-// Vérifie que la passerelle route bien vers microservice1 (squelette minimal,
-// GET / -> texte brut "Hello World!", pas de JSON).
-export async function saluerMicroservice1(base = apiBase('microservice1')) {
-  const reponse = await fetch(base)
-  if (!reponse.ok) {
-    throw new Error(`HTTP ${reponse.status}`)
-  }
-  return reponse.text()
-}
