@@ -57,7 +57,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: b6bcd96
-      qualif: b6bcd96
+      qualif: 4eebe78
       preprod: ""
       prod: ""
     containerPort: 8080
