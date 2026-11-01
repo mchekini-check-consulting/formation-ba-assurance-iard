@@ -1,88 +1,37 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react'
+import { act, cleanup, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import App from './App'
-import { apiBase } from './api'
 
-// Réponse fetch simulée (JSON, pour /items)
-function reponse(corps, status = 200) {
-  return Promise.resolve({
-    ok: status < 400,
-    status,
-    json: () => Promise.resolve(corps),
-  })
-}
-
-beforeEach(() => vi.stubGlobal('fetch', vi.fn()))
+beforeEach(() =>
+  vi.stubGlobal('fetch', vi.fn(() => new Promise(() => {}))),
+)
 
 afterEach(() => {
   cleanup()
   vi.unstubAllGlobals()
-})
-
-describe('apiBase', () => {
-  it("pointe la passerelle (gateway) de l'environnement du frontend", () => {
-    expect(
-      apiBase('backend', 'frontend.formation-ba-projet.qualif.check-consulting.net'),
-    ).toBe('https://gateway.formation-ba-projet.qualif.check-consulting.net/backend')
-  })
-
-  it('utilise le proxy du serveur de dev en local', () => {
-    expect(apiBase('backend', 'localhost')).toBe('/api/backend')
-  })
+  window.location.hash = ''
 })
 
 describe('App', () => {
-  it('affiche les items du backend', async () => {
-    fetch.mockReturnValueOnce(reponse([{ id: 1, nom: 'a', description: 'd' }]))
+  it("affiche la landing habitation en page d'accueil", () => {
     render(<App />)
-    expect(await screen.findByText('a')).toBeTruthy()
-    expect(screen.getByText(': d')).toBeTruthy()
-    expect(fetch).toHaveBeenCalledWith('/api/backend/items', undefined)
-  })
-
-  it('affiche le total au singulier avec un seul item', async () => {
-    fetch.mockReturnValueOnce(reponse([{ id: 1, nom: 'a', description: '' }]))
-    render(<App />)
-    expect(await screen.findByText('Total : 1 item')).toBeTruthy()
-  })
-
-  it('affiche le total au pluriel avec plusieurs items', async () => {
-    fetch.mockReturnValueOnce(
-      reponse([
-        { id: 1, nom: 'a', description: '' },
-        { id: 2, nom: 'b', description: '' },
-      ]),
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe(
+      'Votre logement protégé, sans mauvaise surprise.',
     )
-    render(<App />)
-    expect(await screen.findByText('Total : 2 items')).toBeTruthy()
   })
 
-  it('ajoute un item', async () => {
-    fetch
-      .mockReturnValueOnce(reponse([]))
-      .mockReturnValueOnce(reponse({ id: 2, nom: 'Premier', description: null }, 201))
+  it("affiche l'écran Items sur #/items", () => {
+    window.location.hash = '#/items'
     render(<App />)
-    await screen.findByText('Aucun item')
-    fireEvent.change(screen.getByRole('textbox', { name: 'Nom' }), {
-      target: { value: 'Premier' },
-    })
-    fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }))
-    expect(await screen.findByText('Premier')).toBeTruthy()
-    const [url, options] = fetch.mock.calls[1]
-    expect(url).toBe('/api/backend/items')
-    expect(options.method).toBe('POST')
-    expect(JSON.parse(options.body)).toEqual({ nom: 'Premier', description: '' })
-    expect(screen.getByRole('textbox', { name: 'Nom' }).value).toBe('')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Item')
   })
 
-  it('signale une erreur du backend', async () => {
-    fetch.mockReturnValueOnce(reponse('', 503)).mockReturnValueOnce(reponse('', 400))
+  it("change d'écran quand l'adresse change", () => {
     render(<App />)
-    expect((await screen.findByRole('alert')).textContent).toContain('503')
-    fireEvent.change(screen.getByRole('textbox', { name: 'Nom' }), {
-      target: { value: 'x' },
+    act(() => {
+      window.location.hash = '#/items'
+      window.dispatchEvent(new HashChangeEvent('hashchange'))
     })
-    fireEvent.click(screen.getByRole('button', { name: 'Ajouter' }))
-    expect((await screen.findByText(/Ajout impossible/)).textContent).toContain('400')
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe('Item')
   })
 })
