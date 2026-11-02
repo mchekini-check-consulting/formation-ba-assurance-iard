@@ -1,13 +1,23 @@
-# compiled output
-/dist
-/node_modules
-*.tsbuildinfo
+### Maven
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
 
-# logs
+### Logs ###
 *.log
+logs/
 
-# tests
-/coverage
+
+### IntelliJ IDEA ###
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+!**/src/main/**/out/
+!**/src/test/**/out/
+
 
 ### VS Code ###
 .vscode/*
@@ -16,5 +26,6 @@
 !.vscode/launch.json
 !.vscode/extensions.json
 
-### IntelliJ / WebStorm ###
-.idea/
+### Système ###
+.DS_Store
+Thumbs.db

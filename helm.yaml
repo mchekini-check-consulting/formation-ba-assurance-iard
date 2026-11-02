@@ -16,7 +16,7 @@ applications:
       qualif: 4a617ee
       preprod: ""
       prod: ""
-    containerPort: 3000
+    containerPort: 8080
     replicas: {dev: 1, qualif: 1, preprod: 2, prod: 2}
     service:
       port: 80
