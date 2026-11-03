@@ -1,0 +1,89 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <p class="entete__client">
+      Déjà client ? <button type="button" class="lien-action" (click)="meConnecter()">Me connecter</button>
+    </p>
+  </div>
+</header>
+
+@if (annonce(); as message) {
+  <div class="annonce" role="status">
+    <p>{{ message }}</p>
+    <button type="button" class="annonce__fermer" (click)="fermerAnnonce()" aria-label="Fermer le message">×</button>
+  </div>
+}
+
+<main class="page">
+  <form class="carte-formulaire" aria-labelledby="inscription-titre" novalidate (submit)="creerCompte($event)">
+    <div>
+      <h1 id="inscription-titre" class="serif">Créer mon compte</h1>
+      <p class="intro">Votre espace pour suivre vos devis, signer votre contrat et retrouver vos documents.</p>
+    </div>
+
+    @if (emailDejaUtilise()) {
+      <div class="alerte" role="alert">
+        Un compte existe déjà avec cette adresse.
+        <button type="button" class="lien-action lien-action--alerte" (click)="meConnecter()">Me connecter</button>
+      </div>
+    }
+
+    @if (erreurTechnique()) {
+      <div class="alerte" role="alert">
+        Le service est momentanément indisponible. Votre compte n'a pas été créé, réessayez dans quelques instants.
+      </div>
+    }
+
+    <div class="champ">
+      <label class="libelle" for="email">Adresse e-mail</label>
+      <input
+        #champEmail
+        id="email"
+        type="email"
+        class="saisie"
+        [class.saisie--erreur]="erreurEmail() || emailDejaUtilise()"
+        autocomplete="email"
+        placeholder="prenom.nom@exemple.fr"
+        [attr.aria-invalid]="erreurEmail() || emailDejaUtilise()"
+        [attr.aria-describedby]="erreurEmail() ? 'erreur-email' : null"
+        (input)="saisirEmail($event)"
+      />
+      @if (erreurEmail()) {
+        <p id="erreur-email" class="erreur" role="alert">Saisissez une adresse e-mail valide.</p>
+      }
+    </div>
+
+    <div class="champ">
+      <label class="libelle" for="mot-de-passe">Mot de passe</label>
+      <input
+        #champMotDePasse
+        id="mot-de-passe"
+        type="password"
+        class="saisie"
+        [class.saisie--erreur]="erreurMotDePasse()"
+        autocomplete="new-password"
+        [attr.aria-invalid]="erreurMotDePasse()"
+        aria-describedby="regles-mot-de-passe"
+        (input)="saisirMotDePasse($event)"
+      />
+      <ul id="regles-mot-de-passe" class="regles" aria-label="Règles du mot de passe">
+        @for (regle of regles(); track regle.libelle) {
+          <li class="regle" [class.regle--ok]="regle.respectee">
+            <span class="regle__marque" aria-hidden="true">{{ regle.respectee ? '✓' : '•' }}</span>
+            {{ regle.libelle }}
+            <span class="invisible">{{ regle.respectee ? ' : respectée' : ' : non respectée' }}</span>
+          </li>
+        }
+      </ul>
+      @if (erreurMotDePasse()) {
+        <p class="erreur" role="alert">Votre mot de passe ne respecte pas toutes les règles ci-dessus.</p>
+      }
+    </div>
+
+    <button type="submit" class="btn btn--large" [disabled]="envoiEnCours()">Créer mon compte</button>
+    <p class="mention">Un e-mail de confirmation vous sera envoyé.</p>
+  </form>
+</main>

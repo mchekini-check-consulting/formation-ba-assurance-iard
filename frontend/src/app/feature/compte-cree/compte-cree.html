@@ -1,0 +1,30 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+  </div>
+</header>
+
+@if (annonce(); as message) {
+  <div class="annonce" role="status">
+    <p>{{ message }}</p>
+    <button type="button" class="annonce__fermer" (click)="fermerAnnonce()" aria-label="Fermer le message">×</button>
+  </div>
+}
+
+<main class="page">
+  <section class="confirmation" aria-labelledby="confirmation-titre">
+    <svg role="img" aria-label="Succès" width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="#1E7B46"
+      stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="12" cy="12" r="10"></circle>
+      <path d="M7 12l3.5 3.5L17 9"></path>
+    </svg>
+    <h1 id="confirmation-titre" class="serif">Compte créé</h1>
+    <p>
+      Vous êtes connecté. Un e-mail de confirmation a été envoyé à <strong>{{ email() }}</strong>.
+    </p>
+    <button type="button" class="btn btn--large confirmation__action" (click)="faireMonDevis()">Faire mon devis</button>
+  </section>
+</main>

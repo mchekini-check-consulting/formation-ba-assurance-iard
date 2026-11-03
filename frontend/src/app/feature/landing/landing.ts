@@ -1,4 +1,5 @@
 import { Component, ElementRef, computed, signal, viewChild } from '@angular/core';
+import { RouterLink } from '@angular/router';
 
 export type Statut = 'locataire' | 'proprietaire';
 export type TypeLogement = 'appartement' | 'maison';
@@ -26,6 +27,7 @@ export function codePostalValide(codePostal: string): boolean {
 
 @Component({
   selector: 'iard-landing',
+  imports: [RouterLink],
   styleUrl: './landing.scss',
   templateUrl: './landing.html',
 })

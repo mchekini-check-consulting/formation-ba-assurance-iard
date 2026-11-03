@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 import { Landing, codePostalValide } from './landing';
 
 describe('Landing', () => {
@@ -29,6 +30,7 @@ describe('Landing', () => {
   const annonce = (): string | undefined => page.querySelector('[role="status"]')?.textContent?.trim();
 
   beforeEach(() => {
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
     fixture = TestBed.createComponent(Landing);
     fixture.detectChanges();
     page = fixture.nativeElement as HTMLElement;
@@ -61,11 +63,16 @@ describe('Landing', () => {
   it("affiche l'en-tête avec le logo et les 3 boutons d'accès", () => {
     const entete = page.querySelector('header')!;
     expect(entete.textContent).toContain("Assur'Easy");
-    expect(Array.from(entete.querySelectorAll('button')).map((b) => b.textContent?.trim())).toEqual([
+    expect(Array.from(entete.querySelectorAll('.entete__actions > *')).map((b) => b.textContent?.trim())).toEqual([
       'Espace client',
       'Créer un compte',
       'Devis gratuit',
     ]);
+  });
+
+  it('« Créer un compte » mène à la création de compte (US-05)', () => {
+    const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Créer un compte');
+    expect(lien?.getAttribute('href')).toBe('/inscription');
   });
 
   it("affiche les mentions d'assureur et les liens légaux en pied de page", () => {
@@ -80,7 +87,6 @@ describe('Landing', () => {
 
   it.each([
     ['Espace client', 'L’espace client sera bientôt disponible.'],
-    ['Créer un compte', 'La création de compte sera bientôt disponible.'],
     ['Devis gratuit', 'Le devis en ligne sera bientôt disponible.'],
     ['Faire mon devis', 'Le devis en ligne sera bientôt disponible.'],
   ])('« %s » annonce que le service sera bientôt disponible', (texte, message) => {
