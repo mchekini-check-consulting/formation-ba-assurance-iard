@@ -63,6 +63,8 @@ describe('Landing', () => {
   it("affiche l'en-tête avec le logo et les 3 boutons d'accès", () => {
     const entete = page.querySelector('header')!;
     expect(entete.textContent).toContain("Assur'Easy");
+    expect(entete.querySelector('.logo img')?.getAttribute('src')).toBe('favicon.png');
+    expect(Array.from(entete.querySelectorAll('button')).map((b) => b.textContent?.trim())).toEqual([
     expect(Array.from(entete.querySelectorAll('.entete__actions > *')).map((b) => b.textContent?.trim())).toEqual([
       'Espace client',
       'Créer un compte',
@@ -77,11 +79,24 @@ describe('Landing', () => {
 
   it("affiche les mentions d'assureur et les liens légaux en pied de page", () => {
     const pied = page.querySelector('footer')!;
+    expect(pied.textContent).toContain('RCS Paris 912 345 678');
     expect(pied.textContent).toContain('ACPR');
-    expect(Array.from(pied.querySelectorAll('button')).map((b) => b.textContent?.trim())).toEqual([
+    expect(pied.textContent).toContain("La Médiation de l'Assurance");
+    expect(pied.textContent).toContain("© 2026 Assur'Easy. Tous droits réservés.");
+    expect(Array.from(pied.querySelectorAll('.lien')).map((l) => l.textContent?.trim())).toEqual([
       'Mentions légales',
       'Données personnelles',
+      'Cookies',
+      'CGU',
+      'Accessibilité',
       'Réclamations',
+      'Contact',
+    ]);
+    expect(Array.from(pied.querySelectorAll('a.lien')).map((l) => l.getAttribute('href'))).toEqual([
+      '/cookies',
+      '/cgu',
+      '/accessibilite',
+      '/contact',
     ]);
   });
 

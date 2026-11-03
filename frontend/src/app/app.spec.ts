@@ -17,6 +17,16 @@ describe('App (routes)', () => {
     expect(titre(harness)).toContain('Votre logement assuré en ligne');
   });
 
+  it.each([
+    ['/cookies', 'Cookies'],
+    ['/cgu', 'CGU'],
+    ['/accessibilite', 'Accessibilité'],
+    ['/contact', 'Contact'],
+  ])('affiche la page %s avec son titre', async (adresse, titre) => {
+    const harness = await RouterTestingHarness.create(adresse);
+    expect(harness.routeNativeElement?.querySelector('h1')?.textContent).toBe(titre);
+  });
+
   it("renvoie une adresse inconnue vers l'accueil", async () => {
     const harness = await RouterTestingHarness.create('/page-inconnue');
     expect(titre(harness)).toContain('Votre logement assuré en ligne');

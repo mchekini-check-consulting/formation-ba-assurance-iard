@@ -26,6 +26,7 @@ export function codePostalValide(codePostal: string): boolean {
 }
 
 @Component({
+  imports: [RouterLink],
   selector: 'iard-landing',
   imports: [RouterLink],
   styleUrl: './landing.scss',

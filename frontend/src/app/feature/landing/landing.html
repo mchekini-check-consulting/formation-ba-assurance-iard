@@ -3,7 +3,7 @@
 <header class="entete">
   <div class="conteneur entete__ligne">
     <a class="logo" href="/" aria-label="Assur'Easy, accueil">
-      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
       <span class="logo__nom serif">Assur'Easy</span>
     </a>
     <nav class="entete__actions" aria-label="Accès rapide">
@@ -202,12 +202,21 @@
       <button type="button" class="lien" (click)="bientotDisponible('La page Données personnelles')">
         Données personnelles
       </button>
+      <a class="lien" routerLink="/cookies">Cookies</a>
+      <a class="lien" routerLink="/cgu">CGU</a>
+      <a class="lien" routerLink="/accessibilite">Accessibilité</a>
       <button type="button" class="lien" (click)="bientotDisponible('La page Réclamations')">Réclamations</button>
+      <a class="lien" routerLink="/contact">Contact</a>
     </nav>
     <p>
-      Assur'Easy, [FORME SOCIALE] au capital de [CAPITAL] €, RCS [VILLE] [NUMÉRO], siège social : [ADRESSE].
-      Entreprise régie par le Code des assurances, soumise au contrôle de l'Autorité de contrôle prudentiel et de
-      résolution (ACPR), 4 place de Budapest, 75009 Paris.
+      Assur'Easy, société anonyme au capital de 10 000 000 €, RCS Paris 912 345 678, siège social : 18 rue de
+      Châteaudun, 75009 Paris. Entreprise régie par le Code des assurances, soumise au contrôle de l'Autorité de
+      contrôle prudentiel et de résolution (ACPR), 4 place de Budapest, CS 92459, 75436 Paris Cedex 09.
     </p>
+    <p>
+      En cas de litige, après épuisement des voies de réclamation internes, vous pouvez saisir La Médiation de
+      l'Assurance, TSA 50110, 75441 Paris Cedex 09 (www.mediation-assurance.org).
+    </p>
+    <p>© 2026 Assur'Easy. Tous droits réservés.</p>
   </div>
 </footer>
