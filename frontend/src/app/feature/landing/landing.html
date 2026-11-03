@@ -1,0 +1,215 @@
+<a class="evitement" href="#contenu">Aller au contenu</a>
+
+<header class="entete">
+  <div class="conteneur entete__ligne">
+    <a class="logo" href="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <nav class="entete__actions" aria-label="Accès rapide">
+      <button type="button" class="btn btn--contour" (click)="bientotDisponible('L’espace client')">Espace client</button>
+      <button type="button" class="btn btn--contour" (click)="bientotDisponible('La création de compte')">
+        Créer un compte
+      </button>
+      <button type="button" class="btn" (click)="bientotDisponible('Le devis en ligne')">Devis gratuit</button>
+    </nav>
+  </div>
+</header>
+
+@if (annonce(); as message) {
+  <div class="annonce" role="status">
+    <p>{{ message }}</p>
+    <button type="button" class="annonce__fermer" (click)="fermerAnnonce()" aria-label="Fermer le message">×</button>
+  </div>
+}
+
+<main id="contenu">
+  <section class="bloc bloc--beige">
+    <div class="conteneur accroche">
+      <div class="accroche__texte">
+        <p class="surtitre">Assurance habitation</p>
+        <h1 class="serif">Votre logement assuré en ligne, sans conseiller ni paperasse.</h1>
+        <p class="accroche__intro">
+          Obtenez votre tarif en quelques questions, recevez une formule conseillée et signez votre contrat depuis
+          votre canapé.
+        </p>
+        <ul class="avantages">
+          <li>Tarif immédiat, sans créer de compte</li>
+          <li>Souscription et signature 100 % en ligne</li>
+          <li>Nous résilions votre ancien contrat pour vous (loi Hamon)</li>
+        </ul>
+      </div>
+
+      <form class="tarif" aria-labelledby="tarif-titre" novalidate (submit)="calculerTarif($event)">
+        <h2 id="tarif-titre" class="serif">Votre tarif habitation</h2>
+
+        <div class="champ">
+          <span class="libelle" id="libelle-statut">Vous êtes</span>
+          <div class="choix" role="group" aria-labelledby="libelle-statut">
+            <button
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="statut() === 'locataire'"
+              [attr.aria-pressed]="statut() === 'locataire'"
+              (click)="choisirStatut('locataire')"
+            >
+              Locataire
+            </button>
+            <button
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="statut() === 'proprietaire'"
+              [attr.aria-pressed]="statut() === 'proprietaire'"
+              (click)="choisirStatut('proprietaire')"
+            >
+              Propriétaire
+            </button>
+          </div>
+        </div>
+
+        <div class="champ">
+          <span class="libelle" id="libelle-type">Type de logement</span>
+          <div class="choix" role="group" aria-labelledby="libelle-type">
+            <button
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="typeLogement() === 'appartement'"
+              [attr.aria-pressed]="typeLogement() === 'appartement'"
+              (click)="choisirType('appartement')"
+            >
+              Appartement
+            </button>
+            <button
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="typeLogement() === 'maison'"
+              [attr.aria-pressed]="typeLogement() === 'maison'"
+              (click)="choisirType('maison')"
+            >
+              Maison
+            </button>
+          </div>
+        </div>
+
+        @if (erreurChoix()) {
+          <p class="erreur" role="alert">Indiquez votre statut et le type de logement.</p>
+        }
+
+        <div class="champ">
+          <label class="libelle" for="code-postal">Code postal du logement</label>
+          <input
+            #champCodePostal
+            id="code-postal"
+            class="saisie"
+            [class.saisie--erreur]="erreurCodePostal()"
+            inputmode="numeric"
+            autocomplete="postal-code"
+            maxlength="5"
+            placeholder="Ex. 94000"
+            [attr.aria-invalid]="erreurCodePostal()"
+            [attr.aria-describedby]="erreurCodePostal() ? 'erreur-code-postal' : null"
+            (input)="saisirCodePostal($event)"
+          />
+          @if (erreurCodePostal()) {
+            <p id="erreur-code-postal" class="erreur" role="alert">Saisissez un code postal à 5 chiffres.</p>
+          }
+        </div>
+
+        <button type="submit" class="btn btn--large">Calculer mon tarif</button>
+        <p class="tarif__mention">Gratuit et sans engagement · Aucun compte demandé</p>
+      </form>
+    </div>
+  </section>
+
+  <section class="bloc" aria-labelledby="offre-titre">
+    <div class="conteneur pile">
+      <div class="offre__entete">
+        <div>
+          <h2 id="offre-titre" class="serif titre-section">L'assurance habitation Assur'Easy</h2>
+          <p class="sous-titre">
+            Locataire ou propriétaire, appartement ou maison : trois formules, des options à la carte.
+          </p>
+        </div>
+        <p class="prix">À partir de <strong class="serif">7,90 €</strong>/mois TTC</p>
+      </div>
+      <div class="grille">
+        @for (formule of formules; track formule.nom) {
+          <article class="carte" [class.carte--avant]="formule.miseEnAvant">
+            <h3 class="serif">{{ formule.nom }}</h3>
+            <p class="carte__texte">{{ formule.description }}</p>
+            <p>Contenu assuré jusqu'à <strong>{{ formule.plafond }}</strong></p>
+          </article>
+        }
+      </div>
+    </div>
+  </section>
+
+  <section class="bloc bloc--beige" aria-labelledby="etapes-titre">
+    <div class="conteneur pile">
+      <h2 id="etapes-titre" class="serif titre-section">Assuré en 4 étapes</h2>
+      <ol class="grille etapes">
+        @for (etape of etapes; track etape.titre; let numero = $index) {
+          <li class="etape">
+            <span class="etape__numero serif" aria-hidden="true">{{ numero + 1 }}</span>
+            <strong>{{ etape.titre }}</strong>
+            <span class="carte__texte">{{ etape.detail }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  </section>
+
+  <section class="bloc" aria-labelledby="faq-titre">
+    <div class="conteneur conteneur--etroit">
+      <h2 id="faq-titre" class="serif titre-section">Questions fréquentes</h2>
+      @for (item of questions; track item.question; let i = $index) {
+        <div class="faq">
+          <h3>
+            <button
+              type="button"
+              class="faq__question"
+              [attr.aria-expanded]="questionOuverte() === i"
+              [attr.aria-controls]="'faq-reponse-' + i"
+              (click)="basculerQuestion(i)"
+            >
+              <span>{{ item.question }}</span>
+              <span class="faq__signe" aria-hidden="true">{{ questionOuverte() === i ? '−' : '+' }}</span>
+            </button>
+          </h3>
+          @if (questionOuverte() === i) {
+            <p class="faq__reponse" [id]="'faq-reponse-' + i">{{ item.reponse }}</p>
+          }
+        </div>
+      }
+    </div>
+  </section>
+
+  <section class="bandeau" aria-labelledby="bandeau-titre">
+    <div class="conteneur bandeau__ligne">
+      <div>
+        <h2 id="bandeau-titre" class="serif">Prêt à assurer votre logement ?</h2>
+        <p>Votre tarif en quelques minutes, sans engagement.</p>
+      </div>
+      <button type="button" class="btn btn--blanc btn--large" (click)="bientotDisponible('Le devis en ligne')">
+        Faire mon devis
+      </button>
+    </div>
+  </section>
+</main>
+
+<footer class="pied">
+  <div class="conteneur pile pile--serre">
+    <nav class="pied__liens" aria-label="Informations légales">
+      <button type="button" class="lien" (click)="bientotDisponible('La page Mentions légales')">Mentions légales</button>
+      <button type="button" class="lien" (click)="bientotDisponible('La page Données personnelles')">
+        Données personnelles
+      </button>
+      <button type="button" class="lien" (click)="bientotDisponible('La page Réclamations')">Réclamations</button>
+    </nav>
+    <p>
+      Assur'Easy, [FORME SOCIALE] au capital de [CAPITAL] €, RCS [VILLE] [NUMÉRO], siège social : [ADRESSE].
+      Entreprise régie par le Code des assurances, soumise au contrôle de l'Autorité de contrôle prudentiel et de
+      résolution (ACPR), 4 place de Budapest, 75009 Paris.
+    </p>
+  </div>
+</footer>

@@ -55,7 +55,9 @@ Prérequis : Docker, Java 21, Node.js 24.
 
 ### 1. Base de données
 
-Depuis la racine du projet :
+Depuis la racine du projet, la première fois : créer un fichier `.env` contenant
+`POSTGRES_USER=...` et `POSTGRES_PASSWORD=...`, avec les valeurs de `backend/src/main/resources/application.yaml`
+(le fichier `.env` reste sur le poste, il n'est jamais commité).
 
 ```bash
 docker compose up -d postgres

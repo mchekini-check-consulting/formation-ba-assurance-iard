@@ -27,7 +27,7 @@ Couches : `resource` (HTTP) → `service` (règles métier) → `repository` (do
 ## Lancer en local
 
 ```bash
-docker compose up -d postgres   # depuis la racine du projet
+docker compose up -d postgres   # depuis la racine, après avoir créé .env (POSTGRES_USER, POSTGRES_PASSWORD)
 ./mvnw spring-boot:run
 ```
 

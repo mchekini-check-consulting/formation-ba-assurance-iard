@@ -12,9 +12,13 @@ déploiement, vérification du déploiement.
 
 | Composant | Dossier | Stack | Port dans l'image | En local |
 |---|---|---|---|---|
-| backend(s) `type: backend` | `<name>/` (ex. `backend/`) | Node.js / NestJS / TypeORM | 3000 | `PORT=<port> npm run start:dev`, port 3000 pour `backend/`, suivant pour les autres |
+| backend(s) `type: backend` | `<name>/` (ex. `backend/`) | Java 21 / Spring Boot 4 / JPA / Flyway (Maven, artifact `assurance-iard-api`) | 8080 | `./mvnw spring-boot:run` (ou IntelliJ), port 8080 pour `backend/`, suivant pour les autres (`SERVER_PORT=<port>`) |
 | gateway `type: gateway` | — (fourni par la plateforme) | Traefik, routes dans `gateway.yaml` | 80 | pas de gateway : relais du serveur de dev du frontend |
-| frontend `type: frontend` | `frontend/` | React / Vite | 8080 | http://localhost:5173 (`npm run dev`) |
+| frontend `type: frontend` | `frontend/` | Angular 22 / TypeScript (projet `assurance-iard-web`, préfixe `iard`), servi par nginx | 8080 | http://localhost:4200 (`npm start`) |
+
+Base locale : `docker compose up -d postgres` à la racine (`docker-compose.yaml`,
+PostgreSQL 16, base `assurance_iard`, port 5432). Identifiants dans `.env`
+(`POSTGRES_USER`, `POSTGRES_PASSWORD`, jamais commité), jamais en clair dans `docker-compose.yaml`.
 
 URLs, identiques dans les 4 environnements (`dev`, `qualif`, `preprod`, `prod`) :
 - écran : `https://frontend.formation-ba-assurance-iard.<env>.check-consulting.net`
@@ -29,26 +33,40 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
 
 ## Conventions
 
-**Backend**
-- Couches : contrôleur (HTTP) → service (règles métier) → accès aux données.
+**Backend** (package racine `net.checkconsulting.assuranceiard.api`)
+- Couches : `resource` (contrôleurs HTTP, `@RestController`) → `service`
+  (règles métier) → `repository` (accès aux données, Spring Data JPA).
+  Autres packages : `model` (entités), `dto`, `mapper` (MapStruct,
+  `componentModel=spring`), `config`, `exception`, `utils`.
 - Logs : une ligne JSON par log sur stdout, niveau `LOG_LEVEL`, champ `layer`
   = `controller` / `service` / `db` sur les logs métier (seuls collectés dans
-  le dashboard Grafana « Logs métier »). Plomberie : `backend/src/logging/` (logger JSON, intercepteur des requêtes, `@Loggable()`, logger TypeORM).
-  Couche service : décorateur de classe `@Loggable()` (`backend/src/logging/loggable.decorator.ts`), sur chaque nouvelle classe de service. Jamais de données
-  personnelles, d'arguments, de corps de requête ni de paramètres SQL dans
-  les logs.
+  le dashboard Grafana « Logs métier »). **Pas encore en place** dans le
+  backend Spring Boot : à ajouter (logging structuré JSON) avant de s'appuyer
+  sur Grafana. Jamais de données personnelles, d'arguments, de corps de
+  requête ni de paramètres SQL dans les logs.
 - Base PostgreSQL : variables injectées par la plateforme (`DATABASE_URL`,
-  `SPRING_DATASOURCE_*`, `PG*`) ; valeurs locales par défaut = `compose.yaml`
-  du composant.
-- Schéma : uniquement par migrations — `backend/src/migrations/<horodatage>-<nom>.ts`, **à ajouter aussi** à la liste `migrations` de `backend/src/database/database.module.ts` ; `synchronize: false`. Ne jamais modifier une
-  migration déjà sur `main`.
+  `SPRING_DATASOURCE_*`, `PG*`) ; Spring Boot lit `SPRING_DATASOURCE_*`.
+  Valeurs locales par défaut = `backend/src/main/resources/application.yaml`
+  (alignées sur `docker-compose.yaml` à la racine).
+- Schéma : uniquement par migrations Flyway —
+  `backend/src/main/resources/db/migration/V<numéro>__<nom>.sql`, appliquées
+  au démarrage ; `spring.jpa.hibernate.ddl-auto: validate` (Hibernate vérifie,
+  ne modifie jamais). Ne jamais modifier une migration déjà sur `main`.
+- Tests : unitaires `*Test.java` (`@WebMvcTest`, Mockito…) par `./mvnw test` ;
+  intégration `*IT.java` (Testcontainers, PostgreSQL 16) par failsafe.
 
-**Frontend**
-- Adresse d'un backend : `apiBase(...)` dans `frontend/src/api.js`, calculée depuis
-  l'adresse de la page. Elle prend le nom du backend : `apiBase('<backend>')`. Jamais d'URL, d'environnement,
-  de `localhost` ou de nom de dépôt écrits en dur.
-- En local, `/api/<backend>` est relayé vers le backend du poste par
-  `frontend/vite.config.js` (`server.proxy`) : une entrée par backend.
+**Frontend** (`frontend/src/app/`)
+- Organisation : `core/` (`config/`, `service/`, `model/`, `guards/`,
+  `interceptors/`), `feature/` (un dossier par écran), `app.*` (composant racine).
+- Adresse d'un backend : `apiBase('<backend>')` dans
+  `frontend/src/app/core/config/api.ts`, calculée depuis l'adresse de la page.
+  Jamais d'URL, d'environnement, de `localhost` ou de nom de dépôt écrits en dur.
+- Un service par ressource (`core/service/<nom>.service.ts`, `HttpClient`,
+  `providedIn: 'root'`), sur le modèle de `hello.service.ts`.
+- En local, `apiBase` renvoie `/api`, relayé vers `http://localhost:8080` par
+  `frontend/proxy.conf.json` (préfixe `/api` retiré). Une seule entrée
+  aujourd'hui : avec un deuxième backend, passer à `/api/<backend>` (une
+  entrée par backend, skill `appeler-un-backend`).
 
 **`helm.yaml`** (lu par la plateforme)
 - Nouvelle application **à la fin** de `applications:` (Kargo repère les
@@ -67,9 +85,13 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
   configuration pour les 4 environnements.
 
 **Qualité** (mêmes contrôles qu'en CI, `pr.yaml`)
-- Chaque composant : `make lint`, `make test-unit`, `make test-integration`.
-- Couverture ≥ 80 % (quality gate SonarQube) ; rapport local : `coverage/lcov.info`
-  pour le backend, `lcov.info` sous `frontend/coverage/` pour le frontend.
+- Chaque composant : `make lint`, `make test-unit`, `make test-integration`
+  (sous Windows sans `make` : lancer les commandes du `Makefile` directement).
+  - backend : PMD (`lint`), `./mvnw -B test` (`test-unit`), failsafe (`test-integration`) ;
+  - frontend : `npx oxlint src` (`lint`), `npx ng test --watch=false --coverage` (Vitest, `test-unit`).
+- Couverture ≥ 80 % (quality gate SonarQube) ; rapport local :
+  `backend/target/site/jacoco/jacoco.xml` (JaCoCo) pour le backend,
+  `frontend/coverage/assurance-iard-web/lcov.info` pour le frontend.
 - Tout nouveau code arrive avec ses tests unitaires.
 
 **Git**

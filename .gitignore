@@ -2,3 +2,6 @@
 .DS_Store
 Thumbs.db
 .idea
+
+# Variables locales (mots de passe) : jamais commitées
+.env
