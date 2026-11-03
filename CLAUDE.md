@@ -15,6 +15,7 @@ déploiement, vérification du déploiement.
 | backend(s) `type: backend` | `<name>/` (ex. `backend/`) | Java 21 / Spring Boot 4 / JPA / Flyway (Maven, artifact `assurance-iard-api`) | 8080 | `./mvnw spring-boot:run` (ou IntelliJ), port 8080 pour `backend/`, suivant pour les autres (`SERVER_PORT=<port>`) |
 | gateway `type: gateway` | — (fourni par la plateforme) | Traefik, routes dans `gateway.yaml` | 80 | pas de gateway : relais du serveur de dev du frontend |
 | frontend `type: frontend` | `frontend/` | Angular 22 / TypeScript (projet `assurance-iard-web`, préfixe `iard`), servi par nginx | 8080 | http://localhost:4200 (`npm start`) |
+| health `type: frontend` | `health/` | Vite / TypeScript sans framework + keycloak-js : connexion Keycloak (realm `check-projects-sso`, client `assureasy-frontend-client`) puis appel de `/backend/actuator/health` avec le token (route protégée par le middleware `jwt` de `gateway.yaml`), servi par nginx | 8080 | http://localhost:4201 (`npm start`) |
 
 Base locale : `docker compose up -d postgres` à la racine (`docker-compose.yaml`,
 PostgreSQL 16, base `assurance_iard`, port 5432). Identifiants dans `.env`

@@ -46,6 +46,7 @@ gatewayConfig: |
         headers:
           accessControlAllowOriginList:
             - https://frontend.{{ .project }}.{{ .env }}.{{ .domain }}
+            - https://health.{{ .project }}.{{ .env }}.{{ .domain }}
           accessControlAllowMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
           accessControlAllowHeaders: [Content-Type, Authorization]
           accessControlMaxAge: 600
