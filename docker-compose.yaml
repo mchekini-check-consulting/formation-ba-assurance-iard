@@ -4,14 +4,14 @@ services:
     container_name: assurance-iard-postgres
     environment:
       POSTGRES_DB: assurance_iard
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: ${POSTGRES_USER:?Créez le fichier .env à partir de .env.example}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Créez le fichier .env à partir de .env.example}
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d assurance_iard"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d assurance_iard"]
       interval: 5s
       timeout: 3s
       retries: 10
@@ -22,8 +22,8 @@ services:
     container_name: assurance-iard-backend
     environment:
       SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/assurance_iard
-      SPRING_DATASOURCE_USERNAME: postgres
-      SPRING_DATASOURCE_PASSWORD: postgres
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
       SERVER_PORT: "8080"
       LOG_LEVEL: debug
     ports:

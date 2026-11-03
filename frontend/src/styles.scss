@@ -1,1 +1,39 @@
-/* You can add global styles to this file, and also import other style files */
+/* Styles communs à toute l'application (charte Assur'Easy) */
+:root {
+  --rouge: #a82b27;
+  --rouge-fonce: #8a2320;
+  --rose: #f8eceb;
+  --beige: #f6f5f3;
+  --texte: #1a1a1a;
+  --texte-doux: #4a4a4f;
+  --texte-discret: #5a5a5f;
+  --gris: #8a8a90;
+  --bordure: #e3e3e6;
+  --bordure-claire: #ececef;
+  --erreur: #b00020;
+  --police-texte: 'Inter', system-ui, sans-serif;
+  --police-titre: 'Source Serif 4', Georgia, serif;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--texte);
+  font-family: var(--police-texte);
+}
+
+a {
+  color: var(--rouge);
+}
+
+/* Contour visible pour la navigation au clavier */
+:focus-visible {
+  outline: 2px solid var(--rouge);
+  outline-offset: 2px;
+}
