@@ -121,17 +121,10 @@
   color: var(--texte);
   text-decoration: none;
 
-  &__pastille {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+  &__icone {
+    display: block;
     width: 36px;
     height: 36px;
-    border-radius: 10px;
-    background: var(--rouge);
-    color: #fff;
-    font-size: 14px;
-    font-weight: 700;
   }
 
   &__nom {
