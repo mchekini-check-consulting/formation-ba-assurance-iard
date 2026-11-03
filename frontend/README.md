@@ -1,16 +1,66 @@
-# React + Vite
+# assurance-iard-web
 
-This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
+Application frontend du projet Assurance IARD : Angular 22, TypeScript.
 
-Currently, two official plugins are available:
+## Structure
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```
+src/app/
+  app.ts, app.html, app.config.ts, app.routes.ts   # composant racine, configuration, routes
+  core/
+    config/api.ts    # apiBase : adresse des backends
+    service/         # services d'appel aux backends (HttpClient)
+    model/           # interfaces des données
+    interceptors/    # traitements communs des appels HTTP
+    guards/          # protection d'accès aux pages
+  feature/           # un dossier par écran (ex. feature/items/)
+proxy.conf.json      # relais local /api -> backend (port 8080)
+nginx.conf           # serveur de l'image Docker (port 8080)
+```
 
-## React Compiler
+Préfixe des composants : `iard` (balises `<iard-...>`).
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+## Appeler un backend
 
-## Expanding the Oxlint configuration
+Toujours via `apiBase('<backend>')` (`src/app/core/config/api.ts`), jamais
+d'URL écrite en dur :
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and Oxlint's TypeScript related rules in your project.
+| Où           | `apiBase('backend')` renvoie |
+|--------------|------------------------------|
+| En ligne     | `https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/backend` |
+| En local     | `/api`, relayé vers `http://localhost:8080` par `proxy.conf.json` |
+
+```ts
+@Injectable({ providedIn: 'root' })
+export class ItemsService {
+  private readonly http = inject(HttpClient);
+  private readonly url = `${apiBase('backend')}/items`;
+  lister(): Observable<Item[]> { return this.http.get<Item[]>(this.url); }
+}
+```
+
+## Lancer en local
+
+```bash
+npm install
+npm start
+```
+
+http://localhost:4200/ (rechargement automatique). Le backend doit tourner
+sur le port 8080 pour que les appels `/api/...` répondent.
+
+## Qualité (mêmes contrôles qu'en CI)
+
+| Commande                | Rôle |
+|-------------------------|------|
+| `make lint`             | analyse oxlint |
+| `make test-unit`        | tests Vitest + couverture (`coverage/assurance-iard-web/lcov.info`) |
+| `make test-integration` | aucun pour l'instant |
+
+Sans `make` (Windows) : lancer les commandes `npx ...` écrites dans le `Makefile`.
+Couverture minimale : 80 % (SonarQube). Un fichier `*.spec.ts` par composant ou service.
+
+## Image Docker
+
+`Dockerfile` : `npm run build`, puis `dist/assurance-iard-web/browser` servi
+par nginx non-root sur le port 8080 (`containerPort` dans `helm.yaml`).

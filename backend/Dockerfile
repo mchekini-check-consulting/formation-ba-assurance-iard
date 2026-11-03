@@ -1,25 +1,21 @@
-# syntax=docker/dockerfile:1
-# Backend NestJS -> image distroless Node.js, non-root.
 
-# ---- Build : dépendances de dev + compilation TypeScript
-FROM node:24-bookworm-slim AS build
-WORKDIR /app
-COPY package.json package-lock.json ./
-RUN npm ci
-COPY . .
-# Compile dans dist/, puis ne garde que les dépendances de production
-RUN npm run build && npm prune --omit=dev
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /src
 
-# ---- Runtime : Node.js seul, sans shell ni npm, utilisateur 65532
-FROM gcr.io/distroless/nodejs24-debian12:nonroot
+COPY pom.xml .
+RUN --mount=type=cache,target=/root/.m2 mvn -B -q dependency:go-offline
+
+COPY src src
+RUN --mount=type=cache,target=/root/.m2 mvn -B -q package -DskipTests \
+ && cp target/*.jar /app.jar
+
+
+FROM gcr.io/distroless/java21-debian12:nonroot
 WORKDIR /app
-ENV NODE_ENV=production
-# package.json est requis à l'exécution ("type": "module")
-COPY --from=build /app/package.json ./package.json
-COPY --from=build /app/node_modules ./node_modules
-COPY --from=build /app/dist ./dist
+COPY --from=build /app.jar /app/app.jar
+
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75.0"
 USER nonroot
-EXPOSE 3000
-# ENTRYPOINT de l'image : ["/nodejs/bin/node"]
-CMD ["dist/main.js"]
-# Image construite par la CI (.github/workflows/ci.yaml), taguée avec le sha court du commit
+EXPOSE 8080
+
+CMD ["/app/app.jar"]

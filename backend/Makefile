@@ -1,11 +1,10 @@
-# Commandes appelées par la CI (formation-ba-gitops/ci-template) et utilisables en local.
 .PHONY: lint test-unit test-integration
 
 lint:
-	npm run lint
+	./mvnw -B org.apache.maven.plugins:maven-pmd-plugin:3.28.0:check
 
 test-unit:
-	npm run test:cov -- --coverage.reporter=lcov   # -> coverage/lcov.info
+	./mvnw -B test   # JaCoCo (pom.xml) -> target/site/jacoco/jacoco.xml
 
 test-integration:
-	npm run test:e2e
+	./mvnw -B test-compile failsafe:integration-test failsafe:verify   # classes *IT
