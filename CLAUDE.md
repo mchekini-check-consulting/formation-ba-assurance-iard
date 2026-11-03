@@ -18,7 +18,7 @@ déploiement, vérification du déploiement.
 
 Base locale : `docker compose up -d postgres` à la racine (`docker-compose.yaml`,
 PostgreSQL 16, base `assurance_iard`, port 5432). Identifiants dans `.env`
-(copie locale de `.env.example`, jamais commitée), jamais en clair dans `docker-compose.yaml`.
+(`POSTGRES_USER`, `POSTGRES_PASSWORD`, jamais commité), jamais en clair dans `docker-compose.yaml`.
 
 URLs, identiques dans les 4 environnements (`dev`, `qualif`, `preprod`, `prod`) :
 - écran : `https://frontend.formation-ba-assurance-iard.<env>.check-consulting.net`

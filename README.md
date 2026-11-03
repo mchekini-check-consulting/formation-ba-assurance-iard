@@ -55,8 +55,8 @@ Prérequis : Docker, Java 21, Node.js 24.
 
 ### 1. Base de données
 
-Depuis la racine du projet, la première fois : copier `.env.example` en `.env` et y mettre
-l'utilisateur et le mot de passe de `backend/src/main/resources/application.yaml`
+Depuis la racine du projet, la première fois : créer un fichier `.env` contenant
+`POSTGRES_USER=...` et `POSTGRES_PASSWORD=...`, avec les valeurs de `backend/src/main/resources/application.yaml`
 (le fichier `.env` reste sur le poste, il n'est jamais commité).
 
 ```bash
