@@ -11,9 +11,11 @@
 # plutôt que d'en écrire une copie par environnement.
 #
 # Authentification (middleware jwt, plugin Traefik activé par la plateforme
-# dès qu'un middleware l'utilise) : chaque appel au backend doit porter un
-# token Keycloak (en-tête Authorization: Bearer <token>) émis par le realm
-# check-projects-sso pour le client du frontend (assureasy-frontend-client).
+# dès qu'un middleware l'utilise), uniquement sur /backend/actuator/health
+# (router backend-health) ; le reste de /backend reste public. Un appel à
+# cette route doit porter un token Keycloak (en-tête Authorization: Bearer
+# <token>) émis par le realm check-projects-sso pour le client du frontend
+# (assureasy-frontend-client).
 # Le gateway vérifie la signature (clés publiées par Keycloak, jwks_uri),
 # l'expiration et l'émetteur, puis transmet au backend :
 #   X-User-Sub   : identifiant Keycloak de l'utilisateur (claim sub)
@@ -25,6 +27,14 @@ gatewayConfig: |
     routers:
       backend:
         rule: "PathPrefix(`/backend`)"
+        service: backend
+        middlewares: [backend-strip, cors]
+      # Santé du backend (Spring Boot Actuator, et ses sous-chemins liveness/
+      # readiness) : token obligatoire. priority : choisi avant le router
+      # backend, plus large, qui correspond aussi à ce chemin.
+      backend-health:
+        rule: "PathPrefix(`/backend/actuator/health`)"
+        priority: 100
         service: backend
         # cors d'abord : il répond lui-même aux requêtes OPTIONS du navigateur
         # (preflight, envoyées sans token)
