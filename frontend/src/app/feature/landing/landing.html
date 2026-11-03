@@ -8,9 +8,7 @@
     </a>
     <nav class="entete__actions" aria-label="Accès rapide">
       <button type="button" class="btn btn--contour" (click)="bientotDisponible('L’espace client')">Espace client</button>
-      <button type="button" class="btn btn--contour" (click)="bientotDisponible('La création de compte')">
-        Créer un compte
-      </button>
+      <a class="btn btn--contour" routerLink="/inscription">Créer un compte</a>
       <button type="button" class="btn" (click)="bientotDisponible('Le devis en ligne')">Devis gratuit</button>
     </nav>
   </div>

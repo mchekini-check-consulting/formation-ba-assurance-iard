@@ -1,4 +1,7 @@
 import { Routes } from '@angular/router';
+import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
+import { CompteCree } from './feature/compte-cree/compte-cree';
+import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { PageSimple } from './feature/page-simple/page-simple';
 
@@ -13,5 +16,12 @@ export const routes: Routes = [
     data: { titre: 'Accessibilité' },
   },
   { path: 'contact', component: PageSimple, title: "Contact – Assur'Easy", data: { titre: 'Contact' } },
+  { path: 'inscription', component: Inscription, title: "Créer mon compte – Assur'Easy" },
+  {
+    path: 'compte-cree',
+    component: CompteCree,
+    canActivate: [compteConnecteGuard],
+    title: "Compte créé – Assur'Easy",
+  },
   { path: '**', redirectTo: '' },
 ];
