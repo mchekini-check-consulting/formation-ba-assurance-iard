@@ -64,7 +64,6 @@ describe('Landing', () => {
     const entete = page.querySelector('header')!;
     expect(entete.textContent).toContain("Assur'Easy");
     expect(entete.querySelector('.logo img')?.getAttribute('src')).toBe('favicon.png');
-    expect(Array.from(entete.querySelectorAll('button')).map((b) => b.textContent?.trim())).toEqual([
     expect(Array.from(entete.querySelectorAll('.entete__actions > *')).map((b) => b.textContent?.trim())).toEqual([
       'Espace client',
       'Créer un compte',
