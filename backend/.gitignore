@@ -29,3 +29,8 @@ out/
 ### Système ###
 .DS_Store
 Thumbs.db
+
+### Anciens fichiers générés (backend Node) ###
+dist/
+node_modules/
+*.tsbuildinfo

@@ -1,11 +1,16 @@
 import { Routes } from '@angular/router';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
+import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
+import { Connexion } from './feature/connexion/connexion';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
 import { DevisLogement } from './feature/devis-logement/devis-logement';
+import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
+import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { PageSimple } from './feature/page-simple/page-simple';
+import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
 
 export const routes: Routes = [
   { path: '', component: Landing, title: "Assur'Easy – Assurance habitation en ligne" },
@@ -24,6 +29,31 @@ export const routes: Routes = [
     component: CompteCree,
     canActivate: [compteConnecteGuard],
     title: "Compte créé – Assur'Easy",
+  },
+  { path: 'connexion', component: Connexion, title: "Connexion – Assur'Easy" },
+  {
+    path: 'reinitialisation-mot-de-passe',
+    component: ReinitialisationMotDePasse,
+    title: "Nouveau mot de passe – Assur'Easy",
+  },
+  {
+    path: 'double-authentification',
+    component: DoubleAuthentification,
+    canActivate: [verificationGuard],
+    title: "Double authentification – Assur'Easy",
+  },
+  {
+    path: 'espace-client',
+    component: EspaceClient,
+    canActivate: [sessionGuard],
+    title: "Mon espace – Assur'Easy",
+  },
+  {
+    path: 'espace-client/documents',
+    component: PageSimple,
+    canActivate: [sessionGuard],
+    title: "Mes documents – Assur'Easy",
+    data: { titre: 'Mes documents' },
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   { path: 'devis/besoins', component: DevisBesoins, title: "Vos besoins – Assur'Easy" },

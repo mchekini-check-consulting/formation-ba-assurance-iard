@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { AnnonceService } from '../../core/service/annonce.service';
 import { Landing, codePostalValide } from './landing';
 
 describe('Landing', () => {
@@ -47,7 +48,7 @@ describe('Landing', () => {
       "L'assurance habitation Assur'Easy",
       'Assuré en 4 étapes',
       'Questions fréquentes',
-      'Prêt à assurer votre logement ?',
+      'Prêt à assurer votre logement ?',
     ]);
     expect(page.querySelectorAll('.etape')).toHaveLength(4);
     expect(page.querySelectorAll('.faq')).toHaveLength(4);
@@ -74,9 +75,14 @@ describe('Landing', () => {
     ]);
   });
 
-  it('« Créer un compte » mène à la création de compte (US-05)', () => {
+  it('« Créer un compte » mène à la création de compte (US-05)', () => {
     const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Créer un compte');
     expect(lien?.getAttribute('href')).toBe('/inscription');
+  });
+
+  it('« Espace client » mène à l\'espace client (US-06)', () => {
+    const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Espace client');
+    expect(lien?.getAttribute('href')).toBe('/espace-client');
   });
 
   it("affiche les mentions d'assureur et les liens légaux en pied de page", () => {
@@ -105,7 +111,19 @@ describe('Landing', () => {
   it("affiche une annonce quand on clique sur Espace client", () => {
     expect(annonce()).toBeUndefined();
     cliquer('Espace client');
-    expect(annonce()).toContain("L’espace client sera bientôt disponible.");
+    expect(annonce()).toContain("L'espace client sera bientôt disponible.");
+  });
+
+  it('affiche le message préparé avant le retour à l’accueil (US-07, AC3)', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.inject(AnnonceService).preparer('Vous êtes bien déconnecté.');
+    const accueil = TestBed.createComponent(Landing);
+    accueil.detectChanges();
+
+    expect((accueil.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent).toContain(
+      'Vous êtes bien déconnecté.',
+    );
   });
 
   it("ferme le message bientot disponible", () => {
@@ -151,7 +169,7 @@ describe('Landing', () => {
     expect(page.querySelector('#faq-reponse-2')).not.toBeNull();
   });
 
-  describe('formulaire « Votre tarif habitation »', () => {
+  describe('formulaire « Votre tarif habitation »', () => {
     it('marque le choix sélectionné', () => {
       cliquer('Propriétaire');
       cliquer('Maison');

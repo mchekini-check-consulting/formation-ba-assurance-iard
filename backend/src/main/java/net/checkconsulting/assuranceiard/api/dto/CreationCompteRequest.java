@@ -5,10 +5,11 @@ import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
+import net.checkconsulting.assuranceiard.api.utils.ReglesMotDePasse;
 
 public record CreationCompteRequest(
         @NotBlank @Email @Size(max = 254) String email,
-        @NotNull @Size(max = 72)
-        @Pattern(regexp = "^(?=.*[A-Z])(?=.*\\d).{8,}$", message = "8 caractères minimum, une majuscule et un chiffre")
+        @NotNull @Size(max = ReglesMotDePasse.LONGUEUR_MAX)
+        @Pattern(regexp = ReglesMotDePasse.MOTIF, message = ReglesMotDePasse.MESSAGE)
         String motDePasse) {
 }

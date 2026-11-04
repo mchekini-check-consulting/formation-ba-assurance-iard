@@ -1,5 +1,6 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
+import { AnnonceService } from '../../core/service/annonce.service';
 import { DevisService } from '../../core/service/devis.service';
 
 export type Statut = 'locataire' | 'proprietaire';
@@ -45,7 +46,7 @@ export class Landing {
   protected readonly erreurChoix = computed(() => this.tentative() && (!this.statut() || !this.typeLogement()));
   protected readonly erreurCodePostal = computed(() => this.tentative() && !codePostalValide(this.codePostal()));
 
-  protected readonly annonce = signal<string | null>(null);
+  protected readonly annonce = signal<string | null>(inject(AnnonceService).prendre());
 
   protected readonly questionOuverte = signal(-1);
 

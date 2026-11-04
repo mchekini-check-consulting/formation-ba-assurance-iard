@@ -12,4 +12,45 @@ public class GestionErreurs {
     public ProblemDetail emailDejaUtilise(EmailDejaUtiliseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
+
+    @ExceptionHandler(IdentifiantsIncorrectsException.class)
+    public ProblemDetail identifiantsIncorrects(IdentifiantsIncorrectsException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(CompteBloqueException.class)
+    public ProblemDetail compteBloque(CompteBloqueException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.LOCKED, exception.getMessage());
+        probleme.setProperty("bloqueJusquA", exception.getBloqueJusquA().toString());
+        return probleme;
+    }
+
+    @ExceptionHandler(CodeIncorrectException.class)
+    public ProblemDetail codeIncorrect(CodeIncorrectException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+        probleme.setProperty("essaisRestants", exception.getEssaisRestants());
+        return probleme;
+    }
+
+    @ExceptionHandler(NouveauCodeRequisException.class)
+    public ProblemDetail nouveauCodeRequis(NouveauCodeRequisException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        probleme.setProperty("motif", exception.getMotif());
+        return probleme;
+    }
+
+    @ExceptionHandler(VerificationInconnueException.class)
+    public ProblemDetail verificationInconnue(VerificationInconnueException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(LienInvalideException.class)
+    public ProblemDetail lienInvalide(LienInvalideException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, exception.getMessage());
+    }
+
+    @ExceptionHandler(SessionInvalideException.class)
+    public ProblemDetail sessionInvalide(SessionInvalideException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
 }
