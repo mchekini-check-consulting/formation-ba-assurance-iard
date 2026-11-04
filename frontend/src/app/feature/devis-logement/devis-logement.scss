@@ -1,0 +1,370 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.evitement {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--rouge);
+  color: #fff;
+  border-radius: 8px;
+
+  &:focus {
+    top: 1rem;
+  }
+}
+
+/* En-tête sticky (logo + barre d'étapes) */
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid var(--bordure);
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 14px 0;
+  }
+
+  &__actions {
+    display: flex;
+    gap: 10px;
+  }
+}
+
+.lien-discret {
+  font-size: 14px;
+  color: var(--texte-doux);
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.lien-quitter {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+/* Barre de progression (dans le header sticky) */
+.progression {
+  border-top: 1px solid var(--bordure-claire);
+
+  &__liste {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__etape {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 10px 16px 10px 0;
+    border-bottom: 3px solid var(--bordure);
+    color: var(--texte-discret);
+    text-align: left;
+
+    &--active {
+      border-color: var(--rouge);
+
+      .progression__libelle {
+        color: var(--rouge);
+        font-weight: 700;
+      }
+
+      .progression__nom {
+        color: var(--rouge-fonce);
+        font-weight: 700;
+      }
+    }
+  }
+
+  &__libelle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--texte-discret);
+  }
+
+  &__nom {
+    font-size: 12px;
+    color: var(--texte-discret);
+  }
+}
+
+/* Fond gris de la zone principale */
+.fond-gris {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 80px;
+}
+
+.en-tete-etape {
+  padding: 36px 0 24px;
+
+  h1 {
+    margin: 0 0 8px;
+    font-size: clamp(22px, 3vw + 10px, 30px);
+  }
+}
+
+.sous-titre {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+}
+
+/* Mise en page 2 colonnes : cartes + tarif */
+.mise-en-page {
+  display: flex;
+  align-items: flex-start;
+  gap: 32px;
+}
+
+/* Formulaire (colonne gauche) */
+.formulaire {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Cartes blanches */
+.carte {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--bordure-claire);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  &__titre {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--texte);
+  }
+}
+
+/* Grille 2 colonnes dans les cartes */
+.champ-grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+/* Boutons de choix */
+.choix {
+  display: flex;
+  gap: 8px;
+
+  &__option {
+    flex: 1;
+    min-height: 48px;
+    padding: 0 12px;
+    border: 1.5px solid var(--gris);
+    border-radius: 10px;
+    background: #fff;
+    color: var(--texte);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    cursor: pointer;
+    text-align: center;
+
+    &--actif {
+      border-color: var(--rouge);
+      background: var(--rose);
+      color: var(--rouge-fonce);
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--rouge);
+      outline-offset: 2px;
+    }
+  }
+
+  &--statut {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+
+    .choix__option {
+      text-align: center;
+    }
+  }
+}
+
+/* Alertes */
+.alerte {
+  padding: 16px 20px;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  p {
+    margin: 0;
+    font-size: 15px;
+    line-height: 1.55;
+  }
+
+  &--info {
+    background: #eef4fb;
+    border: 1px solid #b6d0eb;
+    color: #1a3a5c;
+  }
+
+  &--bloquant {
+    background: #fdf2f2;
+    border: 1px solid #f0c0bc;
+    color: #7a1f1f;
+  }
+}
+
+/* Info loi Hamon (RG3) */
+.info-hamon {
+  padding: 12px 16px;
+  background: #fff8e6;
+  border: 1px solid #f0d070;
+  border-radius: 10px;
+  font-size: 14px;
+  line-height: 1.5;
+
+  p {
+    margin: 0;
+  }
+}
+
+/* Mention légale (RG5) */
+.mention-legale {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+  line-height: 1.5;
+  border-top: 1px solid var(--bordure);
+  padding-top: 16px;
+}
+
+/* Bouton d'action */
+.actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 4px 0;
+}
+
+/* Encadré tarif (AC6) — colonne droite, sticky */
+.encadre-tarif {
+  position: sticky;
+  top: 110px;
+  flex: none;
+  width: 220px;
+  padding: 24px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--bordure-claire);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__label {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--texte);
+  }
+
+  &__prix {
+    margin: 0;
+    font-size: 30px;
+    font-weight: 700;
+    color: var(--rouge);
+    line-height: 1.1;
+  }
+
+  &__unite {
+    font-size: 15px;
+    font-weight: 400;
+    color: var(--texte-doux);
+  }
+
+  &__mention {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-discret);
+    line-height: 1.4;
+  }
+
+  &__guide {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-doux);
+    line-height: 1.5;
+  }
+}
+
+@media (max-width: 768px) {
+  .progression__etape {
+    font-size: 10px;
+
+    &:nth-child(n + 3) {
+      display: none;
+    }
+  }
+
+  .mise-en-page {
+    flex-direction: column;
+  }
+
+  .encadre-tarif {
+    position: static;
+    width: 100%;
+    order: -1;
+    flex-direction: row;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 4px 16px;
+
+    &__mention {
+      flex-basis: 100%;
+    }
+  }
+
+  .champ-grille {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 600px) {
+  .choix--statut {
+    grid-template-columns: 1fr;
+  }
+}

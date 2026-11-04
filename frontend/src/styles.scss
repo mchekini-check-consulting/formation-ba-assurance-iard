@@ -180,6 +180,10 @@ a {
   font: inherit;
   font-size: 16px;
 
+  option {
+    color: var(--texte);
+  }
+
   &--erreur {
     border-color: var(--erreur);
   }

@@ -1,6 +1,7 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { AnnonceService } from '../../core/service/annonce.service';
+import { DevisService } from '../../core/service/devis.service';
 
 export type Statut = 'locataire' | 'proprietaire';
 export type TypeLogement = 'appartement' | 'maison';
@@ -33,6 +34,8 @@ export function codePostalValide(codePostal: string): boolean {
   templateUrl: './landing.html',
 })
 export class Landing {
+  private readonly devisService = inject(DevisService);
+  private readonly router = inject(Router);
   private readonly champCodePostal = viewChild.required<ElementRef<HTMLInputElement>>('champCodePostal');
 
   protected readonly statut = signal<Statut | null>(null);
@@ -124,7 +127,14 @@ export class Landing {
     if (this.erreurChoix()) {
       return;
     }
-    this.bientotDisponible('Le calcul de votre tarif');
+    if (this.statut() && this.typeLogement()) {
+      this.devisService.prefillDepuisLanding(this.statut()!, this.typeLogement()!, this.codePostal());
+    }
+    void this.router.navigate(['/devis/logement']);
+  }
+
+  protected allerAuDevis(): void {
+    void this.router.navigate(['/devis/logement']);
   }
 
   protected bientotDisponible(service: string): void {

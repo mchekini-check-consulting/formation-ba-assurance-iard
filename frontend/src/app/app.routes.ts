@@ -3,6 +3,8 @@ import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
+import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
+import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
 import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
@@ -53,5 +55,7 @@ export const routes: Routes = [
     title: "Mes documents – Assur'Easy",
     data: { titre: 'Mes documents' },
   },
+  { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
+  { path: 'devis/besoins', component: DevisBesoins, title: "Vos besoins – Assur'Easy" },
   { path: '**', redirectTo: '' },
 ];

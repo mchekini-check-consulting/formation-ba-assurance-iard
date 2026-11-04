@@ -1,0 +1,507 @@
+<a class="evitement" href="#contenu">Aller au contenu</a>
+
+<header class="entete">
+  <div class="conteneur entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <div class="logo__pastille">AE</div>
+      <span class="logo__nom serif">Assur&#39;Easy</span>
+    </a>
+    <nav class="entete__actions" aria-label="Acc&#232;s rapide">
+      <a class="lien-quitter" routerLink="/">Quitter le devis</a>
+    </nav>
+  </div>
+
+  <nav class="progression" aria-label="Avancement du devis">
+    <div class="conteneur">
+      <ol class="progression__liste">
+        <li class="progression__etape progression__etape--active" aria-current="step">
+          <span class="progression__libelle">&#201;tape 1</span>
+          <span class="progression__nom">Mon logement</span>
+        </li>
+        <li class="progression__etape">
+          <span class="progression__libelle">&#201;tape 2</span>
+          <span class="progression__nom">Mes besoins</span>
+        </li>
+        <li class="progression__etape">
+          <span class="progression__libelle">&#201;tape 3</span>
+          <span class="progression__nom">Ma formule</span>
+        </li>
+        <li class="progression__etape">
+          <span class="progression__libelle">&#201;tape 4</span>
+          <span class="progression__nom">Mes informations</span>
+        </li>
+        <li class="progression__etape">
+          <span class="progression__libelle">&#201;tape 5</span>
+          <span class="progression__nom">Paiement</span>
+        </li>
+      </ol>
+    </div>
+  </nav>
+</header>
+
+<main id="contenu" class="fond-gris">
+  <div class="conteneur">
+
+    <div class="en-tete-etape">
+      <h1 id="titre-etape" class="serif">Mon logement et ma situation</h1>
+      <p class="sous-titre">Seules les questions qui vous concernent s&#39;affichent.</p>
+    </div>
+
+    <div class="mise-en-page">
+      <form class="formulaire" novalidate (submit)="continuer($event)" aria-labelledby="titre-etape">
+
+        <!-- Carte 1 : Vous &#234;tes -->
+        <section class="carte" aria-labelledby="titre-statut">
+          <h2 id="titre-statut" class="carte__titre">Vous &#234;tes</h2>
+
+          <div class="champ">
+            <div class="choix choix--statut" role="group" aria-label="Votre situation">
+              <button
+                #premierBoutonStatut
+                type="button"
+                class="choix__option"
+                [class.choix__option--actif]="estLocataireOuColocation()"
+                [attr.aria-pressed]="estLocataireOuColocation()"
+                (click)="choisirGroupeLocataire()"
+              >Locataire</button>
+              <button
+                type="button"
+                class="choix__option"
+                [class.choix__option--actif]="statut() === 'proprietaire-occupant'"
+                [attr.aria-pressed]="statut() === 'proprietaire-occupant'"
+                (click)="choisirStatut('proprietaire-occupant')"
+              >Propri&#233;taire, j&#39;y habite</button>
+              <button
+                type="button"
+                class="choix__option"
+                [class.choix__option--actif]="statut() === 'proprietaire-non-occupant'"
+                [attr.aria-pressed]="statut() === 'proprietaire-non-occupant'"
+                (click)="choisirStatut('proprietaire-non-occupant')"
+              >Propri&#233;taire, je le loue ou il est vide</button>
+            </div>
+            @if (erreurStatut()) {
+              <p class="erreur" role="alert">Indiquez votre situation.</p>
+            }
+          </div>
+
+          <!-- Sous-question colocation -->
+          @if (estLocataireOuColocation()) {
+            <div class="champ">
+              <span class="libelle" id="libelle-colocation">&#202;tes-vous en colocation&#160;?</span>
+              <div class="choix" role="group" aria-labelledby="libelle-colocation">
+                <button
+                  #premierBoutonColocation
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="statut() === 'colocation'"
+                  [attr.aria-pressed]="statut() === 'colocation'"
+                  (click)="choisirStatut('colocation')"
+                >Colocation</button>
+                <button
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="statut() === 'locataire'"
+                  [attr.aria-pressed]="statut() === 'locataire'"
+                  (click)="choisirStatut('locataire')"
+                >Bail individuel</button>
+              </div>
+              @if (erreurSousStatut()) {
+                <p class="erreur" role="alert">Indiquez si vous &#234;tes en colocation ou en bail individuel.</p>
+              }
+            </div>
+          }
+
+          <!-- AC3 : alerte propri&#233;taire non-occupant -->
+          @if (estNonOccupant()) {
+            <div class="alerte alerte--info" role="alert">
+              <p>
+                Ce type de contrat (propri&#233;taire non-occupant) n&#39;est pas propos&#233; en ligne.
+                Un conseiller peut vous accompagner pour trouver la bonne solution.
+              </p>
+              <button type="button" class="btn" (click)="rappelerConseiller()">
+                &#202;tre rappel&#233; par un conseiller
+              </button>
+            </div>
+          }
+        </section>
+
+        @if (!estNonOccupant()) {
+
+          <!-- Carte 2 : Le logement -->
+          <section class="carte" aria-labelledby="titre-logement">
+            <h2 id="titre-logement" class="carte__titre">Le logement</h2>
+
+            <!-- R&#233;sidence + Type -->
+            <div class="champ-grille">
+              <div class="champ">
+                <label class="libelle" for="residence">R&#233;sidence</label>
+                <select
+                  #champResidence
+                  id="residence"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurResidence()"
+                  [attr.aria-invalid]="erreurResidence() || null"
+                  [attr.aria-describedby]="erreurResidence() ? 'erreur-residence' : null"
+                  (change)="choisirResidenceDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="principale" [selected]="residence() === 'principale'">R&#233;sidence principale</option>
+                  <option value="secondaire" [selected]="residence() === 'secondaire'">R&#233;sidence secondaire</option>
+                </select>
+                @if (erreurResidence()) {
+                  <p id="erreur-residence" class="erreur" role="alert">Indiquez le type de r&#233;sidence.</p>
+                }
+              </div>
+
+              <div class="champ">
+                <label class="libelle" for="type-logement">Type de logement</label>
+                <select
+                  #champType
+                  id="type-logement"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurTypeLogement()"
+                  [attr.aria-invalid]="erreurTypeLogement() || null"
+                  [attr.aria-describedby]="erreurTypeLogement() ? 'erreur-type-logement' : null"
+                  (change)="choisirTypeDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="appartement" [selected]="typeLogement() === 'appartement'">Appartement</option>
+                  <option value="maison" [selected]="typeLogement() === 'maison'">Maison</option>
+                </select>
+                @if (erreurTypeLogement()) {
+                  <p id="erreur-type-logement" class="erreur" role="alert">Indiquez le type de logement.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Pi&#232;ces + Surface -->
+            <div class="champ-grille">
+              <div class="champ">
+                <label class="libelle" for="nombre-pieces">Nombre de pi&#232;ces</label>
+                <select
+                  #champNombrePiecesSelect
+                  id="nombre-pieces"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurNombrePieces()"
+                  [attr.aria-invalid]="erreurNombrePieces() || null"
+                  [attr.aria-describedby]="erreurNombrePieces() ? 'erreur-nombre-pieces' : null"
+                  (change)="choisirNombrePiecesDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="1" [selected]="nombrePieces() === '1'">1</option>
+                  <option value="2" [selected]="nombrePieces() === '2'">2</option>
+                  <option value="3" [selected]="nombrePieces() === '3'">3</option>
+                  <option value="4" [selected]="nombrePieces() === '4'">4</option>
+                  <option value="5" [selected]="nombrePieces() === '5'">5</option>
+                  <option value="6" [selected]="nombrePieces() === '6'">6</option>
+                  <option value="7" [selected]="nombrePieces() === '7'">7</option>
+                  <option value="8" [selected]="nombrePieces() === '8'">8</option>
+                  <option value="9" [selected]="nombrePieces() === '9'">9</option>
+                  <option value="10" [selected]="nombrePieces() === '10'">10 ou plus</option>
+                </select>
+                @if (erreurNombrePieces()) {
+                  <p id="erreur-nombre-pieces" class="erreur" role="alert">Indiquez le nombre de pi&#232;ces.</p>
+                }
+              </div>
+
+              <div class="champ">
+                <label class="libelle" for="surface">Surface habitable (m&#178;)</label>
+                <input
+                  #champSurface
+                  id="surface"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurSurface()"
+                  inputmode="numeric"
+                  placeholder="Ex. 65"
+                  [value]="surface()"
+                  [attr.aria-invalid]="erreurSurface() || null"
+                  [attr.aria-describedby]="erreurSurface() ? 'erreur-surface' : null"
+                  (input)="saisirSurface($event)"
+                />
+                @if (erreurSurface()) {
+                  <p id="erreur-surface" class="erreur" role="alert">Saisissez une surface entre 9 et 1&#160;000&#160;m&#178;.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Adresse -->
+            <div class="champ">
+              <label class="libelle" for="adresse">Adresse</label>
+              <input
+                #champAdresse
+                id="adresse"
+                class="saisie"
+                [class.saisie--erreur]="erreurAdresse()"
+                type="text"
+                autocomplete="street-address"
+                placeholder="Ex. 12 rue de la Paix"
+                [value]="adresse()"
+                [attr.aria-invalid]="erreurAdresse() || null"
+                [attr.aria-describedby]="erreurAdresse() ? 'erreur-adresse' : null"
+                (input)="saisirAdresse($event)"
+              />
+              @if (erreurAdresse()) {
+                <p id="erreur-adresse" class="erreur" role="alert">Saisissez l&#39;adresse du logement.</p>
+              }
+            </div>
+
+            <!-- Code postal + Ville -->
+            <div class="champ-grille">
+              <div class="champ">
+                <label class="libelle" for="code-postal">Code postal</label>
+                <input
+                  #champCodePostal
+                  id="code-postal"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurCodePostal()"
+                  inputmode="numeric"
+                  autocomplete="postal-code"
+                  maxlength="5"
+                  placeholder="Ex. 75001"
+                  [value]="codePostal()"
+                  [attr.aria-invalid]="erreurCodePostal() || null"
+                  [attr.aria-describedby]="erreurCodePostal() ? 'erreur-code-postal' : null"
+                  (input)="saisirCodePostal($event)"
+                />
+                @if (erreurCodePostal()) {
+                  <p id="erreur-code-postal" class="erreur" role="alert">Saisissez un code postal &#224; 5 chiffres.</p>
+                }
+              </div>
+              <div class="champ">
+                <label class="libelle" for="ville">Ville</label>
+                <input
+                  #champVille
+                  id="ville"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurVille()"
+                  type="text"
+                  autocomplete="address-level2"
+                  placeholder="Ex. Paris"
+                  [value]="ville()"
+                  [attr.aria-invalid]="erreurVille() || null"
+                  [attr.aria-describedby]="erreurVille() ? 'erreur-ville' : null"
+                  (input)="saisirVille($event)"
+                />
+                @if (erreurVille()) {
+                  <p id="erreur-ville" class="erreur" role="alert">Saisissez la ville.</p>
+                }
+              </div>
+            </div>
+
+            <!-- AC2 : &#233;tage (appartement uniquement) -->
+            @if (estAppartement()) {
+              <div class="champ">
+                <label class="libelle" for="etage">&#201;tage</label>
+                <input
+                  #champEtage
+                  id="etage"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurEtage()"
+                  inputmode="numeric"
+                  placeholder="Ex. 3  (0 pour rez-de-chauss&#233;e)"
+                  [value]="etage()"
+                  [attr.aria-invalid]="erreurEtage() || null"
+                  [attr.aria-describedby]="erreurEtage() ? 'erreur-etage' : null"
+                  (input)="saisirEtage($event)"
+                />
+                @if (erreurEtage()) {
+                  <p id="erreur-etage" class="erreur" role="alert">Indiquez l&#39;&#233;tage.</p>
+                }
+              </div>
+            }
+
+            <!-- AC2 : d&#233;pendances (maison uniquement) -->
+            @if (estMaison()) {
+              <div class="champ">
+                <span class="libelle" id="libelle-dependances">Avez-vous des d&#233;pendances (garage, cave&#8230;)&#160;?</span>
+                <div class="choix" role="group" aria-labelledby="libelle-dependances">
+                  <button
+                    #premierBoutonDependances
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="dependances() === true"
+                    [attr.aria-pressed]="dependances() === true"
+                    (click)="choisirDependances(true)"
+                  >Oui</button>
+                  <button
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="dependances() === false"
+                    [attr.aria-pressed]="dependances() === false"
+                    (click)="choisirDependances(false)"
+                  >Non</button>
+                </div>
+                @if (erreurDependances()) {
+                  <p class="erreur" role="alert">Indiquez si vous avez des d&#233;pendances.</p>
+                }
+              </div>
+            }
+
+            <!-- AC2 : nombre de colocataires (colocation uniquement) &#8212; RG1 : 2 &#224; 10 -->
+            @if (estColocation()) {
+              <div class="champ">
+                <label class="libelle" for="colocataires">Nombre de personnes dans la colocation (vous compris)</label>
+                <input
+                  #champColocataires
+                  id="colocataires"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurNombreColocataires()"
+                  inputmode="numeric"
+                  placeholder="Ex. 3"
+                  [value]="nombreColocataires()"
+                  [attr.aria-invalid]="erreurNombreColocataires() || null"
+                  [attr.aria-describedby]="erreurNombreColocataires() ? 'erreur-colocataires' : null"
+                  (input)="saisirNombreColocataires($event)"
+                />
+                @if (erreurNombreColocataires()) {
+                  <p id="erreur-colocataires" class="erreur" role="alert">Indiquez un nombre entre 2 et 10.</p>
+                }
+              </div>
+            }
+
+          </section>
+
+          <!-- Carte 3 : Vos ant&#233;c&#233;dents -->
+          <section class="carte" aria-labelledby="titre-antecedents">
+            <h2 id="titre-antecedents" class="carte__titre">Vos ant&#233;c&#233;dents</h2>
+
+            <!-- Ligne 1 : Sinistres + R&#233;siliation -->
+            <div class="champ-grille">
+              <div class="champ">
+                <label class="libelle" for="sinistres">Sinistres d&#233;clar&#233;s ces 3 derni&#232;res ann&#233;es</label>
+                <select
+                  #champSinistresSelect
+                  id="sinistres"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurNombreSinistres()"
+                  [attr.aria-invalid]="erreurNombreSinistres() || null"
+                  [attr.aria-describedby]="erreurNombreSinistres() ? 'erreur-sinistres' : null"
+                  (change)="choisirSinistresDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="0" [selected]="nombreSinistres() === '0'">Aucun</option>
+                  <option value="1" [selected]="nombreSinistres() === '1'">1</option>
+                  <option value="2" [selected]="nombreSinistres() === '2'">2</option>
+                  <option value="3+" [selected]="nombreSinistres() === '3+'">3 ou plus</option>
+                </select>
+                @if (erreurNombreSinistres()) {
+                  <p id="erreur-sinistres" class="erreur" role="alert">Indiquez le nombre de sinistres.</p>
+                }
+              </div>
+
+              <div class="champ">
+                <label class="libelle" for="resilie-contrat">Un assureur a-t-il r&#233;sili&#233; votre contrat&#160;?</label>
+                <select
+                  #champResilientContrat
+                  id="resilie-contrat"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurResilientContrat()"
+                  [attr.aria-invalid]="erreurResilientContrat() || null"
+                  [attr.aria-describedby]="erreurResilientContrat() ? 'erreur-resilie-contrat' : null"
+                  (change)="choisirResilientContratDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="non" [selected]="resilieContrat() === 'non'">Non</option>
+                  <option value="non-paiement" [selected]="resilieContrat() === 'non-paiement'">Oui, pour non-paiement</option>
+                  <option value="autre" [selected]="resilieContrat() === 'autre'">Oui, pour une autre raison</option>
+                </select>
+                @if (erreurResilientContrat()) {
+                  <p id="erreur-resilie-contrat" class="erreur" role="alert">Indiquez si vous avez &#233;t&#233; r&#233;sili&#233;.</p>
+                }
+              </div>
+            </div>
+
+            <!-- Ligne 2 : Assur&#233; depuis plus d&#39;un an -->
+            <div class="champ">
+              <label class="libelle" for="antecedent-assurance">&#202;tes-vous assur&#233; depuis plus d&#39;un an pour ce logement&#160;?</label>
+              <select
+                #champAssuranceAntecedent
+                id="antecedent-assurance"
+                class="saisie"
+                [class.saisie--erreur]="erreurAssuranceAntecedent()"
+                [attr.aria-invalid]="erreurAssuranceAntecedent() || null"
+                [attr.aria-describedby]="erreurAssuranceAntecedent() ? 'erreur-antecedent-assurance' : null"
+                (change)="choisirAssuranceAntecedentDepuisSelect($event)"
+              >
+                <option value="">S&#233;lectionnez</option>
+                <option value="non-assure" [selected]="assuranceAntecedent() === 'non-assure'">Non, je ne suis pas assur&#233;(e)</option>
+                <option value="assure-moins-un-an" [selected]="assuranceAntecedent() === 'assure-moins-un-an'">Oui, depuis moins d&#39;un an</option>
+                <option value="assure-plus-un-an" [selected]="assuranceAntecedent() === 'assure-plus-un-an'">Oui, depuis plus d&#39;un an</option>
+              </select>
+              @if (erreurAssuranceAntecedent()) {
+                <p id="erreur-antecedent-assurance" class="erreur" role="alert">Indiquez votre situation d&#39;assur&#233;.</p>
+              }
+            </div>
+
+            <!-- AC2 + RG3 : loi Hamon + assureur actuel -->
+            @if (estAssurePlusUnAn()) {
+              <div class="info-hamon" role="note">
+                <p>Assur&#39;Easy r&#233;silie votre contrat actuel &#224; votre place (loi Hamon). Indiquez le nom de votre assureur ci-dessous.</p>
+              </div>
+              <div class="champ">
+                <label class="libelle" for="assureur-actuel">Votre assureur actuel</label>
+                <input
+                  #champAssureurActuel
+                  id="assureur-actuel"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurAssureurActuel()"
+                  type="text"
+                  placeholder="Ex. Maif, Axa, Groupama&#8230;"
+                  [value]="assureurActuel()"
+                  [attr.aria-invalid]="erreurAssureurActuel() || null"
+                  [attr.aria-describedby]="erreurAssureurActuel() ? 'erreur-assureur' : null"
+                  (input)="saisirAssureurActuel($event)"
+                />
+                @if (erreurAssureurActuel()) {
+                  <p id="erreur-assureur" class="erreur" role="alert">Indiquez le nom de votre assureur actuel.</p>
+                }
+              </div>
+            }
+
+            <!-- AC4 : alerte r&#233;siliation non-paiement -->
+            @if (estBloque()) {
+              <div class="alerte alerte--bloquant" role="alert">
+                <p>
+                  En raison de la r&#233;siliation pour non-paiement, la souscription en ligne n&#39;est pas possible.
+                  Un conseiller peut &#233;tudier votre situation.
+                </p>
+              </div>
+            }
+
+            <!-- RG5 : rappel fausses d&#233;clarations -->
+            <p class="mention-legale">
+              Toute omission ou fausse d&#233;claration peut entra&#238;ner la nullit&#233; du contrat ou une r&#233;duction des indemnit&#233;s (articles L113-8 et L113-9 du Code des assurances).
+            </p>
+
+          </section>
+
+          <!-- Bouton d&#39;action -->
+          <div class="actions">
+            @if (estBloque()) {
+              <button type="button" class="btn btn--large" (click)="rappelerConseiller()">
+                &#202;tre rappel&#233; par un conseiller
+              </button>
+            } @else {
+              <button type="submit" class="btn btn--large">
+                Continuer vers mes besoins
+              </button>
+            }
+          </div>
+
+        }
+      </form>
+
+      <!-- Encadr&#233; tarif (AC6) &#8212; toujours visible -->
+      <aside class="encadre-tarif" aria-live="polite" aria-label="Estimation du tarif">
+        <p class="encadre-tarif__label">Votre tarif</p>
+        @if (tarifFormate(); as tarif) {
+          <p class="encadre-tarif__prix serif">d&#232;s {{ tarif }}&#160;&#8364;<span class="encadre-tarif__unite">/mois</span></p>
+          <p class="encadre-tarif__mention">Estimation provisoire&#160;&#183; tarif d&#233;finitif &#224; l&#39;&#233;tape suivante</p>
+        } @else {
+          <p class="encadre-tarif__guide">Indiquez le code postal et la surface pour voir une premi&#232;re estimation.</p>
+        }
+      </aside>
+
+    </div>
+  </div>
+</main>

@@ -9,7 +9,7 @@
     <nav class="entete__actions" aria-label="Accès rapide">
       <a class="btn btn--contour" routerLink="/espace-client">Espace client</a>
       <a class="btn btn--contour" routerLink="/inscription">Créer un compte</a>
-      <button type="button" class="btn" (click)="bientotDisponible('Le devis en ligne')">Devis gratuit</button>
+      <button type="button" class="btn" (click)="allerAuDevis()">Devis gratuit</button>
     </nav>
   </div>
 </header>
@@ -188,7 +188,7 @@
         <h2 id="bandeau-titre" class="serif">Prêt à assurer votre logement ?</h2>
         <p>Votre tarif en quelques minutes, sans engagement.</p>
       </div>
-      <button type="button" class="btn btn--blanc btn--large" (click)="bientotDisponible('Le devis en ligne')">
+      <button type="button" class="btn btn--blanc btn--large" (click)="allerAuDevis()">
         Faire mon devis
       </button>
     </div>

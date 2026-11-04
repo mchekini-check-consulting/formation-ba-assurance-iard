@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { Router, provideRouter } from '@angular/router';
 import { AnnonceService } from '../../core/service/annonce.service';
 import { Landing, codePostalValide } from './landing';
 
 describe('Landing', () => {
   let fixture: ComponentFixture<Landing>;
   let page: HTMLElement;
+  let router: Router;
 
   const bouton = (texte: string): HTMLButtonElement => {
     const trouve = Array.from(page.querySelectorAll('button')).find((b) => b.textContent?.trim() === texte);
@@ -32,6 +33,8 @@ describe('Landing', () => {
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Landing);
     fixture.detectChanges();
     page = fixture.nativeElement as HTMLElement;
@@ -105,13 +108,10 @@ describe('Landing', () => {
     ]);
   });
 
-  it.each([
-    ['Devis gratuit', 'Le devis en ligne sera bientôt disponible.'],
-    ['Faire mon devis', 'Le devis en ligne sera bientôt disponible.'],
-  ])('« %s » annonce que le service sera bientôt disponible', (texte, message) => {
+  it("affiche une annonce quand on clique sur un lien non encore disponible", () => {
     expect(annonce()).toBeUndefined();
-    cliquer(texte);
-    expect(annonce()).toContain(message);
+    cliquer('Mentions légales');
+    expect(annonce()).toContain('bientôt disponible');
   });
 
   it('affiche le message préparé avant le retour à l’accueil (US-07, AC3)', () => {
@@ -126,10 +126,22 @@ describe('Landing', () => {
     );
   });
 
-  it('ferme le message « bientôt disponible »', () => {
-    cliquer('Devis gratuit');
+  it("ferme le message bientot disponible", () => {
+    cliquer('Mentions légales');
     page.querySelector<HTMLButtonElement>('[aria-label="Fermer le message"]')!.click();
     fixture.detectChanges();
+    expect(annonce()).toBeUndefined();
+  });
+
+  it("Devis gratuit navigue vers etape 1 du devis (US-09)", () => {
+    cliquer('Devis gratuit');
+    expect(router.navigate).toHaveBeenCalledWith(['/devis/logement']);
+    expect(annonce()).toBeUndefined();
+  });
+
+  it("Faire mon devis navigue vers etape 1 du devis (US-09)", () => {
+    cliquer('Faire mon devis');
+    expect(router.navigate).toHaveBeenCalledWith(['/devis/logement']);
     expect(annonce()).toBeUndefined();
   });
 
@@ -193,13 +205,14 @@ describe('Landing', () => {
       expect(annonce()).toBeUndefined();
     });
 
-    it('annonce que le calcul sera bientôt disponible quand tout est rempli', () => {
+    it("navigue vers le devis quand le formulaire est complet (US-09)", () => {
       cliquer('Locataire');
       cliquer('Appartement');
       saisirCodePostal('94000');
       cliquer('Calculer mon tarif');
       expect(page.querySelector('[role="alert"]')).toBeNull();
-      expect(annonce()).toContain('Le calcul de votre tarif sera bientôt disponible.');
+      expect(annonce()).toBeUndefined();
+      expect(router.navigate).toHaveBeenCalledWith(['/devis/logement']);
     });
   });
 });
