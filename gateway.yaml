@@ -1,8 +1,7 @@
 # Configuration personnalisée du pod "gateway" (helm.yaml, type: gateway) :
-# routage et CORS pour l'instant, au format natif du "file provider" de
+# routage, CORS et authentification, au format natif du "file provider" de
 # Traefik. Optionnel : si ce fichier n'existe pas, le routage vers les
-# backends de helm.yaml est généré automatiquement (ce fichier sert surtout
-# d'exemple pour l'instant, le routage par défaut suffit).
+# backends de helm.yaml est généré automatiquement (sans authentification).
 #
 # Lu par l'Application ArgoCD du projet comme un fichier de values Helm
 # supplémentaire (ignoré s'il est absent). gatewayConfig est une CHAÎNE
@@ -10,6 +9,19 @@
 # donc y écrire {{ .project }}, {{ .env }}, {{ .domain }} pour que la même
 # configuration s'adapte aux 4 environnements (dev/qualif/preprod/prod),
 # plutôt que d'en écrire une copie par environnement.
+#
+# Authentification (middleware jwt, plugin Traefik activé par la plateforme
+# dès qu'un middleware l'utilise), uniquement sur /backend/actuator/health
+# (router backend-health) ; le reste de /backend reste public. Un appel à
+# cette route doit porter un token Keycloak (en-tête Authorization: Bearer
+# <token>) émis par le realm check-projects-sso pour le client du frontend
+# (assureasy-frontend-client).
+# Le gateway vérifie la signature (clés publiées par Keycloak, jwks_uri),
+# l'expiration et l'émetteur, puis transmet au backend :
+#   X-User-Sub   : identifiant Keycloak de l'utilisateur (claim sub)
+#   X-User-Roles : ses rôles, en JSON (claim roles), ex. ["admin","lecteur"]
+# Le token lui-même n'est pas transmis au backend (forwardToken: false).
+# Sans token ou token invalide : 401 ; token d'un autre client : 403.
 gatewayConfig: |
   http:
     routers:
@@ -17,6 +29,16 @@ gatewayConfig: |
         rule: "PathPrefix(`/backend`)"
         service: backend
         middlewares: [backend-strip, cors]
+      # Santé du backend (Spring Boot Actuator, et ses sous-chemins liveness/
+      # readiness) : token obligatoire. priority : choisi avant le router
+      # backend, plus large, qui correspond aussi à ce chemin.
+      backend-health:
+        rule: "PathPrefix(`/backend/actuator/health`)"
+        priority: 100
+        service: backend
+        # cors d'abord : il répond lui-même aux requêtes OPTIONS du navigateur
+        # (preflight, envoyées sans token)
+        middlewares: [cors, jwt, backend-strip]
     middlewares:
       backend-strip:
         stripPrefix: {prefixes: ["/backend"]}
@@ -24,10 +46,25 @@ gatewayConfig: |
         headers:
           accessControlAllowOriginList:
             - https://frontend.{{ .project }}.{{ .env }}.{{ .domain }}
+            - https://health.{{ .project }}.{{ .env }}.{{ .domain }}
           accessControlAllowMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
           accessControlAllowHeaders: [Content-Type, Authorization]
           accessControlMaxAge: 600
           addVaryHeader: true
+      jwt:
+        plugin:
+          jwt:
+            issuers:
+              - https://keycloak.{{ .env }}.{{ .domain }}/realms/check-projects-sso
+            require:
+              azp: assureasy-frontend-client
+            headerMap:
+              X-User-Sub: sub
+              X-User-Roles: roles
+            # X-User-* envoyés par le client retirés même si le token n'a pas
+            # le claim : le backend ne reçoit que ceux posés par le gateway
+            removeMissingHeaders: true
+            forwardToken: false
     services:
       backend:
         loadBalancer: {servers: [{url: "http://backend:80"}]}
