@@ -90,6 +90,12 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
   (sous Windows sans `make` : lancer les commandes du `Makefile` directement).
   - backend : PMD (`lint`), `./mvnw -B test` (`test-unit`), failsafe (`test-integration`) ;
   - frontend : `npx oxlint src` (`lint`), `npx ng test --watch=false --coverage` (Vitest, `test-unit`).
+- Tests de bout en bout : `make e2e-tests`, job `e2e-test` de la CI après les tests
+  d'intégration (cible optionnelle, composant sans cette cible ignoré).
+  - health : Playwright (`health/e2e/`), application construite servie par
+    `vite preview`, Keycloak et gateway simulés (`page.route`) ; en local sans
+    télécharger Chromium : `PLAYWRIGHT_CHANNEL=chrome npx playwright test` ;
+  - frontend : pas encore de tests e2e (la cible affiche un message).
 - Couverture ≥ 80 % (quality gate SonarQube) ; rapport local :
   `backend/target/site/jacoco/jacoco.xml` (JaCoCo) pour le backend,
   `frontend/coverage/assurance-iard-web/lcov.info` pour le frontend.
