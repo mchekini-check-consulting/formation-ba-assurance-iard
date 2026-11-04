@@ -1,6 +1,8 @@
 import { Routes } from '@angular/router';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
+import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
+import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { PageSimple } from './feature/page-simple/page-simple';
@@ -23,5 +25,7 @@ export const routes: Routes = [
     canActivate: [compteConnecteGuard],
     title: "Compte créé – Assur'Easy",
   },
+  { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
+  { path: 'devis/besoins', component: DevisBesoins, title: "Vos besoins – Assur'Easy" },
   { path: '**', redirectTo: '' },
 ];

@@ -5,3 +5,9 @@ Thumbs.db
 
 # Variables locales (mots de passe) : jamais commitées
 .env
+
+# Journaux de démarrage locaux
+*.log
+
+# Scripts temporaires de développement
+fix-spec.js

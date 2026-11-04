@@ -1,0 +1,26 @@
+:host { display: flex; flex-direction: column; min-height: 100vh; }
+
+.conteneur {
+  width: 100%;
+  max-width: 920px;
+  margin: 0 auto;
+  padding: 2.5rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+
+  h1 { margin: 0; }
+  p  { margin: 0; color: var(--texte-doux); }
+}
+
+.entete {
+  border-bottom: 1px solid var(--bordure);
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    padding: 14px 1.5rem;
+    max-width: 920px;
+    margin: 0 auto;
+  }
+}
