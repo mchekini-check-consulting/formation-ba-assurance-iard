@@ -108,10 +108,10 @@ describe('Landing', () => {
     ]);
   });
 
-  it("affiche une annonce quand on clique sur Espace client", () => {
+  it("affiche une annonce quand on clique sur un lien non encore disponible", () => {
     expect(annonce()).toBeUndefined();
-    cliquer('Espace client');
-    expect(annonce()).toContain("L'espace client sera bientôt disponible.");
+    cliquer('Mentions légales');
+    expect(annonce()).toContain('bientôt disponible');
   });
 
   it('affiche le message préparé avant le retour à l’accueil (US-07, AC3)', () => {
@@ -127,7 +127,7 @@ describe('Landing', () => {
   });
 
   it("ferme le message bientot disponible", () => {
-    cliquer('Espace client');
+    cliquer('Mentions légales');
     page.querySelector<HTMLButtonElement>('[aria-label="Fermer le message"]')!.click();
     fixture.detectChanges();
     expect(annonce()).toBeUndefined();
