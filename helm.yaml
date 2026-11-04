@@ -57,7 +57,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: 9a7a62d
-      qualif: 2aefb26
+      qualif: 9a7a62d
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -81,7 +81,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: 9a7a62d
-      qualif: d78b468
+      qualif: 9a7a62d
       preprod: ""
       prod: ""
     containerPort: 8080
