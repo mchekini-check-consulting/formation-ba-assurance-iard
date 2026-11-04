@@ -5,17 +5,10 @@
       <span class="logo__nom serif">Assur'Easy</span>
     </a>
     <p class="entete__client">
-      Déjà client ? <button type="button" class="lien-action" (click)="meConnecter()">Me connecter</button>
+      Déjà client ? <a class="lien-action" routerLink="/connexion">Me connecter</a>
     </p>
   </div>
 </header>
-
-@if (annonce(); as message) {
-  <div class="annonce" role="status">
-    <p>{{ message }}</p>
-    <button type="button" class="annonce__fermer" (click)="fermerAnnonce()" aria-label="Fermer le message">×</button>
-  </div>
-}
 
 <main class="page">
   <form class="carte-formulaire" aria-labelledby="inscription-titre" novalidate (submit)="creerCompte($event)">
@@ -27,7 +20,7 @@
     @if (emailDejaUtilise()) {
       <div class="alerte" role="alert">
         Un compte existe déjà avec cette adresse.
-        <button type="button" class="lien-action lien-action--alerte" (click)="meConnecter()">Me connecter</button>
+        <a class="lien-action lien-action--alerte" routerLink="/connexion">Me connecter</a>
       </div>
     }
 

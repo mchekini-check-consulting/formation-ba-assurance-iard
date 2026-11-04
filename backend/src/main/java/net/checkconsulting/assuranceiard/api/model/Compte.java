@@ -32,4 +32,10 @@ public class Compte {
     @CreationTimestamp
     @Column(name = "date_creation", nullable = false, updatable = false)
     private Instant dateCreation;
+
+    @Column(name = "echecs_connexion", nullable = false)
+    private int echecsConnexion;
+
+    @Column(name = "bloque_jusqu_a")
+    private Instant bloqueJusquA;
 }

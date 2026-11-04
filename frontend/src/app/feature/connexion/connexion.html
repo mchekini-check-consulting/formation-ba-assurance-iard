@@ -1,0 +1,68 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <p class="entete__client">Pas encore client ? <a class="lien-action" routerLink="/inscription">Créer un compte</a></p>
+  </div>
+</header>
+
+<main class="page">
+  <form class="carte-formulaire" aria-labelledby="connexion-titre" novalidate (submit)="seConnecter($event)">
+    <div>
+      <h1 id="connexion-titre" class="serif">Connexion</h1>
+      <p class="intro">Accédez à votre espace client avec votre e-mail et votre mot de passe.</p>
+    </div>
+
+    @if (identifiantsIncorrects()) {
+      <div class="alerte" role="alert">E-mail ou mot de passe incorrect.</div>
+    }
+
+    @if (bloqueJusquA(); as heure) {
+      <div class="alerte" role="alert">Compte bloqué 15 minutes. Vous pourrez réessayer à partir de {{ heure }}.</div>
+    }
+
+    @if (erreurTechnique()) {
+      <div class="alerte" role="alert">Le service est momentanément indisponible. Réessayez dans quelques instants.</div>
+    }
+
+    <div class="champ">
+      <label class="libelle" for="email">Adresse e-mail</label>
+      <input
+        #champEmail
+        id="email"
+        type="email"
+        class="saisie"
+        [class.saisie--erreur]="erreurEmail()"
+        autocomplete="username"
+        [attr.aria-invalid]="erreurEmail()"
+        [attr.aria-describedby]="erreurEmail() ? 'erreur-email' : null"
+        (input)="saisirEmail($event)"
+      />
+      @if (erreurEmail()) {
+        <p id="erreur-email" class="erreur" role="alert">Saisissez une adresse e-mail valide.</p>
+      }
+    </div>
+
+    <div class="champ">
+      <label class="libelle" for="mot-de-passe">Mot de passe</label>
+      <input
+        #champMotDePasse
+        id="mot-de-passe"
+        type="password"
+        class="saisie"
+        [class.saisie--erreur]="erreurMotDePasse()"
+        autocomplete="current-password"
+        [attr.aria-invalid]="erreurMotDePasse()"
+        [attr.aria-describedby]="erreurMotDePasse() ? 'erreur-mot-de-passe' : null"
+        (input)="saisirMotDePasse($event)"
+      />
+      @if (erreurMotDePasse()) {
+        <p id="erreur-mot-de-passe" class="erreur" role="alert">Saisissez votre mot de passe.</p>
+      }
+    </div>
+
+    <button type="submit" class="btn btn--large" [disabled]="envoiEnCours() || bloqueJusquA() !== null">Se connecter</button>
+  </form>
+</main>

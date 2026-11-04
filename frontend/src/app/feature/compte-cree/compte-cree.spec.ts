@@ -16,8 +16,14 @@ describe('CompteCree', () => {
 
   it("confirme la création et rappelle l'e-mail de confirmation (RG4)", () => {
     expect(page.querySelector('h1')?.textContent).toContain('Compte créé');
-    expect(page.textContent).toContain('Vous êtes connecté.');
+    expect(page.textContent).toContain('Votre compte est créé.');
+    expect(page.textContent).not.toContain('Vous êtes connecté');
     expect(page.querySelector('strong')?.textContent).toBe('marie@exemple.fr');
+  });
+
+  it("propose de se connecter, sans considérer le client comme connecté (US-06, RG1)", () => {
+    const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Me connecter');
+    expect(lien?.getAttribute('href')).toBe('/connexion');
   });
 
   it('« Faire mon devis » annonce que le devis sera bientôt disponible', () => {

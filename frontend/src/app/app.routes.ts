@@ -1,6 +1,10 @@
 import { Routes } from '@angular/router';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
+import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
+import { Connexion } from './feature/connexion/connexion';
+import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
+import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { PageSimple } from './feature/page-simple/page-simple';
@@ -22,6 +26,26 @@ export const routes: Routes = [
     component: CompteCree,
     canActivate: [compteConnecteGuard],
     title: "Compte créé – Assur'Easy",
+  },
+  { path: 'connexion', component: Connexion, title: "Connexion – Assur'Easy" },
+  {
+    path: 'double-authentification',
+    component: DoubleAuthentification,
+    canActivate: [verificationGuard],
+    title: "Double authentification – Assur'Easy",
+  },
+  {
+    path: 'espace-client',
+    component: EspaceClient,
+    canActivate: [sessionGuard],
+    title: "Mon espace – Assur'Easy",
+  },
+  {
+    path: 'espace-client/documents',
+    component: PageSimple,
+    canActivate: [sessionGuard],
+    title: "Mes documents – Assur'Easy",
+    data: { titre: 'Mes documents' },
   },
   { path: '**', redirectTo: '' },
 ];

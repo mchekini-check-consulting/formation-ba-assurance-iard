@@ -1,0 +1,70 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+  </div>
+</header>
+
+@if (annonce(); as message) {
+  <div class="annonce" role="status">
+    <p>{{ message }}</p>
+    <button type="button" class="annonce__fermer" (click)="fermerAnnonce()" aria-label="Fermer le message">×</button>
+  </div>
+}
+
+<main class="page">
+  <form class="carte-formulaire" aria-labelledby="verification-titre" novalidate (submit)="valider($event)">
+    <div>
+      <h1 id="verification-titre" class="serif">Double authentification</h1>
+      <p class="intro">
+        Un code à 6 chiffres, valable 10 minutes, a été envoyé à <strong>{{ emailMasque() }}</strong>.
+      </p>
+    </div>
+
+    @if (essaisRestants(); as essais) {
+      <div class="alerte" role="alert">
+        Code incorrect. Il vous reste {{ essais }} {{ essais > 1 ? 'essais' : 'essai' }}.
+      </div>
+    }
+
+    @if (nouveauCodeRequis() === 'essais-epuises') {
+      <div class="alerte" role="alert">Code incorrect. Après 3 erreurs, vous devez demander un nouveau code.</div>
+    }
+
+    @if (nouveauCodeRequis() === 'code-expire') {
+      <div class="alerte" role="alert">Ce code a expiré. Demandez un nouveau code.</div>
+    }
+
+    @if (erreurTechnique()) {
+      <div class="alerte" role="alert">Le service est momentanément indisponible. Réessayez dans quelques instants.</div>
+    }
+
+    <div class="champ">
+      <label class="libelle" for="code">Code de vérification</label>
+      <input
+        #champCode
+        id="code"
+        type="text"
+        class="saisie"
+        [class.saisie--erreur]="erreurCode()"
+        inputmode="numeric"
+        maxlength="6"
+        autocomplete="one-time-code"
+        [attr.aria-invalid]="erreurCode()"
+        [attr.aria-describedby]="erreurCode() ? 'erreur-code' : null"
+        (input)="saisirCode($event)"
+      />
+      @if (erreurCode()) {
+        <p id="erreur-code" class="erreur" role="alert">Saisissez les 6 chiffres du code.</p>
+      }
+    </div>
+
+    <button type="submit" class="btn btn--large" [disabled]="envoiEnCours() || nouveauCodeRequis() !== null">Valider</button>
+    <p class="mention">
+      Vous n'avez rien reçu ?
+      <button type="button" class="lien-action" [disabled]="envoiEnCours()" (click)="renvoyerCode()">Renvoyer un code</button>
+    </p>
+  </form>
+</main>

@@ -76,6 +76,11 @@ describe('Landing', () => {
     expect(lien?.getAttribute('href')).toBe('/inscription');
   });
 
+  it('« Espace client » mène à l\'espace client (US-06)', () => {
+    const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Espace client');
+    expect(lien?.getAttribute('href')).toBe('/espace-client');
+  });
+
   it("affiche les mentions d'assureur et les liens légaux en pied de page", () => {
     const pied = page.querySelector('footer')!;
     expect(pied.textContent).toContain('RCS Paris 912 345 678');
@@ -100,7 +105,6 @@ describe('Landing', () => {
   });
 
   it.each([
-    ['Espace client', 'L’espace client sera bientôt disponible.'],
     ['Devis gratuit', 'Le devis en ligne sera bientôt disponible.'],
     ['Faire mon devis', 'Le devis en ligne sera bientôt disponible.'],
   ])('« %s » annonce que le service sera bientôt disponible', (texte, message) => {
