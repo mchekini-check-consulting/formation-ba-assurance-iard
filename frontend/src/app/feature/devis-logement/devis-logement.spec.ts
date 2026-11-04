@@ -141,6 +141,21 @@ describe('DevisLogement', () => {
     it('affiche le champ sinistres dans le formulaire', () => {
       expect(page.querySelector('#sinistres')).not.toBeNull();
     });
+
+    it('permet de choisir les dependances pour une maison', () => {
+      selectionner('#type-logement', 'maison');
+      cliquer('Oui');
+      expect(
+        page.querySelector<HTMLButtonElement>('[aria-labelledby="libelle-dependances"] [aria-pressed="true"]')?.textContent?.trim(),
+      ).toBe('Oui');
+    });
+
+    it("enregistre le nom de l'assureur actuel", () => {
+      selectionner('#resilie-contrat', 'non');
+      selectionner('#antecedent-assurance', 'assure-plus-un-an');
+      const champ = saisir('#assureur-actuel', 'Maif');
+      expect(champ.value).toBe('Maif');
+    });
   });
 
   describe('AC3 — proprietaire non-occupant', () => {
@@ -235,6 +250,26 @@ describe('DevisLogement', () => {
       fixture.detectChanges();
       expect(page.querySelector('#erreur-colocataires')?.textContent).toContain('2');
       expect(champ.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('replace le curseur sur assureur actuel si non renseigne (traverse focusPremierChampErreur)', () => {
+      cliquer('Locataire');
+      cliquer('Bail individuel');
+      selectionner('#residence', 'principale');
+      selectionner('#type-logement', 'appartement');
+      selectionner('#nombre-pieces', '3');
+      saisir('#surface', '50');
+      saisir('#adresse', '12 rue de la Paix');
+      saisir('#code-postal', '75001');
+      saisir('#ville', 'Paris');
+      saisir('#etage', '2');
+      selectionner('#sinistres', '0');
+      selectionner('#resilie-contrat', 'non');
+      selectionner('#antecedent-assurance', 'assure-plus-un-an');
+      bouton('Continuer vers mes besoins').click();
+      fixture.detectChanges();
+      expect(page.querySelector('#erreur-assureur')).not.toBeNull();
+      expect(document.activeElement).toBe(page.querySelector<HTMLInputElement>('#assureur-actuel'));
     });
 
     it('signale absence de sinistres si non renseignes', () => {
