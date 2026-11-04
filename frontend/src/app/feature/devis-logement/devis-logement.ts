@@ -42,21 +42,24 @@ export class DevisLogement {
   private readonly tentative = signal(false);
   private readonly groupeLocataire = signal(false);
 
-  protected readonly statut = signal<StatutLogement | null>(null);
-  protected readonly residence = signal<TypeResidence | null>(null);
-  protected readonly typeLogement = signal<TypeLogement | null>(null);
-  protected readonly adresse = signal('');
-  protected readonly codePostal = signal('');
-  protected readonly ville = signal('');
-  protected readonly surface = signal('');
-  protected readonly nombrePieces = signal('');
-  protected readonly etage = signal('');
-  protected readonly dependances = signal<boolean | null>(null);
-  protected readonly nombreColocataires = signal('');
-  protected readonly nombreSinistres = signal('');
-  protected readonly resilieContrat = signal('');
-  protected readonly assuranceAntecedent = signal('');
-  protected readonly assureurActuel = signal('');
+  // Retour depuis l'étape 2 : les réponses déjà données sont reprises
+  private readonly saisie = this.devisService.logement();
+
+  protected readonly statut = signal<StatutLogement | null>(this.saisie.statut);
+  protected readonly residence = signal<TypeResidence | null>(this.saisie.residence);
+  protected readonly typeLogement = signal<TypeLogement | null>(this.saisie.typeLogement);
+  protected readonly adresse = signal(this.saisie.adresse);
+  protected readonly codePostal = signal(this.saisie.codePostal);
+  protected readonly ville = signal(this.saisie.ville);
+  protected readonly surface = signal(this.saisie.surface);
+  protected readonly nombrePieces = signal(this.saisie.nombrePieces);
+  protected readonly etage = signal(this.saisie.etage);
+  protected readonly dependances = signal<boolean | null>(this.saisie.dependances);
+  protected readonly nombreColocataires = signal(this.saisie.nombreColocataires);
+  protected readonly nombreSinistres = signal(this.saisie.nombreSinistres);
+  protected readonly resilieContrat = signal(this.saisie.resilieContrat);
+  protected readonly assuranceAntecedent = signal(this.saisie.assuranceAntecedent);
+  protected readonly assureurActuel = signal(this.saisie.assureurActuel);
 
   // antecedent dérivé des deux selects de la carte antécédents
   protected readonly antecedent = computed<Antecedent | null>(() => {
@@ -254,6 +257,8 @@ export class DevisLogement {
       surface: this.surface(),
       nombrePieces: this.nombrePieces(),
       antecedent: this.antecedent(),
+      resilieContrat: this.resilieContrat(),
+      assuranceAntecedent: this.assuranceAntecedent(),
       etage: this.etage(),
       dependances: this.dependances(),
       nombreColocataires: this.nombreColocataires(),
