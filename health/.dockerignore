@@ -6,3 +6,5 @@ coverage
 *.log
 Dockerfile
 .dockerignore
+playwright-report
+test-results
