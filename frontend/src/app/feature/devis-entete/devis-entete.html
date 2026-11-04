@@ -1,0 +1,30 @@
+<a class="evitement" href="#contenu">Aller au contenu</a>
+
+<header class="entete">
+  <div class="conteneur entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <div class="logo__pastille">AE</div>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <nav class="entete__actions" aria-label="Accès rapide">
+      <a class="lien-quitter" routerLink="/">Quitter le devis</a>
+    </nav>
+  </div>
+
+  <nav class="progression" aria-label="Avancement du devis">
+    <div class="conteneur">
+      <ol class="progression__liste">
+        @for (nom of etapes; track nom; let numero = $index) {
+          <li
+            class="progression__etape"
+            [class.progression__etape--active]="numero + 1 === etape()"
+            [attr.aria-current]="numero + 1 === etape() ? 'step' : null"
+          >
+            <span class="progression__libelle">Étape {{ numero + 1 }}</span>
+            <span class="progression__nom">{{ nom }}</span>
+          </li>
+        }
+      </ol>
+    </div>
+  </nav>
+</header>

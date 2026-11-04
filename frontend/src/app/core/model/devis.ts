@@ -24,6 +24,8 @@ export interface DevisLogement {
   surface: string;
   nombrePieces: string;
   antecedent: Antecedent | null;
+  resilieContrat: string;
+  assuranceAntecedent: string;
   etage: string;
   dependances: boolean | null;
   nombreColocataires: string;
@@ -42,6 +44,8 @@ export function logementVide(): DevisLogement {
     surface: '',
     nombrePieces: '',
     antecedent: null,
+    resilieContrat: '',
+    assuranceAntecedent: '',
     etage: '',
     dependances: null,
     nombreColocataires: '',

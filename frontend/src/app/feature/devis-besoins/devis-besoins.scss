@@ -1,26 +1,89 @@
-:host { display: flex; flex-direction: column; min-height: 100vh; }
-
-.conteneur {
-  width: 100%;
-  max-width: 920px;
-  margin: 0 auto;
-  padding: 2.5rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-
-  h1 { margin: 0; }
-  p  { margin: 0; color: var(--texte-doux); }
+.aide {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texte-doux);
 }
 
-.entete {
-  border-bottom: 1px solid var(--bordure);
+.montant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
 
-  &__ligne {
-    display: flex;
-    align-items: center;
-    padding: 14px 1.5rem;
-    max-width: 920px;
-    margin: 0 auto;
+  &__unite {
+    font-weight: 600;
+  }
+}
+
+.choix {
+  flex-wrap: wrap;
+
+  &__option {
+    flex: 1 1 8rem;
+  }
+}
+
+.carte--pourquoi {
+  gap: 8px;
+  border-left: 4px solid var(--rouge);
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--texte-doux);
+  }
+}
+
+.actions--deux {
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.encadre-reco {
+  width: 300px;
+
+  &__nom {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+  }
+
+  &__pourquoi {
+    margin: 8px 0 0;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__raisons {
+    margin: 0;
+    padding-left: 18px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--texte-doux);
+  }
+
+  &__plafond {
+    margin: 4px 0 0;
+    padding: 8px 10px;
+    border-radius: 8px;
+    background: var(--rose);
+    color: var(--rouge-fonce);
+    font-size: 13px;
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 768px) {
+  .encadre-reco {
+    width: 100%;
+
+    &__nom,
+    &__pourquoi,
+    &__raisons,
+    &__plafond {
+      flex-basis: 100%;
+    }
   }
 }

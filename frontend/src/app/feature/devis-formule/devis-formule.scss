@@ -1,0 +1,82 @@
+.formules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.formule {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 28px 24px 24px;
+  border: 1.5px solid var(--bordure-claire);
+  border-radius: 16px;
+  background: #fff;
+
+  &--choisie {
+    border-color: var(--rouge);
+    box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+  }
+
+  &__badge {
+    position: absolute;
+    top: -12px;
+    left: 24px;
+    margin: 0;
+    padding: 3px 12px;
+    border-radius: 999px;
+    background: var(--rouge);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+  }
+
+  &__nom {
+    margin: 0;
+    font-size: 22px;
+  }
+
+  &__description {
+    flex: 1;
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--texte-doux);
+  }
+
+  &__plafond {
+    margin: 0;
+    font-size: 14px;
+  }
+}
+
+.mention {
+  margin: 10px 0 16px;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.liste {
+  margin: 0;
+  padding-left: 18px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--texte-doux);
+}
+
+p.liste {
+  padding-left: 0;
+}
+
+.actions--gauche {
+  justify-content: flex-start;
+  padding-top: 16px;
+}
+
+@media (max-width: 768px) {
+  .formules {
+    grid-template-columns: 1fr;
+    gap: 22px;
+  }
+}

@@ -70,6 +70,24 @@ describe('DevisLogement', () => {
     expect(page.querySelector('[role="alert"]')).toBeNull();
   });
 
+  it('reprend les reponses deja donnees au retour de etape 2', () => {
+    remplirFormulaire();
+    bouton('Continuer vers mes besoins').click();
+
+    fixture = TestBed.createComponent(DevisLogement);
+    fixture.detectChanges();
+    page = fixture.nativeElement as HTMLElement;
+
+    expect(page.querySelector<HTMLInputElement>('#surface')?.value).toBe('50');
+    expect(page.querySelector<HTMLSelectElement>('#resilie-contrat')?.value).toBe('non');
+    expect(page.querySelector<HTMLSelectElement>('#antecedent-assurance')?.value).toBe('non-assure');
+    expect(bouton('Bail individuel').getAttribute('aria-pressed')).toBe('true');
+
+    vi.mocked(router.navigate).mockClear();
+    bouton('Continuer vers mes besoins').click();
+    expect(router.navigate).toHaveBeenCalledWith(['/devis/besoins']);
+  });
+
   it('affiche le rappel sur les fausses declarations (RG5)', () => {
     expect(page.textContent).toContain('L113-8');
     expect(page.textContent).toContain('L113-9');

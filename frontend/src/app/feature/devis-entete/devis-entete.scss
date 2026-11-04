@@ -1,0 +1,4 @@
+/* L'en-tête reste collant : sa limite est la page, pas ce composant */
+:host {
+  display: contents;
+}

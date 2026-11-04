@@ -1,16 +1,102 @@
-<header class="entete">
-  <div class="conteneur entete__ligne">
-    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
-      <img src="favicon.png" alt="" width="36" height="36" />
-      <span class="serif">Assur'Easy</span>
-    </a>
-  </div>
-</header>
+<iard-devis-entete [etape]="2" />
 
-<main id="contenu">
+<main id="contenu" class="fond-gris">
   <div class="conteneur">
-    <h1 class="serif">Vos besoins</h1>
-    <p>Cette étape (US-10) sera développée prochainement.</p>
-    <a class="btn btn--contour" routerLink="/devis/logement">← Retour à votre logement</a>
+    <div class="en-tete-etape">
+      <h1 id="titre-etape" class="serif">Mes besoins</h1>
+      <p class="sous-titre">Quelques questions pour vous conseiller la formule qui vous correspond.</p>
+    </div>
+
+    <div class="mise-en-page">
+      <form class="formulaire" novalidate aria-labelledby="titre-etape" (submit)="voirRecommandation($event)">
+        <section class="carte">
+          <div class="champ">
+            <label class="libelle" for="valeur-contenu">Quelle est la valeur du contenu de votre logement ?</label>
+            <p id="aide-contenu" class="aide">Meubles, vêtements, électroménager et objets du quotidien.</p>
+            <div class="montant">
+              <input
+                id="valeur-contenu"
+                class="saisie"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                aria-describedby="aide-contenu"
+                [value]="valeurContenu()"
+                (input)="saisirContenu($event)"
+              />
+              <span class="montant__unite">€</span>
+            </div>
+          </div>
+
+          @for (question of questions; track question.cle) {
+            <div class="champ">
+              <span class="libelle" [id]="'libelle-' + question.cle">{{ question.libelle }}</span>
+              <p class="aide" [id]="'aide-' + question.cle">{{ question.aide }}</p>
+              <div
+                class="choix"
+                role="group"
+                [attr.aria-labelledby]="'libelle-' + question.cle"
+                [attr.aria-describedby]="'aide-' + question.cle"
+              >
+                @for (choix of question.choix; track choix.valeur) {
+                  <button
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="reponses()[question.cle] === choix.valeur"
+                    [attr.aria-pressed]="reponses()[question.cle] === choix.valeur"
+                    (click)="choisir(question.cle, choix.valeur)"
+                  >
+                    {{ choix.libelle }}
+                  </button>
+                }
+              </div>
+            </div>
+          }
+        </section>
+
+        <section class="carte carte--pourquoi" aria-labelledby="titre-pourquoi">
+          <h2 id="titre-pourquoi" class="carte__titre">Pourquoi ces questions ?</h2>
+          <p>
+            Vos réponses figureront dans la fiche conseil qui vous sera remise avant la signature, au titre de notre
+            devoir de conseil (article L521-4 du Code des assurances).
+          </p>
+        </section>
+
+        @if (erreur()) {
+          <div class="alerte alerte--bloquant" role="alert">
+            <p>Votre recommandation n'a pas pu être enregistrée. Veuillez réessayer.</p>
+          </div>
+        }
+
+        <div class="actions actions--deux">
+          <a class="btn btn--contour" routerLink="/devis/logement">← Retour à mon logement</a>
+          <button type="submit" class="btn btn--large" [disabled]="!complet() || envoi()">
+            Voir ma recommandation
+          </button>
+        </div>
+      </form>
+
+      <aside class="encadre-tarif encadre-reco" aria-live="polite" aria-label="Formule conseillée">
+        <p class="encadre-tarif__label">Formule conseillée</p>
+        @if (recommandation(); as reco) {
+          <p class="encadre-reco__nom serif">{{ nomFormule() }}</p>
+          <p class="encadre-tarif__prix serif">
+            {{ prix() }}&#160;€<span class="encadre-tarif__unite">/mois</span>
+          </p>
+          <p class="encadre-tarif__mention">Prix avant options · estimation provisoire</p>
+          <p class="encadre-reco__pourquoi">Pourquoi ?</p>
+          <ul class="encadre-reco__raisons">
+            @for (raison of reco.raisons; track raison) {
+              <li>{{ raison }}</li>
+            }
+          </ul>
+          @if (depassePlafond()) {
+            <p class="encadre-reco__plafond">Votre contenu dépasse le plafond de 35 000 € de cette formule.</p>
+          }
+        } @else {
+          <p class="encadre-tarif__guide">Répondez aux questions pour découvrir votre formule</p>
+        }
+      </aside>
+    </div>
   </div>
 </main>

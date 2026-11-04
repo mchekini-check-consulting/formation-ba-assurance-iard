@@ -1,9 +1,11 @@
 import { Routes } from '@angular/router';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
+import { logementRenseigneGuard, recommandationEnregistreeGuard } from './core/guards/devis.guard';
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
+import { DevisFormule } from './feature/devis-formule/devis-formule';
 import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
 import { EspaceClient } from './feature/espace-client/espace-client';
@@ -56,6 +58,17 @@ export const routes: Routes = [
     data: { titre: 'Mes documents' },
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
-  { path: 'devis/besoins', component: DevisBesoins, title: "Vos besoins – Assur'Easy" },
+  {
+    path: 'devis/besoins',
+    component: DevisBesoins,
+    canActivate: [logementRenseigneGuard],
+    title: "Mes besoins – Assur'Easy",
+  },
+  {
+    path: 'devis/formule',
+    component: DevisFormule,
+    canActivate: [recommandationEnregistreeGuard],
+    title: "Ma formule – Assur'Easy",
+  },
   { path: '**', redirectTo: '' },
 ];
