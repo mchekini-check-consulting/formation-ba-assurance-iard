@@ -150,6 +150,14 @@ describe('DevisLogement', () => {
       ).toBe('Oui');
     });
 
+    it('permet de choisir non pour les dependances (maison)', () => {
+      selectionner('#type-logement', 'maison');
+      cliquer('Non');
+      expect(
+        page.querySelector<HTMLButtonElement>('[aria-labelledby="libelle-dependances"] [aria-pressed="true"]')?.textContent?.trim(),
+      ).toBe('Non');
+    });
+
     it("enregistre le nom de l'assureur actuel", () => {
       selectionner('#resilie-contrat', 'non');
       selectionner('#antecedent-assurance', 'assure-plus-un-an');
@@ -240,6 +248,25 @@ describe('DevisLogement', () => {
       fixture.detectChanges();
       expect(page.querySelector('#erreur-surface')?.textContent).toContain('9');
       expect(s.getAttribute('aria-invalid')).toBe('true');
+    });
+
+    it('signale dependances non renseignees pour une maison', () => {
+      cliquer('Locataire');
+      cliquer('Bail individuel');
+      selectionner('#residence', 'principale');
+      selectionner('#type-logement', 'maison');
+      selectionner('#nombre-pieces', '3');
+      saisir('#surface', '50');
+      saisir('#adresse', '12 rue de la Paix');
+      saisir('#code-postal', '75001');
+      saisir('#ville', 'Paris');
+      selectionner('#sinistres', '0');
+      selectionner('#resilie-contrat', 'non');
+      selectionner('#antecedent-assurance', 'non-assure');
+      bouton('Continuer vers mes besoins').click();
+      fixture.detectChanges();
+      expect(page.textContent).toContain('pendances');
+      expect(router.navigate).not.toHaveBeenCalled();
     });
 
     it('signale un nombre de colocataires hors plage 2-10 (RG1)', () => {
