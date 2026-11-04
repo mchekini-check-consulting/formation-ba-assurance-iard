@@ -72,7 +72,7 @@ class CodeVerificationServiceTest {
 
     private CodeVerificationService service(boolean bouchon) {
         return new CodeVerificationService(codeRepository, sessionService, envoiCode, passwordEncoder,
-                new ConnexionProperties(bouchon), Clock.fixed(MAINTENANT, ZoneOffset.UTC));
+                new ConnexionProperties(bouchon, "http://ecran"), Clock.fixed(MAINTENANT, ZoneOffset.UTC));
     }
 
     @Test

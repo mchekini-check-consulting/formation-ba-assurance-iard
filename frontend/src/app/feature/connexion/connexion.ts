@@ -3,6 +3,7 @@ import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { emailValide } from '../../core/model/compte';
 import { ResultatConnexion } from '../../core/model/connexion';
 import { ConnexionService } from '../../core/service/connexion.service';
+import { MotDePasseService } from '../../core/service/mot-de-passe.service';
 
 @Component({
   selector: 'iard-connexion',
@@ -12,6 +13,7 @@ import { ConnexionService } from '../../core/service/connexion.service';
 })
 export class Connexion {
   private readonly connexionService = inject(ConnexionService);
+  private readonly motDePasseService = inject(MotDePasseService);
   private readonly router = inject(Router);
   private readonly retour = inject(ActivatedRoute).snapshot.queryParamMap.get('retour');
   private readonly champEmail = viewChild.required<ElementRef<HTMLInputElement>>('champEmail');
@@ -27,6 +29,8 @@ export class Connexion {
   protected readonly identifiantsIncorrects = signal(false);
   protected readonly erreurTechnique = signal(false);
   protected readonly envoiEnCours = signal(false);
+  protected readonly adresseRequise = signal(false);
+  protected readonly lienEnvoye = signal(false);
   /** Heure de fin du blocage, déjà mise en forme ; null si le compte n'est pas bloqué. */
   protected readonly bloqueJusquA = signal<string | null>(null);
 
@@ -37,6 +41,8 @@ export class Connexion {
   protected saisirEmail(event: Event): void {
     this.email.set((event.target as HTMLInputElement).value);
     this.identifiantsIncorrects.set(false);
+    this.adresseRequise.set(false);
+    this.lienEnvoye.set(false);
     this.leverBlocage();
   }
 
@@ -65,6 +71,25 @@ export class Connexion {
     this.connexionService.connecter(this.email(), this.motDePasse()).subscribe((resultat) => {
       this.envoiEnCours.set(false);
       this.traiter(resultat);
+    });
+  }
+
+  /** AC1, AC2 et RG1 de l'US-07 : possible même compte bloqué, le message ne dit pas si le compte existe. */
+  protected motDePasseOublie(): void {
+    this.lienEnvoye.set(false);
+    this.identifiantsIncorrects.set(false);
+    this.erreurTechnique.set(false);
+    if (!emailValide(this.email())) {
+      this.adresseRequise.set(true);
+      this.champEmail().nativeElement.focus();
+      return;
+    }
+    this.adresseRequise.set(false);
+    this.envoiEnCours.set(true);
+    this.motDePasseService.demanderLien(this.email()).subscribe((envoye) => {
+      this.envoiEnCours.set(false);
+      this.lienEnvoye.set(envoye);
+      this.erreurTechnique.set(!envoye);
     });
   }
 

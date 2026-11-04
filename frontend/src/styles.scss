@@ -55,10 +55,16 @@ a {
   font: inherit;
   font-size: 15px;
   font-weight: 600;
+  text-decoration: none;
   cursor: pointer;
 
   &:hover {
     background: var(--rouge-fonce);
+  }
+
+  &:disabled {
+    opacity: 0.55;
+    pointer-events: none;
   }
 
   &--contour {

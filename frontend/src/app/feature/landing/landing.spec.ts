@@ -1,5 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { AnnonceService } from '../../core/service/annonce.service';
 import { Landing, codePostalValide } from './landing';
 
 describe('Landing', () => {
@@ -111,6 +112,18 @@ describe('Landing', () => {
     expect(annonce()).toBeUndefined();
     cliquer(texte);
     expect(annonce()).toContain(message);
+  });
+
+  it('affiche le message préparé avant le retour à l’accueil (US-07, AC3)', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.inject(AnnonceService).preparer('Vous êtes bien déconnecté.');
+    const accueil = TestBed.createComponent(Landing);
+    accueil.detectChanges();
+
+    expect((accueil.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent).toContain(
+      'Vous êtes bien déconnecté.',
+    );
   });
 
   it('ferme le message « bientôt disponible »', () => {

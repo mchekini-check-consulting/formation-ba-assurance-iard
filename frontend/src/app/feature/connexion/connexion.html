@@ -27,6 +27,16 @@
       <div class="alerte" role="alert">Le service est momentanément indisponible. Réessayez dans quelques instants.</div>
     }
 
+    @if (adresseRequise()) {
+      <div class="alerte" role="alert">
+        Saisissez votre adresse e-mail, puis cliquez à nouveau sur « Mot de passe oublié ».
+      </div>
+    }
+
+    @if (lienEnvoye()) {
+      <div class="information" role="status">Si un compte existe, un lien de réinitialisation a été envoyé.</div>
+    }
+
     <div class="champ">
       <label class="libelle" for="email">Adresse e-mail</label>
       <input
@@ -64,5 +74,10 @@
     </div>
 
     <button type="submit" class="btn btn--large" [disabled]="envoiEnCours() || bloqueJusquA() !== null">Se connecter</button>
+    <p class="mention">
+      <button type="button" class="lien-action" [disabled]="envoiEnCours()" (click)="motDePasseOublie()">
+        Mot de passe oublié
+      </button>
+    </p>
   </form>
 </main>
