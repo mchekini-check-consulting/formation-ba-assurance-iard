@@ -4,7 +4,7 @@ import { config } from './config';
 describe('config', () => {
   it("déduit Keycloak et la route de santé du host de l'environnement", () => {
     expect(config('health.formation-ba-assurance-iard.qualif.check-consulting.net')).toEqual({
-      keycloakUrl: 'https://keycloak.qualif.check-consulting.net',
+      keycloakUrl: 'https://keycloak.dev.check-consulting.net',
       healthUrl:
         'https://gateway.formation-ba-assurance-iard.qualif.check-consulting.net/backend/actuator/health',
     });
