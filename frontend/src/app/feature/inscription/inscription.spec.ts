@@ -89,7 +89,7 @@ describe('Inscription', () => {
     repondre({ detail: 'Un compte existe déjà avec cette adresse.' }, 409);
     const alerte = page.querySelector('.alerte');
     expect(alerte?.textContent).toContain('Un compte existe déjà avec cette adresse.');
-    expect(alerte?.querySelector('button')?.textContent).toContain('Me connecter');
+    expect(alerte?.querySelector('a')?.getAttribute('href')).toBe('/connexion');
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
@@ -124,15 +124,7 @@ describe('Inscription', () => {
     expect(router.navigate).not.toHaveBeenCalled();
   });
 
-  it('annonce que la connexion sera bientôt disponible, puis ferme le message', () => {
-    Array.from(page.querySelectorAll('button'))
-      .find((b) => b.textContent?.trim() === 'Me connecter')!
-      .click();
-    fixture.detectChanges();
-    expect(page.querySelector('[role="status"]')?.textContent).toContain('La connexion sera bientôt disponible.');
-
-    page.querySelector<HTMLButtonElement>('[aria-label="Fermer le message"]')!.click();
-    fixture.detectChanges();
-    expect(page.querySelector('[role="status"]')).toBeNull();
+  it("« Déjà client ? » mène à l'écran de connexion (US-06)", () => {
+    expect(page.querySelector('.entete__client a')?.getAttribute('href')).toBe('/connexion');
   });
 });

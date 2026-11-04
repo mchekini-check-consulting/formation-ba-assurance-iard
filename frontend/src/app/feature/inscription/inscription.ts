@@ -26,8 +26,6 @@ export class Inscription {
   protected readonly erreurTechnique = signal(false);
   protected readonly envoiEnCours = signal(false);
 
-  protected readonly annonce = signal<string | null>(null);
-
   protected saisirEmail(event: Event): void {
     this.email.set((event.target as HTMLInputElement).value);
     this.emailDejaUtilise.set(false);
@@ -63,13 +61,5 @@ export class Inscription {
       }
       void this.router.navigate(['/compte-cree']);
     });
-  }
-
-  protected meConnecter(): void {
-    this.annonce.set('La connexion sera bientôt disponible.');
-  }
-
-  protected fermerAnnonce(): void {
-    this.annonce.set(null);
   }
 }
