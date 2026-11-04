@@ -55,7 +55,7 @@ gatewayConfig: |
         plugin:
           jwt:
             issuers:
-              - https://keycloak.{{ .env }}.{{ .domain }}/realms/check-projects-sso
+              - https://keycloak.dev.{{ .domain }}/realms/check-projects-sso
             require:
               azp: assureasy-frontend-client
             headerMap:
