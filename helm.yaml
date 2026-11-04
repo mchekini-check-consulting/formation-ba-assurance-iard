@@ -80,8 +80,8 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: ""
-      qualif: ""
+      dev: d78b468
+      qualif: d78b468
       preprod: ""
       prod: ""
     containerPort: 8080
