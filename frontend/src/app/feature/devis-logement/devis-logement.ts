@@ -283,7 +283,11 @@ export class DevisLogement {
     if (this.erreurNombreColocataires()) { this.champColocataires()?.nativeElement.focus(); return; }
     if (this.erreurNombreSinistres()) { this.champSinistresSelect()?.nativeElement.focus(); return; }
     if (this.erreurResilientContrat()) { this.champResilientContrat()?.nativeElement.focus(); return; }
+    this.focusAntecedents();
+  }
+
+  private focusAntecedents(): void {
     if (this.erreurAssuranceAntecedent()) { this.champAssuranceAntecedent()?.nativeElement.focus(); return; }
-    if (this.erreurAssureurActuel()) { this.champAssureurActuel()?.nativeElement.focus(); return; }
+    if (this.erreurAssureurActuel()) { this.champAssureurActuel()?.nativeElement.focus(); }
   }
 }
