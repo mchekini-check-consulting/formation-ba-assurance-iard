@@ -14,11 +14,12 @@ import net.checkconsulting.assuranceiard.api.utils.Jetons;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** RG3 de l'US-07 : la session prend fin après 30 minutes sans activité. */
 @Service
 @RequiredArgsConstructor
 public class SessionService {
 
-    private static final Duration DUREE_SESSION = Duration.ofMinutes(30);
+    private static final Duration DUREE_INACTIVITE = Duration.ofMinutes(30);
     private static final String PREFIXE_BEARER = "Bearer ";
 
     private final SessionClientRepository sessionRepository;
@@ -32,22 +33,30 @@ public class SessionService {
         SessionClient session = new SessionClient();
         session.setCompte(compte);
         session.setJetonHash(Jetons.empreinte(jeton));
-        session.setDateExpiration(maintenant.plus(DUREE_SESSION));
+        session.setDateExpiration(maintenant.plus(DUREE_INACTIVITE));
         sessionRepository.save(session);
         return new SessionResponse(jeton, compte.getEmail());
     }
 
-    @Transactional(readOnly = true)
+    /** Toute lecture d'une session valable compte comme une activité et la prolonge de 30 minutes. */
+    @Transactional
     public SessionCouranteResponse lire(String authorization) {
-        return sessionRepository.findByJetonHash(empreinte(authorization))
-                .filter(session -> horloge.instant().isBefore(session.getDateExpiration()))
-                .map(session -> new SessionCouranteResponse(session.getCompte().getEmail()))
+        Instant maintenant = horloge.instant();
+        SessionClient session = sessionRepository.findByJetonHash(empreinte(authorization))
+                .filter(trouvee -> maintenant.isBefore(trouvee.getDateExpiration()))
                 .orElseThrow(SessionInvalideException::new);
+        session.setDateExpiration(maintenant.plus(DUREE_INACTIVITE));
+        return new SessionCouranteResponse(session.getCompte().getEmail());
     }
 
     @Transactional
     public void fermer(String authorization) {
         sessionRepository.deleteByJetonHash(empreinte(authorization));
+    }
+
+    @Transactional
+    public void fermerToutes(Compte compte) {
+        sessionRepository.deleteByCompte(compte);
     }
 
     private String empreinte(String authorization) {

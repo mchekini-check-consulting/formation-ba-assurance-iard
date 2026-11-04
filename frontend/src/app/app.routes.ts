@@ -8,6 +8,7 @@ import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { PageSimple } from './feature/page-simple/page-simple';
+import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
 
 export const routes: Routes = [
   { path: '', component: Landing, title: "Assur'Easy – Assurance habitation en ligne" },
@@ -28,6 +29,11 @@ export const routes: Routes = [
     title: "Compte créé – Assur'Easy",
   },
   { path: 'connexion', component: Connexion, title: "Connexion – Assur'Easy" },
+  {
+    path: 'reinitialisation-mot-de-passe',
+    component: ReinitialisationMotDePasse,
+    title: "Nouveau mot de passe – Assur'Easy",
+  },
   {
     path: 'double-authentification',
     component: DoubleAuthentification,

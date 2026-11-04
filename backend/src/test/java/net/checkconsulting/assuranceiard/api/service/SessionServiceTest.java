@@ -63,11 +63,28 @@ class SessionServiceTest {
     }
 
     @Test
-    void litLaSessionEnCours() {
-        when(sessionRepository.findByJetonHash(Jetons.empreinte("jeton")))
-                .thenReturn(Optional.of(sessionExpirantA(MAINTENANT.plusSeconds(1))));
+    void litLaSessionEnCoursEtLaProlongeDeTrenteMinutes() {
+        SessionClient session = sessionExpirantA(MAINTENANT.plusSeconds(1));
+        when(sessionRepository.findByJetonHash(Jetons.empreinte("jeton"))).thenReturn(Optional.of(session));
 
         assertThat(sessionService.lire("Bearer jeton")).isEqualTo(new SessionCouranteResponse("marie@exemple.fr"));
+        assertThat(session.getDateExpiration()).isEqualTo(MAINTENANT.plus(Duration.ofMinutes(30)));
+    }
+
+    @Test
+    void neProlongePasUneSessionExpiree() {
+        SessionClient session = sessionExpirantA(MAINTENANT.minusSeconds(1));
+        when(sessionRepository.findByJetonHash(Jetons.empreinte("jeton"))).thenReturn(Optional.of(session));
+
+        assertThatThrownBy(() -> sessionService.lire("Bearer jeton")).isInstanceOf(SessionInvalideException.class);
+        assertThat(session.getDateExpiration()).isEqualTo(MAINTENANT.minusSeconds(1));
+    }
+
+    @Test
+    void fermeToutesLesSessionsDuCompte() {
+        sessionService.fermerToutes(compte);
+
+        verify(sessionRepository).deleteByCompte(compte);
     }
 
     @Test

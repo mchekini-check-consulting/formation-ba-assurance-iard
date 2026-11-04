@@ -39,6 +39,13 @@ applications:
       # US-06, RG4 : code de test 123456 accepté. Jamais en preprod ni en prod.
       - key: CODE_BOUCHON_ACTIF
         value: {dev: "true", qualif: "true", preprod: "false", prod: "false"}
+      # US-07 : adresse de l'écran, pour construire le lien de réinitialisation du mot de passe.
+      - key: FRONTEND_URL
+        value:
+          dev: https://frontend.formation-ba-assurance-iard.dev.check-consulting.net
+          qualif: https://frontend.formation-ba-assurance-iard.qualif.check-consulting.net
+          preprod: https://frontend.formation-ba-assurance-iard.preprod.check-consulting.net
+          prod: https://frontend.formation-ba-assurance-iard.prod.check-consulting.net
   - name: gateway
     type: gateway
     # Pas d'image/tag : fourni par la plateforme (petit Traefik autonome),

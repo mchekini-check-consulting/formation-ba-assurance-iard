@@ -4,6 +4,7 @@
       <span class="logo__pastille" aria-hidden="true">AE</span>
       <span class="logo__nom serif">Assur'Easy</span>
     </a>
+    <button type="button" class="btn btn--contour" (click)="seDeconnecter()">Se déconnecter</button>
   </div>
 </header>
 
@@ -13,8 +14,5 @@
     <p>
       Vous êtes connecté avec <strong>{{ email() }}</strong>.
     </p>
-    <button type="button" class="btn btn--contour btn--large confirmation__action" (click)="seDeconnecter()">
-      Se déconnecter
-    </button>
   </section>
 </main>

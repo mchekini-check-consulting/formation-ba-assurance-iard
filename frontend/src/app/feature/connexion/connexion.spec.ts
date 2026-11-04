@@ -126,6 +126,84 @@ describe('Connexion', () => {
     expect(bouton().disabled).toBe(false);
   });
 
+  describe('mot de passe oublié (US-07)', () => {
+    const oublie = (): HTMLButtonElement =>
+      Array.from(page.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Mot de passe oublié')!;
+
+    const cliquerOublie = (): void => {
+      oublie().click();
+      fixture.detectChanges();
+    };
+
+    const repondreOubli = (status: number): void => {
+      http.expectOne('/api/mot-de-passe/oubli').flush(null, { status, statusText: String(status) });
+      fixture.detectChanges();
+    };
+
+    it('ne soumet pas le formulaire de connexion', () => {
+      creer();
+      expect(oublie().type).toBe('button');
+    });
+
+    it('annonce l’envoi du lien sans dire si le compte existe (AC1, RG1)', () => {
+      creer();
+      saisir('#email', ' marie@exemple.fr ');
+      cliquerOublie();
+      expect(oublie().disabled).toBe(true);
+      repondreOubli(204);
+
+      expect(page.querySelector('.information')?.textContent).toContain(
+        'Si un compte existe, un lien de réinitialisation a été envoyé.',
+      );
+      expect(oublie().disabled).toBe(false);
+    });
+
+    it.each([[''], ['prenom.nom']])('invite à saisir une adresse pour « %s » (AC2)', (email) => {
+      creer();
+      saisir('#email', email);
+      cliquerOublie();
+
+      expect(page.querySelector('.alerte')?.textContent).toContain('Saisissez votre adresse e-mail');
+      expect(document.activeElement).toBe(page.querySelector('#email'));
+      expect(page.querySelector('.information')).toBeNull();
+    });
+
+    it('retire les messages quand on modifie l’adresse', () => {
+      creer();
+      cliquerOublie();
+      saisir('#email', 'marie@exemple.fr');
+      expect(page.querySelector('.alerte')).toBeNull();
+
+      cliquerOublie();
+      repondreOubli(204);
+      saisir('#email', 'autre@exemple.fr');
+      expect(page.querySelector('.information')).toBeNull();
+    });
+
+    it('reste possible pendant le blocage du compte', () => {
+      creer();
+      soumettre();
+      repondre({ bloqueJusquA: new Date(Date.now() + 60000).toISOString() }, 423);
+      expect(oublie().disabled).toBe(false);
+
+      cliquerOublie();
+      repondreOubli(204);
+
+      expect(page.querySelector('.information')).not.toBeNull();
+      expect(bouton().disabled).toBe(true);
+    });
+
+    it('prévient si le service est indisponible', () => {
+      creer();
+      saisir('#email', 'marie@exemple.fr');
+      cliquerOublie();
+      repondreOubli(500);
+
+      expect(page.querySelector('.alerte')?.textContent).toContain('Le service est momentanément indisponible.');
+      expect(page.querySelector('.information')).toBeNull();
+    });
+  });
+
   it('prévient si le service est indisponible', () => {
     creer();
     soumettre();

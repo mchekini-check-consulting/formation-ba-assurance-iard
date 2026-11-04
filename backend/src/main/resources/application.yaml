@@ -18,5 +18,7 @@ server:
 
 assurance:
   connexion:
-    # RG4 : code 123456 accepté. Désactivé par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
+    # Bouchons : code 123456 accepté et lien de réinitialisation écrit dans les logs.
+    # Désactivés par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
     code-bouchon-actif: ${CODE_BOUCHON_ACTIF:false}
+    url-frontend: ${FRONTEND_URL:http://localhost:4200}

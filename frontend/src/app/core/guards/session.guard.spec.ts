@@ -4,6 +4,7 @@ import { Component } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { ConnexionService } from '../service/connexion.service';
+import { InactiviteService } from '../service/inactivite.service';
 import { sessionGuard, verificationGuard } from './session.guard';
 
 @Component({ template: '' })
@@ -12,13 +13,16 @@ class PageVide {}
 describe('gardes de connexion', () => {
   let router: Router;
   let http: HttpTestingController;
+  const surveiller = vi.fn();
 
   beforeEach(() => {
     sessionStorage.clear();
+    surveiller.mockClear();
     TestBed.configureTestingModule({
       providers: [
         provideHttpClient(),
         provideHttpClientTesting(),
+        { provide: InactiviteService, useValue: { surveiller } },
         provideRouter([
           { path: 'connexion', component: PageVide },
           { path: 'double-authentification', component: PageVide, canActivate: [verificationGuard] },
@@ -35,14 +39,16 @@ describe('gardes de connexion', () => {
   it('renvoie vers la connexion en retenant la page demandée (AC6)', async () => {
     await router.navigateByUrl('/espace-client/documents');
     expect(router.url).toBe('/connexion?retour=%2Fespace-client%2Fdocuments');
+    expect(surveiller).not.toHaveBeenCalled();
   });
 
-  it('ouvre la page demandée à un client connecté', async () => {
+  it('ouvre la page demandée à un client connecté et surveille son inactivité', async () => {
     sessionStorage.setItem('assureasy.session', 'session');
     const navigation = router.navigateByUrl('/espace-client/documents');
     await vi.waitFor(() => http.expectOne('/api/session').flush({ email: 'marie@exemple.fr' }));
     await navigation;
     expect(router.url).toBe('/espace-client/documents');
+    expect(surveiller).toHaveBeenCalled();
   });
 
   it('renvoie vers la connexion si la session a expiré', async () => {

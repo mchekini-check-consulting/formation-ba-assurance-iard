@@ -44,6 +44,11 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    @ExceptionHandler(LienInvalideException.class)
+    public ProblemDetail lienInvalide(LienInvalideException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, exception.getMessage());
+    }
+
     @ExceptionHandler(SessionInvalideException.class)
     public ProblemDetail sessionInvalide(SessionInvalideException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());

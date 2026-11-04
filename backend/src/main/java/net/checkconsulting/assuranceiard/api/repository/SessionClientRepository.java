@@ -12,5 +12,7 @@ public interface SessionClientRepository extends JpaRepository<SessionClient, Lo
 
     void deleteByJetonHash(String jetonHash);
 
+    void deleteByCompte(Compte compte);
+
     void deleteByCompteAndDateExpirationBefore(Compte compte, Instant date);
 }

@@ -2,6 +2,7 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { AnnonceService } from '../../core/service/annonce.service';
 import { ConnexionService } from '../../core/service/connexion.service';
 import { EspaceClient } from './espace-client';
 
@@ -34,11 +35,18 @@ describe('EspaceClient', () => {
     expect(page.querySelector('strong')?.textContent).toBe('marie@exemple.fr');
   });
 
-  it("déconnecte le client et revient à l'accueil", () => {
-    page.querySelector('button')!.click();
-    http.expectOne('/api/session').flush(null, { status: 204, statusText: 'No Content' });
+  it("propose « Se déconnecter » dans l'en-tête (US-07, AC3)", () => {
+    expect(page.querySelector('header button')?.textContent).toContain('Se déconnecter');
+  });
+
+  it("ferme la session, revient à l'accueil et confirme la déconnexion (US-07, AC3)", () => {
+    page.querySelector<HTMLButtonElement>('header button')!.click();
+    const requete = http.expectOne('/api/session');
+    expect(requete.request.method).toBe('DELETE');
+    requete.flush(null, { status: 204, statusText: 'No Content' });
 
     expect(connexionService.jeton()).toBeNull();
     expect(router.navigate).toHaveBeenCalledWith(['/']);
+    expect(TestBed.inject(AnnonceService).prendre()).toBe('Vous êtes bien déconnecté.');
   });
 });
