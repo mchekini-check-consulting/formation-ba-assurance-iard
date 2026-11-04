@@ -23,7 +23,7 @@ export function config(hostname: string = location.hostname): Config {
   }
   const suffixe = `${env}.${domaine.join('.')}`;
   return {
-    keycloakUrl: `https://keycloak.${suffixe}`,
+    keycloakUrl: `https://keycloak.dev.check-consulting.net`,
     healthUrl: `https://gateway.${projet}.${suffixe}/backend/actuator/health`,
   };
 }
