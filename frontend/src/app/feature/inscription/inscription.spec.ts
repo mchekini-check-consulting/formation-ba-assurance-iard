@@ -1,7 +1,7 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { CompteService } from '../../core/service/compte.service';
 import { Inscription } from './inscription';
 
@@ -111,7 +111,7 @@ describe('Inscription', () => {
     repondre({ id: 7, email: 'marie@exemple.fr' }, 201);
     expect(boutonCreer().disabled).toBe(false);
     expect(TestBed.inject(CompteService).emailConnecte()).toBe('marie@exemple.fr');
-    expect(router.navigate).toHaveBeenCalledWith(['/compte-cree']);
+    expect(router.navigate).toHaveBeenCalledWith(['/compte-cree'], { queryParams: {} });
   });
 
   it("prévient que le compte n'a pas été créé si le service est indisponible", () => {
@@ -126,5 +126,44 @@ describe('Inscription', () => {
 
   it("« Déjà client ? » mène à l'écran de connexion (US-06)", () => {
     expect(page.querySelector('.entete__client a')?.getAttribute('href')).toBe('/connexion');
+  });
+
+  describe('US-13 : un nouveau client garde le chemin vers son devis', () => {
+    beforeEach(() => {
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({
+        providers: [
+          provideRouter([]),
+          provideHttpClient(),
+          provideHttpClientTesting(),
+          {
+            provide: ActivatedRoute,
+            useValue: { snapshot: { queryParamMap: convertToParamMap({ retour: '/devis/informations' }) } },
+          },
+        ],
+      });
+      router = TestBed.inject(Router);
+      http = TestBed.inject(HttpTestingController);
+      vi.spyOn(router, 'navigate').mockResolvedValue(true);
+      fixture = TestBed.createComponent(Inscription);
+      fixture.detectChanges();
+      page = fixture.nativeElement as HTMLElement;
+    });
+
+    it('après la création du compte', () => {
+      saisir('#email', 'marie@exemple.fr');
+      saisir('#mot-de-passe', 'MotDePasse1');
+      valider();
+      repondre({ id: 1, email: 'marie@exemple.fr' }, 201);
+
+      expect(router.navigate).toHaveBeenCalledWith(['/compte-cree'], {
+        queryParams: { retour: '/devis/informations' },
+      });
+    });
+
+    it('s’il a déjà un compte', () => {
+      const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.includes('Me connecter'));
+      expect(lien?.getAttribute('href')).toBe('/connexion?retour=%2Fdevis%2Finformations');
+    });
   });
 });

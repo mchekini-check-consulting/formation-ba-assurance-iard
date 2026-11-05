@@ -1,11 +1,12 @@
 import { Routes } from '@angular/router';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
-import { logementRenseigneGuard, recommandationEnregistreeGuard } from './core/guards/devis.guard';
+import { formuleChoisieGuard, logementRenseigneGuard, recommandationEnregistreeGuard } from './core/guards/devis.guard';
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
 import { DevisFormule } from './feature/devis-formule/devis-formule';
+import { DevisInformations } from './feature/devis-informations/devis-informations';
 import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
 import { EspaceClient } from './feature/espace-client/espace-client';
@@ -72,9 +73,15 @@ export const routes: Routes = [
   },
   {
     path: 'devis/informations',
-    component: PageSimple,
+    component: DevisInformations,
+    canActivate: [formuleChoisieGuard, sessionGuard],
     title: "Mes informations – Assur'Easy",
-    data: { titre: 'Cette étape (US-13) sera développée prochainement' },
+  },
+  {
+    path: 'devis/paiement',
+    component: PageSimple,
+    title: "Paiement – Assur'Easy",
+    data: { titre: 'Cette étape sera développée prochainement' },
   },
   { path: '**', redirectTo: '' },
 ];

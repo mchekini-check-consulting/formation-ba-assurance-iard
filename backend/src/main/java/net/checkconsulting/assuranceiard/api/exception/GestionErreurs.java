@@ -4,6 +4,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 @RestControllerAdvice
 public class GestionErreurs {
@@ -52,5 +53,23 @@ public class GestionErreurs {
     @ExceptionHandler(SessionInvalideException.class)
     public ProblemDetail sessionInvalide(SessionInvalideException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNAUTHORIZED, exception.getMessage());
+    }
+
+    @ExceptionHandler(InformationRefuseeException.class)
+    public ProblemDetail informationRefusee(InformationRefuseeException exception) {
+        ProblemDetail probleme =
+                ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+        probleme.setProperty("champ", exception.getChamp());
+        return probleme;
+    }
+
+    @ExceptionHandler(DevisInconnuException.class)
+    public ProblemDetail devisInconnu(DevisInconnuException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ProblemDetail fichierTropGros(MaxUploadSizeExceededException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONTENT_TOO_LARGE, "Fichier trop volumineux.");
     }
 }

@@ -16,6 +16,7 @@ export class Connexion {
   private readonly motDePasseService = inject(MotDePasseService);
   private readonly router = inject(Router);
   private readonly retour = inject(ActivatedRoute).snapshot.queryParamMap.get('retour');
+  protected readonly parametresRetour = this.retour ? { retour: this.retour } : {};
   private readonly champEmail = viewChild.required<ElementRef<HTMLInputElement>>('champEmail');
   private readonly champMotDePasse = viewChild.required<ElementRef<HTMLInputElement>>('champMotDePasse');
   private finBlocage?: ReturnType<typeof setTimeout>;
@@ -97,7 +98,7 @@ export class Connexion {
     switch (resultat.statut) {
       case 'code-envoye':
         void this.router.navigate(['/double-authentification'], {
-          queryParams: this.retour ? { retour: this.retour } : {},
+          queryParams: this.parametresRetour,
         });
         break;
       case 'identifiants-incorrects':

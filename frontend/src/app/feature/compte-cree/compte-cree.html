@@ -25,7 +25,7 @@
     <p>
       Votre compte est créé. Un e-mail de confirmation a été envoyé à <strong>{{ email() }}</strong>.
     </p>
-    <a class="btn btn--large confirmation__action" routerLink="/connexion">Me connecter</a>
+    <a class="btn btn--large confirmation__action" routerLink="/connexion" [queryParams]="parametresRetour">Me connecter</a>
     <button type="button" class="btn btn--contour btn--large confirmation__action" (click)="faireMonDevis()">Faire mon devis</button>
   </section>
 </main>

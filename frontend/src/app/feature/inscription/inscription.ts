@@ -1,5 +1,5 @@
 import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { emailValide, motDePasseConforme, reglesMotDePasse } from '../../core/model/compte';
 import { CompteService } from '../../core/service/compte.service';
 
@@ -12,6 +12,8 @@ import { CompteService } from '../../core/service/compte.service';
 export class Inscription {
   private readonly compteService = inject(CompteService);
   private readonly router = inject(Router);
+  private readonly retour = inject(ActivatedRoute).snapshot.queryParamMap.get('retour');
+  protected readonly parametresRetour = this.retour ? { retour: this.retour } : {};
   private readonly champEmail = viewChild.required<ElementRef<HTMLInputElement>>('champEmail');
   private readonly champMotDePasse = viewChild.required<ElementRef<HTMLInputElement>>('champMotDePasse');
 
@@ -59,7 +61,7 @@ export class Inscription {
         this.champEmail().nativeElement.focus();
         return;
       }
-      void this.router.navigate(['/compte-cree']);
+      void this.router.navigate(['/compte-cree'], { queryParams: this.parametresRetour });
     });
   }
 }
