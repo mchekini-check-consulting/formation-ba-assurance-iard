@@ -1,0 +1,59 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="mes-devis-titre">
+    <h1 id="mes-devis-titre" class="serif">Mes devis</h1>
+
+    @if (erreur()) {
+      <p class="mes-devis__erreur" role="alert">{{ erreur() }}</p>
+    }
+
+    @if (chargement()) {
+      <p>Chargement de vos devis…</p>
+    } @else if (liste()?.length === 0) {
+      <p>Vous n'avez pas encore de devis enregistré.</p>
+      <a class="btn" routerLink="/devis/logement">Faire un devis</a>
+    }
+
+    <ul class="mes-devis__liste">
+      @for (ligne of liste(); track ligne.reference) {
+        <li class="devis-ligne">
+          <div class="devis-ligne__entete">
+            <h2 class="serif">Formule {{ nomFormule(ligne) }}</h2>
+            <span class="badge" [class.badge--expire]="ligne.expire">{{ ligne.expire ? 'Expiré' : 'Valide' }}</span>
+          </div>
+          <p>{{ ligne.adresse }}, {{ ligne.codePostal }} {{ ligne.ville }}</p>
+          <p>
+            <strong>{{ formaterPrix(ligne.prixMensuel) }}&#160;€/mois</strong>
+            ({{ formaterPrix(ligne.prixAnnuel) }}&#160;€/an)
+          </p>
+          <p>Fin de validité : {{ formaterDate(ligne.dateFinValidite) }}</p>
+          <div class="devis-ligne__actions">
+            @if (aConfirmer() === ligne.reference) {
+              <p class="devis-ligne__question">Supprimer définitivement ce devis ?</p>
+              <button type="button" class="btn" (click)="supprimer(ligne.reference)">Confirmer la suppression</button>
+              <button type="button" class="btn btn--contour" (click)="annulerSuppression()">Annuler</button>
+            } @else {
+              <button type="button" class="btn" (click)="reprendre(ligne.reference)">Reprendre</button>
+              <button type="button" class="btn btn--contour" (click)="demanderSuppression(ligne.reference)">
+                Supprimer
+              </button>
+            }
+          </div>
+        </li>
+      }
+    </ul>
+
+    @if (liste()?.length) {
+      <p class="mes-devis__mention">{{ MENTION_CONSERVATION }}</p>
+    }
+  </section>
+</main>

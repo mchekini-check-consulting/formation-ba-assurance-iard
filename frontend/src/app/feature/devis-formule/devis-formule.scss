@@ -282,3 +282,32 @@ p.liste {
     order: -1;
   }
 }
+
+.message-reprise {
+  margin-bottom: 20px;
+}
+
+.recapitulatif__mention {
+  margin: 12px 0 0;
+  font-size: 13px;
+  line-height: 1.4;
+}
+
+.recapitulatif .alerte,
+.recapitulatif .erreur {
+  margin-top: 12px;
+}
+
+.encadre-compte__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+// Charte Assur'Easy : rouge et blanc
+.recapitulatif .alerte,
+.message-reprise {
+  background: #fff;
+  border: 1px solid #a82b27;
+  color: inherit;
+}
