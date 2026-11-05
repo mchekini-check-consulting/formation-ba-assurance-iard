@@ -1,0 +1,232 @@
+<iard-devis-entete [etape]="4" />
+
+<main id="contenu" class="fond-gris">
+  <div class="conteneur">
+    <div class="en-tete-etape">
+      <h1 id="titre-etape" class="serif">Mes informations</h1>
+      <p class="sous-titre">Votre contrat sera établi à votre nom, sans envoi par courrier.</p>
+    </div>
+
+    <form class="formulaire formulaire--centre" novalidate aria-labelledby="titre-etape" (submit)="continuer($event)">
+      <section class="carte" aria-labelledby="titre-identite">
+        <h2 id="titre-identite" class="carte__titre">Mon identité</h2>
+
+        <div class="champ">
+          <span id="libelle-civilite" class="libelle">Civilité</span>
+          <div class="choix" role="group" aria-labelledby="libelle-civilite">
+            <button
+              id="civilite"
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="saisie().civilite === 'madame'"
+              [attr.aria-pressed]="saisie().civilite === 'madame'"
+              (click)="choisirCivilite('madame')"
+            >
+              Madame
+            </button>
+            <button
+              type="button"
+              class="choix__option"
+              [class.choix__option--actif]="saisie().civilite === 'monsieur'"
+              [attr.aria-pressed]="saisie().civilite === 'monsieur'"
+              (click)="choisirCivilite('monsieur')"
+            >
+              Monsieur
+            </button>
+          </div>
+          @if (erreur('civilite'); as message) {
+            <p class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
+
+        <div class="champ-grille">
+          <div class="champ">
+            <label class="libelle" for="nom">Nom</label>
+            <input
+              id="nom"
+              class="saisie"
+              type="text"
+              autocomplete="family-name"
+              maxlength="100"
+              [class.saisie--erreur]="erreur('nom')"
+              [attr.aria-invalid]="erreur('nom') ? true : null"
+              [attr.aria-describedby]="erreur('nom') ? 'erreur-nom' : null"
+              [value]="saisie().nom"
+              (input)="saisirTexte('nom', $event)"
+            />
+            @if (erreur('nom'); as message) {
+              <p id="erreur-nom" class="erreur" role="alert">{{ message }}</p>
+            }
+          </div>
+
+          <div class="champ">
+            <label class="libelle" for="prenom">Prénom</label>
+            <input
+              id="prenom"
+              class="saisie"
+              type="text"
+              autocomplete="given-name"
+              maxlength="100"
+              [class.saisie--erreur]="erreur('prenom')"
+              [attr.aria-invalid]="erreur('prenom') ? true : null"
+              [attr.aria-describedby]="erreur('prenom') ? 'erreur-prenom' : null"
+              [value]="saisie().prenom"
+              (input)="saisirTexte('prenom', $event)"
+            />
+            @if (erreur('prenom'); as message) {
+              <p id="erreur-prenom" class="erreur" role="alert">{{ message }}</p>
+            }
+          </div>
+
+          <div class="champ">
+            <label class="libelle" for="date-naissance">Date de naissance</label>
+            <p id="aide-date" class="aide">Au format JJ/MM/AAAA</p>
+            <input
+              id="date-naissance"
+              class="saisie"
+              type="text"
+              inputmode="numeric"
+              autocomplete="bday"
+              maxlength="10"
+              [class.saisie--erreur]="erreur('date-naissance')"
+              [attr.aria-invalid]="erreur('date-naissance') ? true : null"
+              [attr.aria-describedby]="erreur('date-naissance') ? 'aide-date erreur-date' : 'aide-date'"
+              [value]="saisie().dateNaissance"
+              (input)="saisirDate($event)"
+            />
+            @if (erreur('date-naissance'); as message) {
+              <p id="erreur-date" class="erreur" role="alert">{{ message }}</p>
+            }
+          </div>
+
+          <div class="champ">
+            <label class="libelle" for="telephone">Téléphone</label>
+            <p id="aide-telephone" class="aide">10 chiffres, par exemple 06 12 34 56 78</p>
+            <input
+              id="telephone"
+              class="saisie"
+              type="tel"
+              inputmode="tel"
+              autocomplete="tel-national"
+              maxlength="20"
+              [class.saisie--erreur]="erreur('telephone')"
+              [attr.aria-invalid]="erreur('telephone') ? true : null"
+              [attr.aria-describedby]="erreur('telephone') ? 'aide-telephone erreur-telephone' : 'aide-telephone'"
+              [value]="saisie().telephone"
+              (input)="saisirTexte('telephone', $event)"
+            />
+            @if (erreur('telephone'); as message) {
+              <p id="erreur-telephone" class="erreur" role="alert">{{ message }}</p>
+            }
+          </div>
+        </div>
+      </section>
+
+      <section class="carte" aria-labelledby="titre-justificatifs">
+        <h2 id="titre-justificatifs" class="carte__titre">Mes justificatifs</h2>
+
+        @for (zone of zones; track zone.cle) {
+          <div class="zone">
+            <h3 class="zone__titre">{{ zone.titre }}</h3>
+
+            <div class="champ">
+              <label class="libelle" [for]="'type-' + zone.id">Type de document</label>
+              <select
+                class="saisie"
+                [id]="'type-' + zone.id"
+                [class.saisie--erreur]="erreur('type-' + zone.id)"
+                [attr.aria-invalid]="erreur('type-' + zone.id) ? true : null"
+                (change)="choisirType(zone.cle, $event)"
+              >
+                <option value="" [selected]="!saisie()[zone.cle].type">Choisissez</option>
+                @for (type of zone.types; track type.valeur) {
+                  <option [value]="type.valeur" [selected]="saisie()[zone.cle].type === type.valeur">
+                    {{ type.libelle }}
+                  </option>
+                }
+              </select>
+              @if (erreur('type-' + zone.id); as message) {
+                <p class="erreur" role="alert">{{ message }}</p>
+              }
+            </div>
+
+            <div
+              class="depot"
+              [class.depot--accepte]="saisie()[zone.cle].fichier"
+              [class.depot--erreur]="erreurDepot(zone)"
+              (dragover)="$event.preventDefault()"
+              (drop)="lacherFichier(zone.cle, $event)"
+            >
+              <input
+                #champFichier
+                class="depot__champ"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png"
+                [id]="'fichier-' + zone.id"
+                [attr.aria-label]="zone.titre + ' : choisir un fichier ou prendre une photo'"
+                [attr.aria-invalid]="erreurDepot(zone) ? true : null"
+                [attr.aria-describedby]="erreurDepot(zone) ? 'erreur-fichier-' + zone.id : null"
+                (change)="choisirFichier(zone.cle, $event)"
+              />
+              @if (saisie()[zone.cle].fichier; as fichier) {
+                <p class="depot__fichier">
+                  <span class="depot__coche" role="img" aria-label="Fichier accepté">✓</span>
+                  <span class="depot__nom">{{ fichier.name }}</span>
+                </p>
+                <button type="button" class="depot__remplacer" (click)="champFichier.click()">Remplacer</button>
+              } @else {
+                <label class="btn btn--contour depot__bouton" [for]="'fichier-' + zone.id">
+                  Choisir un fichier ou prendre une photo
+                </label>
+                <p class="aide">Ou glissez votre fichier ici. PDF, JPG ou PNG, 5 Mo maximum.</p>
+              }
+            </div>
+            @if (erreurDepot(zone); as message) {
+              <p class="erreur" role="alert" [id]="'erreur-fichier-' + zone.id">{{ message }}</p>
+            }
+          </div>
+        }
+
+        <p class="mention-legale">
+          Ces documents sont utilisés uniquement pour vérifier votre identité et l'adresse assurée.
+        </p>
+      </section>
+
+      @if (nomsColocataires().length > 0) {
+        <section class="carte" aria-labelledby="titre-colocataires">
+          <h2 id="titre-colocataires" class="carte__titre">Mes colocataires</h2>
+          @for (nom of nomsColocataires(); track $index) {
+            <div class="champ">
+              <label class="libelle" [for]="'colocataire-' + $index">Colocataire {{ $index + 1 }} : nom et prénom</label>
+              <input
+                class="saisie"
+                type="text"
+                autocomplete="off"
+                maxlength="200"
+                [id]="'colocataire-' + $index"
+                [class.saisie--erreur]="erreur('colocataire-' + $index)"
+                [attr.aria-invalid]="erreur('colocataire-' + $index) ? true : null"
+                [value]="nom"
+                (input)="saisirColocataire($index, $event)"
+              />
+              @if (erreur('colocataire-' + $index); as message) {
+                <p class="erreur" role="alert">{{ message }}</p>
+              }
+            </div>
+          }
+        </section>
+      }
+
+      @if (erreurEnvoi()) {
+        <div class="alerte alerte--bloquant" role="alert">
+          <p>Vos informations n'ont pas pu être enregistrées. Veuillez réessayer.</p>
+        </div>
+      }
+
+      <div class="actions actions--deux">
+        <a class="btn btn--contour" routerLink="/devis/formule">← Retour à ma formule</a>
+        <button type="submit" class="btn btn--large" [disabled]="envoi()">Continuer vers le paiement</button>
+      </div>
+    </form>
+  </div>
+</main>

@@ -46,6 +46,9 @@ applications:
           qualif: https://frontend.formation-ba-assurance-iard.qualif.check-consulting.net
           preprod: https://frontend.formation-ba-assurance-iard.preprod.check-consulting.net
           prod: https://frontend.formation-ba-assurance-iard.prod.check-consulting.net
+      # US-13 : dossier temporaire, vidé à chaque redémarrage. Faux documents uniquement.
+      - key: JUSTIFICATIFS_DOSSIER
+        value: /tmp/justificatifs
   - name: gateway
     type: gateway
     # Pas d'image/tag : fourni par la plateforme (petit Traefik autonome),

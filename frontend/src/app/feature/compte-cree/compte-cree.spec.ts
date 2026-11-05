@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, provideRouter } from '@angular/router';
 import { CompteService } from '../../core/service/compte.service';
 import { CompteCree } from './compte-cree';
 
@@ -35,5 +35,22 @@ describe('CompteCree', () => {
     page.querySelector<HTMLButtonElement>('[aria-label="Fermer le message"]')!.click();
     TestBed.tick();
     expect(page.querySelector('[role="status"]')).toBeNull();
+  });
+
+  it('US-13 : garde le chemin vers le devis en cours', () => {
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParams: { retour: '/devis/informations' } } } },
+      ],
+    });
+    TestBed.inject(CompteService).emailConnecte.set('marie@exemple.fr');
+    const fixture = TestBed.createComponent(CompteCree);
+    fixture.detectChanges();
+    const element = fixture.nativeElement as HTMLElement;
+
+    const lien = Array.from(element.querySelectorAll('a')).find((a) => a.textContent?.trim() === 'Me connecter');
+    expect(lien?.getAttribute('href')).toBe('/connexion?retour=%2Fdevis%2Finformations');
   });
 });

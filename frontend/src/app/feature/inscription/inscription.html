@@ -5,7 +5,7 @@
       <span class="logo__nom serif">Assur'Easy</span>
     </a>
     <p class="entete__client">
-      Déjà client ? <a class="lien-action" routerLink="/connexion">Me connecter</a>
+      Déjà client ? <a class="lien-action" routerLink="/connexion" [queryParams]="parametresRetour">Me connecter</a>
     </p>
   </div>
 </header>
@@ -20,7 +20,7 @@
     @if (emailDejaUtilise()) {
       <div class="alerte" role="alert">
         Un compte existe déjà avec cette adresse.
-        <a class="lien-action lien-action--alerte" routerLink="/connexion">Me connecter</a>
+        <a class="lien-action lien-action--alerte" routerLink="/connexion" [queryParams]="parametresRetour">Me connecter</a>
       </div>
     }
 

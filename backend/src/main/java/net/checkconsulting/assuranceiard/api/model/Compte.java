@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.time.Instant;
+import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -38,4 +39,19 @@ public class Compte {
 
     @Column(name = "bloque_jusqu_a")
     private Instant bloqueJusquA;
+
+    @Column(length = 8)
+    private String civilite;
+
+    @Column(length = 100)
+    private String nom;
+
+    @Column(length = 100)
+    private String prenom;
+
+    @Column(name = "date_naissance")
+    private LocalDate dateNaissance;
+
+    @Column(length = 10)
+    private String telephone;
 }

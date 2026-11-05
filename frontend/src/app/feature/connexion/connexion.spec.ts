@@ -211,4 +211,10 @@ describe('Connexion', () => {
     expect(page.querySelector('.alerte')?.textContent).toContain('Le service est momentanément indisponible.');
     expect(bouton().disabled).toBe(false);
   });
+
+  it('US-13 : garde la page demandée vers la création de compte', () => {
+    creer({ retour: '/devis/informations' });
+    const lien = Array.from(page.querySelectorAll('a')).find((a) => a.textContent?.includes('Créer un compte'));
+    expect(lien?.getAttribute('href')).toBe('/inscription?retour=%2Fdevis%2Finformations');
+  });
 });

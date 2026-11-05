@@ -1,5 +1,6 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { DevisLogement, StatutLogement, TypeLogement, estimerTarif, logementVide } from '../model/devis';
+import { SaisieInformations, saisieVide } from '../model/informations';
 import {
   Formule,
   Franchise,
@@ -20,6 +21,8 @@ export class DevisService {
   readonly optionsChoisies = signal<OptionConseillee[]>([]);
   readonly franchiseChoisie = signal<Franchise | null>(null);
   readonly periodicite = signal<Periodicite>('mensuel');
+  /** Étape 4, fichiers compris : gardée en mémoire jusqu'à un rechargement de la page. */
+  readonly informations = signal<SaisieInformations>(saisieVide());
 
   readonly recommandation = computed(() => recommander(this.besoins()));
   readonly tarifBase = computed(() => {

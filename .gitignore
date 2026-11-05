@@ -6,6 +6,10 @@ Thumbs.db
 # Variables locales (mots de passe) : jamais commitées
 .env
 
+# Justificatifs déposés en local (US-13) : jamais commités
+/justificatifs/
+/backend/justificatifs/
+
 # Journaux de démarrage locaux
 *.log
 

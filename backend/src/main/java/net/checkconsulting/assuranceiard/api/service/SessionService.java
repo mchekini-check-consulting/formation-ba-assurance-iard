@@ -41,12 +41,18 @@ public class SessionService {
     /** Toute lecture d'une session valable compte comme une activité et la prolonge de 30 minutes. */
     @Transactional
     public SessionCouranteResponse lire(String authorization) {
+        return new SessionCouranteResponse(compteConnecte(authorization).getEmail());
+    }
+
+    /** Renvoie le compte de la session, en la prolongeant ; refuse une session absente ou expirée. */
+    @Transactional
+    public Compte compteConnecte(String authorization) {
         Instant maintenant = horloge.instant();
         SessionClient session = sessionRepository.findByJetonHash(empreinte(authorization))
                 .filter(trouvee -> maintenant.isBefore(trouvee.getDateExpiration()))
                 .orElseThrow(SessionInvalideException::new);
         session.setDateExpiration(maintenant.plus(DUREE_INACTIVITE));
-        return new SessionCouranteResponse(session.getCompte().getEmail());
+        return session.getCompte();
     }
 
     @Transactional

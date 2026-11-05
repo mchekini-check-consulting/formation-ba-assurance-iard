@@ -27,6 +27,7 @@ services:
       SERVER_PORT: "8080"
       LOG_LEVEL: debug
       CODE_BOUCHON_ACTIF: "true"
+      JUSTIFICATIFS_DOSSIER: /tmp/justificatifs
     ports:
       - "8080:8080"
     depends_on:

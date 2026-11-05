@@ -8,7 +8,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 @Configuration
-@EnableConfigurationProperties(ConnexionProperties.class)
+@EnableConfigurationProperties({ConnexionProperties.class, JustificatifsProperties.class})
 public class SecuriteConfig {
 
     @Bean

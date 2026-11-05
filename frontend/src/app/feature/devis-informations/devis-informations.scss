@@ -1,0 +1,112 @@
+$vert: #1b7a3d;
+
+.formulaire--centre {
+  max-width: 760px;
+  margin: 0 auto;
+}
+
+/* Le curseur ne doit pas se retrouver caché sous l'en-tête fixe (AC5) */
+.saisie,
+.choix__option,
+.depot {
+  scroll-margin-top: 150px;
+}
+
+.zone {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+
+  &__titre {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+  }
+}
+
+.depot {
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 16px;
+  border: 1.5px dashed var(--gris);
+  border-radius: 12px;
+  background: #fff;
+
+  &:focus-within {
+    outline: 2px solid var(--rouge);
+    outline-offset: 2px;
+  }
+
+  &--accepte {
+    justify-content: space-between;
+    border-style: solid;
+    border-color: $vert;
+  }
+
+  &--erreur {
+    border-color: var(--erreur);
+  }
+
+  /* Caché à l'œil, mais toujours atteignable au clavier et par le curseur */
+  &__champ {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    opacity: 0;
+    overflow: hidden;
+  }
+
+  &__bouton {
+    min-height: 44px;
+    text-align: center;
+  }
+
+  &__fichier {
+    flex: 1 1 12rem;
+    min-width: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  &__coche {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background: $vert;
+    color: #fff;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__nom {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+
+  &__remplacer {
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--rouge);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+  }
+}
+
+.mention-legale {
+  font-size: 13px;
+  color: var(--texte-doux);
+}
