@@ -60,6 +60,12 @@
     font-size: 24px;
     margin: 0;
   }
+
+  &__sous-titre {
+    margin: 6px 0 0;
+    font-size: 14px;
+    color: var(--texte-secondaire);
+  }
 }
 
 .page-corps {
@@ -96,6 +102,9 @@
   gap: 0;
   padding: 0;
   overflow: hidden;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
 }
 
 .contrat__entete {
@@ -304,9 +313,28 @@
   }
 }
 
-.bouton--pleine-largeur {
+.btn-pleine-largeur {
   width: 100%;
   justify-content: center;
+}
+
+.renonciation-entete {
+  margin-top: 16px;
+}
+
+.lien-details {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--rouge);
+  cursor: pointer;
+  text-decoration: underline;
+  text-align: left;
+
+  &:hover {
+    text-decoration: none;
+  }
 }
 
 .lien-renvoyer {

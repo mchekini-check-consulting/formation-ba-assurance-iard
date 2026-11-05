@@ -39,6 +39,7 @@
   @if (etat() === 'affiche' && contrat(); as c) {
     <div class="page-entete">
       <h1 class="serif">Relisez votre contrat</h1>
+      <p class="page-entete__sous-titre">Il a été généré à partir de vos réponses. Vérifiez-le avant de signer.</p>
     </div>
 
     <div class="page-corps">
@@ -60,7 +61,7 @@
           <dl class="lignes">
             <div class="ligne">
               <dt class="ligne__libelle">Nom</dt>
-              <dd class="ligne__valeur">{{ c.civilite }} {{ c.prenom | uppercase }} {{ c.nom | uppercase }}</dd>
+              <dd class="ligne__valeur">{{ abrevierCivilite(c.civilite) }} {{ c.prenom | titlecase }} {{ c.nom | titlecase }}</dd>
             </div>
             @if (c.telephone) {
               <div class="ligne">
@@ -82,12 +83,24 @@
           <dl class="lignes">
             <div class="ligne">
               <dt class="ligne__libelle">Adresse</dt>
-              <dd class="ligne__valeur">{{ capitaliser(c.adresseLogement) }}, {{ c.codePostal }} {{ capitaliser(c.ville) }}</dd>
+              <dd class="ligne__valeur">{{ c.adresseLogement | titlecase }}, {{ c.codePostal }} {{ c.ville | titlecase }}</dd>
             </div>
             <div class="ligne">
-              <dt class="ligne__libelle">Logement</dt>
-              <dd class="ligne__valeur">{{ c.typeLogement === 'appartement' ? 'Appartement' : 'Maison' }} · {{ c.surface }} m²</dd>
+              <dt class="ligne__libelle">Type</dt>
+              <dd class="ligne__valeur">{{ c.typeLogement === 'appartement' ? 'Appartement' : 'Maison' }} · {{ c.surface }} m²{{ descriptionLogement() ? ' · ' + descriptionLogement() : '' }}</dd>
             </div>
+            @if (residenceLabel()) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Résidence</dt>
+                <dd class="ligne__valeur">{{ residenceLabel() }}</dd>
+              </div>
+            }
+            @if (statutLabel()) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Qualité</dt>
+                <dd class="ligne__valeur">{{ statutLabel() }}</dd>
+              </div>
+            }
           </dl>
         </section>
 
@@ -104,7 +117,12 @@
             </div>
             <div class="ligne">
               <dt class="ligne__libelle">Franchise</dt>
-              <dd class="ligne__valeur">{{ c.franchise }} € <span class="note">— Montant à votre charge en cas de sinistre</span></dd>
+              <dd class="ligne__valeur">
+                {{ c.franchise }} €
+                <span class="note">— Montant à votre charge en cas de sinistre</span>
+                <br>
+                <span class="note">Catastrophes naturelles : franchise légale de 380 €</span>
+              </dd>
             </div>
           </dl>
         </section>
@@ -115,6 +133,10 @@
             <div class="ligne">
               <dt class="ligne__libelle">Cotisation</dt>
               <dd class="ligne__valeur">{{ formaterPrix(c.cotisationMensuelle) }} € TTC/mois, soit {{ formaterPrix(c.cotisationAnnuelle) }} € TTC/an</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Prélèvement</dt>
+              <dd class="ligne__valeur">Le {{ c.jourPrelevement }} de chaque mois</dd>
             </div>
             <div class="ligne">
               <dt class="ligne__libelle">IBAN</dt>
@@ -132,24 +154,35 @@
         </section>
 
         <section class="section" aria-labelledby="titre-date">
-          <h2 id="titre-date" class="section__titre">Date d'effet et renonciation</h2>
+          <h2 id="titre-date" class="section__titre">Date d'effet</h2>
           <dl class="lignes">
             <div class="ligne">
-              <dt class="ligne__libelle">Date d'effet</dt>
+              <dt class="ligne__libelle">Prise d'effet</dt>
               <dd class="ligne__valeur">{{ formaterDateEffet(c.dateEffet) }}</dd>
             </div>
             @if (c.resiliationHamon) {
               <div class="ligne ligne--hamon">
-                <dt class="ligne__libelle">Résiliation loi Hamon</dt>
-                <dd class="ligne__valeur">Assur'Easy résilie votre ancien contrat en votre nom (loi Hamon)</dd>
+                <dt class="ligne__libelle">Loi Hamon</dt>
+                <dd class="ligne__valeur">
+                  Assur'Easy résilie votre contrat actuel en votre nom, sans démarche de votre part,
+                  après la signature du présent contrat (art. L. 113-15-2 du Code des assurances).
+                </dd>
               </div>
             }
           </dl>
-          <p class="renonciation">
-            Conformément à l'article L. 112-2-1 du Code des assurances, vous disposez d'un délai de
-            <strong>14 jours calendaires</strong> à compter de la signature du contrat pour y renoncer,
-            sans frais ni pénalité, par courrier recommandé avec accusé de réception.
-          </p>
+          <div class="renonciation-entete">
+            <button type="button" class="lien-details" (click)="renonciationEtendue.set(!renonciationEtendue())">
+              Droit de renonciation (14 jours)
+              <span aria-hidden="true">{{ renonciationEtendue() ? ' ▲' : ' ▼' }}</span>
+            </button>
+          </div>
+          @if (renonciationEtendue()) {
+            <p class="renonciation">
+              Conformément à l'article L. 112-2-1 du Code des assurances, vous disposez d'un délai de
+              <strong>14 jours calendaires</strong> à compter de la signature du contrat pour y renoncer,
+              sans frais ni pénalité, par courrier recommandé avec accusé de réception adressé à Assur'Easy.
+            </p>
+          }
         </section>
 
       </div>
@@ -166,7 +199,8 @@
 
           @if (c.telephone) {
             <p class="panneau-signature__sms">
-              Un code de validation vous a été envoyé par SMS au <strong>{{ masquerTelephone(c.telephone) }}</strong>.
+              Pour signer, saisissez le code à 6 chiffres reçu par SMS au
+              <strong>{{ masquerTelephone(c.telephone) }}</strong>.
             </p>
           }
 
@@ -176,11 +210,11 @@
               [checked]="mandatLu()"
               (change)="mandatLu.set($any($event.target).checked)"
             />
-            <span>J'ai lu et j'accepte les conditions particulières du présent contrat.</span>
+            <span>J'ai lu et j'accepte les conditions particulières du contrat ci-dessus.</span>
           </label>
 
           <div class="champ-code">
-            <label for="code-signature" class="champ-code__label">Code de validation</label>
+            <label for="code-signature" class="champ-code__label">Code reçu par SMS</label>
             <input
               id="code-signature"
               type="text"
@@ -199,7 +233,7 @@
 
           <button
             type="button"
-            class="bouton bouton--principal bouton--pleine-largeur"
+            class="btn btn--large btn-pleine-largeur"
             [disabled]="!peutSigner()"
             (click)="signerContrat()"
           >
@@ -208,7 +242,7 @@
 
           <button type="button" class="lien-renvoyer">Renvoyer le code</button>
 
-          <p class="note-prototype">[Prototype] Code de test : 123456</p>
+          <p class="note-prototype">[Prototype] La vérification SMS n'est pas active. Utilisez le code 123456.</p>
         }
 
       </aside>

@@ -1,4 +1,4 @@
-import { UpperCasePipe } from '@angular/common';
+import { TitleCasePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Contrat, DemandeContrat } from '../../core/model/contrat';
@@ -11,7 +11,7 @@ type EtatPage = 'chargement' | 'affiche' | 'erreur-technique' | 'mandat-non-sign
 
 @Component({
   selector: 'iard-devis-contrat',
-  imports: [RouterLink, UpperCasePipe],
+  imports: [RouterLink, TitleCasePipe],
   templateUrl: './devis-contrat.html',
   styleUrl: './devis-contrat.scss',
 })
@@ -29,6 +29,7 @@ export class DevisContrat {
   protected readonly codeSignature = signal('');
   protected readonly erreurSignature = signal<string | null>(null);
   protected readonly enCoursDeSignature = signal(false);
+  protected readonly renonciationEtendue = signal(false);
 
   protected readonly peutSigner = computed(
     () => this.mandatLu() && this.codeSignature().length === 6 && !this.enCoursDeSignature(),
@@ -50,6 +51,31 @@ export class DevisContrat {
     const c = this.contrat();
     if (!c || !c.options.length) return 'Aucune';
     return c.options.map((o) => LIBELLES_OPTIONS[o as OptionConseillee] ?? o).join(', ');
+  });
+
+  protected readonly residenceLabel = computed(() => {
+    const r = this.devis.logement().residence;
+    if (r === 'principale') return 'Résidence principale';
+    if (r === 'secondaire') return 'Résidence secondaire';
+    return '';
+  });
+
+  protected readonly statutLabel = computed(() => {
+    switch (this.devis.logement().statut) {
+      case 'locataire': return 'Locataire';
+      case 'colocation': return 'Colocataire';
+      case 'proprietaire-occupant': return 'Propriétaire occupant';
+      case 'proprietaire-non-occupant': return 'Propriétaire non occupant';
+      default: return '';
+    }
+  });
+
+  protected readonly descriptionLogement = computed(() => {
+    const l = this.devis.logement();
+    const parties: string[] = [];
+    if (l.nombrePieces) parties.push(`${l.nombrePieces} pièce${Number(l.nombrePieces) > 1 ? 's' : ''}`);
+    if (l.etage) parties.push(`${l.etage}e étage`);
+    return parties.join(' · ');
   });
 
   protected readonly formaterPrix = formaterPrix;
@@ -84,6 +110,10 @@ export class DevisContrat {
     });
   }
 
+  protected abrevierCivilite(civilite: string | null | undefined): string {
+    return abrevierCivilite(civilite);
+  }
+
   protected masquerTelephone(telephone: string | null | undefined): string {
     return masquerTelephone(telephone);
   }
@@ -100,10 +130,6 @@ export class DevisContrat {
     if (!iso) return '';
     const [annee, mois, jour] = iso.split('-');
     return `${jour}/${mois}/${annee} à 0 h`;
-  }
-
-  protected capitaliser(texte: string): string {
-    return texte ? texte.toUpperCase() : '';
   }
 
   private genererOuCharger(): void {
@@ -148,6 +174,12 @@ export class DevisContrat {
       resiliationHamon: logement.antecedent === 'assure-plus-un-an',
     };
   }
+}
+
+function abrevierCivilite(civilite: string | null | undefined): string {
+  if (civilite === 'madame') return 'Mme';
+  if (civilite === 'monsieur') return 'M.';
+  return '';
 }
 
 function masquerTelephone(telephone: string | null | undefined): string {

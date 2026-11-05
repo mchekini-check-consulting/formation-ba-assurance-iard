@@ -77,10 +77,10 @@ describe('DevisContrat', () => {
     expect(page.textContent).toContain('AE-2026-000001');
   });
 
-  it('affiche le nom du souscripteur en majuscules', () => {
+  it('affiche le nom du souscripteur en titlecase', () => {
     http.expectOne((req) => req.method === 'POST').flush(UN_CONTRAT);
     fixture.detectChanges();
-    expect(page.textContent).toContain('DUPONT');
+    expect(page.textContent).toContain('Dupont');
   });
 
   it('affiche un message de chargement initialement', () => {
@@ -108,7 +108,7 @@ describe('DevisContrat', () => {
     codeInput.dispatchEvent(new InputEvent('input'));
     fixture.detectChanges();
 
-    const bouton = page.querySelector<HTMLButtonElement>('.bouton--principal')!;
+    const bouton = page.querySelector<HTMLButtonElement>('.btn')!;
     bouton.click();
     fixture.detectChanges();
 
