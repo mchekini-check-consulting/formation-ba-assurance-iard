@@ -150,6 +150,10 @@
             <p class="recapitulatif__mensuel">soit {{ totalMensuelFormate() }}&#160;€/mois</p>
           }
         }
+        <div class="recapitulatif__actions">
+          <button type="button" class="btn" (click)="souscrire($event)">Enregistrer mon devis</button>
+          <button type="button" class="btn btn--contour" (click)="telechargerDevis()">Télécharger le devis</button>
+        </div>
       </aside>
     </div>
 

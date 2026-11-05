@@ -149,6 +149,22 @@ export class DevisFormule {
     void this.router.navigate(['/devis/informations']);
   }
 
+  protected telechargerDevis(): void {
+    const lignes = this.lignesDevis();
+    if (lignes.length === 0) return;
+    const contenu = [
+      "Mon devis – Assur'Easy",
+      '='.repeat(30),
+      ...lignes.map((l) => `${l.libelle} : ${l.montantFormate} €`),
+      '-'.repeat(30),
+      `Total TTC : ${this.totalFormate() ?? '-'} €${this.unitePrix()}`,
+    ].join('\n');
+    const a = document.createElement('a');
+    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(contenu);
+    a.download = 'mon-devis-assureasy.txt';
+    a.click();
+  }
+
   protected formaterAjustement(montant: number): string {
     const mult = this.afficherAnnuel() ? 12 : 1;
     const signe = montant >= 0 ? '+' : '-';
