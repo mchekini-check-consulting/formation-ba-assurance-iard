@@ -10,5 +10,5 @@ import { RouterLink } from '@angular/router';
 export class DevisEntete {
   readonly etape = input.required<number>();
 
-  protected readonly etapes = ['Mon logement', 'Mes besoins', 'Ma formule', 'Mes informations', 'Paiement'];
+  protected readonly etapes = ['Mon logement', 'Mes besoins', 'Ma formule', 'Mes informations', 'Paiement', 'Mon contrat'];
 }

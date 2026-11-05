@@ -34,7 +34,7 @@ public class MandatService {
     private static final Set<Integer> JOURS_PRELEVEMENT = Set.of(5, 10, 15);
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
     private static final String ALPHABET_RUM = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-    private static final int LONGUEUR_ALEA_RUM = 8;
+    private static final int LONGUEUR_ALEA_RUM = 6;
     private static final SecureRandom HASARD = new SecureRandom();
 
     private final SessionService sessionService;
@@ -67,6 +67,7 @@ public class MandatService {
         MandatSepa mandat = mandatDuDossier(dossier);
         mandat.setTitulaire(demande.titulaire().trim());
         mandat.setIbanFin(ibanService.fin(iban));
+        mandat.setIbanDebut(ibanService.debut(iban));
         mandat.setJourPrelevement(demande.jourPrelevement());
         mandat.setDateDebut(demande.dateDebut());
         mandat.setDatePremierPrelevement(premierPrelevement);
@@ -92,13 +93,13 @@ public class MandatService {
         return mandatRepository.save(mandat);
     }
 
-    // Exemple : AE-2026-K7M2QX9P. Lettres et chiffres ambigus (I, O, 0, 1) exclus.
+    // Format : AE-RUM-2026-K7M2QX. Lettres et chiffres ambigus (I, O, 0, 1) exclus.
     private String nouvelleRum() {
         StringBuilder alea = new StringBuilder(LONGUEUR_ALEA_RUM);
         for (int i = 0; i < LONGUEUR_ALEA_RUM; i++) {
             alea.append(ALPHABET_RUM.charAt(HASARD.nextInt(ALPHABET_RUM.length())));
         }
-        return "AE-" + LocalDate.ofInstant(horloge.instant(), FRANCE).getYear() + "-" + alea;
+        return "AE-RUM-" + LocalDate.ofInstant(horloge.instant(), FRANCE).getYear() + "-" + alea;
     }
 
     // RG1

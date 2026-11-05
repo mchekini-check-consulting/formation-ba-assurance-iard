@@ -32,6 +32,10 @@ public class IbanService {
         return iban.substring(iban.length() - LONGUEUR_FIN);
     }
 
+    public String debut(String iban) {
+        return iban.substring(0, LONGUEUR_ENTETE);
+    }
+
     private boolean longueurValide(String iban) {
         return !iban.startsWith(PAYS_FRANCE) || iban.length() == LONGUEUR_FRANCE;
     }

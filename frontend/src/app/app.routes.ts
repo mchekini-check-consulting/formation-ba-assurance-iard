@@ -4,6 +4,7 @@ import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
   logementRenseigneGuard,
+  mandatSigneGuard,
   recommandationEnregistreeGuard,
 } from './core/guards/devis.guard';
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
@@ -11,6 +12,7 @@ import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
 import { DevisFormule } from './feature/devis-formule/devis-formule';
+import { DevisContrat } from './feature/devis-contrat/devis-contrat';
 import { DevisInformations } from './feature/devis-informations/devis-informations';
 import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { DevisPaiement } from './feature/devis-paiement/devis-paiement';
@@ -91,9 +93,9 @@ export const routes: Routes = [
   },
   {
     path: 'devis/contrat',
-    component: PageSimple,
+    component: DevisContrat,
+    canActivate: [mandatSigneGuard, sessionGuard],
     title: "Mon contrat – Assur'Easy",
-    data: { titre: 'Cette étape sera développée prochainement' },
   },
   { path: '**', redirectTo: '' },
 ];

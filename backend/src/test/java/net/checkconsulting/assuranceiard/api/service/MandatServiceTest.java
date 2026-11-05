@@ -86,7 +86,7 @@ class MandatServiceTest {
 
         assertThat(reponse.creancier()).isEqualTo("Assur'Easy");
         assertThat(reponse.ics()).isEqualTo("FR00ZZZ000000");
-        assertThat(reponse.rum()).matches("AE-2026-[A-HJ-NP-Z2-9]{8}");
+        assertThat(reponse.rum()).matches("AE-RUM-2026-[A-HJ-NP-Z2-9]{6}");
     }
 
     @Test
@@ -126,6 +126,7 @@ class MandatServiceTest {
         assertThat(reponse.rum()).isEqualTo("AE-2026-EXISTANT");
         assertThat(reponse.datePremierPrelevement()).isEqualTo(LocalDate.of(2026, 12, 10));
         assertThat(mandat.getIbanFin()).isEqualTo("0189");
+        assertThat(mandat.getIbanDebut()).isEqualTo("FR76");
         assertThat(mandat.getTitulaire()).isEqualTo("Marie Durand");
         assertThat(mandat.getJourPrelevement()).isEqualTo(10);
         assertThat(mandat.getDateDebut()).isEqualTo(AUJOURDHUI.plusDays(1));
@@ -136,7 +137,7 @@ class MandatServiceTest {
 
     @Test
     void signerSansPreparationCreeLeMandat() {
-        assertThat(service.signer(JETON, demande(AUJOURDHUI.plusDays(1))).rum()).startsWith("AE-2026-");
+        assertThat(service.signer(JETON, demande(AUJOURDHUI.plusDays(1))).rum()).startsWith("AE-RUM-2026-");
     }
 
     @ParameterizedTest

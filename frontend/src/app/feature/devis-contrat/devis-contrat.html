@@ -1,0 +1,253 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <span class="logo__pastille" aria-hidden="true">AE</span>
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    @if (email()) {
+      <span class="entete__connexion">Connecté : {{ email() }}</span>
+    }
+  </div>
+</header>
+
+<main id="contenu" class="fond-gris">
+
+  @if (etat() === 'chargement') {
+    <div class="conteneur-chargement">
+      <p class="chargement" aria-live="polite" aria-busy="true">Génération de votre contrat en cours…</p>
+    </div>
+  }
+
+  @if (etat() === 'erreur-technique') {
+    <div class="conteneur-erreur">
+      <div class="carte carte--erreur" role="alert">
+        <p>Une erreur est survenue lors de la génération de votre contrat. Veuillez réessayer ou contacter le support.</p>
+        <a routerLink="/devis/paiement" class="lien">Retour au paiement</a>
+      </div>
+    </div>
+  }
+
+  @if (etat() === 'mandat-non-signe') {
+    <div class="conteneur-erreur">
+      <div class="carte carte--erreur" role="alert">
+        <p>Votre mandat SEPA n'a pas encore été signé. Veuillez compléter l'étape paiement.</p>
+        <a routerLink="/devis/paiement" class="lien">Retour au paiement</a>
+      </div>
+    </div>
+  }
+
+  @if (etat() === 'affiche' && contrat(); as c) {
+    <div class="page-entete">
+      <h1 class="serif">Relisez votre contrat</h1>
+      <p class="page-entete__sous-titre">Il a été généré à partir de vos réponses. Vérifiez-le avant de signer.</p>
+    </div>
+
+    <div class="page-corps">
+
+      <div class="carte contrat-carte">
+
+        <div class="contrat__entete">
+          <div>
+            <p class="contrat__type">Contrat d'assurance habitation</p>
+            <p class="contrat__sous-type">Conditions particulières · N° {{ c.numero }}</p>
+          </div>
+          <span class="badge" [class.badge--attente]="c.statut === 'EN_ATTENTE_DE_SIGNATURE'" [class.badge--signe]="c.statut === 'SIGNE'">
+            {{ c.statut === 'SIGNE' ? 'Signé' : 'En attente de signature' }}
+          </span>
+        </div>
+
+        <section class="section" aria-labelledby="titre-souscripteur">
+          <h2 id="titre-souscripteur" class="section__titre">Souscripteur</h2>
+          <dl class="lignes">
+            <div class="ligne">
+              <dt class="ligne__libelle">Nom</dt>
+              <dd class="ligne__valeur">{{ abrevierCivilite(c.civilite) }} {{ c.prenom | titlecase }} {{ c.nom | titlecase }}</dd>
+            </div>
+            @if (c.telephone) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Téléphone</dt>
+                <dd class="ligne__valeur">{{ masquerTelephone(c.telephone) }}</dd>
+              </div>
+            }
+            @if (email()) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Email</dt>
+                <dd class="ligne__valeur">{{ email() }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <section class="section" aria-labelledby="titre-logement">
+          <h2 id="titre-logement" class="section__titre">Logement assuré</h2>
+          <dl class="lignes">
+            <div class="ligne">
+              <dt class="ligne__libelle">Adresse</dt>
+              <dd class="ligne__valeur">{{ c.adresseLogement | titlecase }}, {{ c.codePostal }} {{ c.ville | titlecase }}</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Type</dt>
+              <dd class="ligne__valeur">{{ c.typeLogement === 'appartement' ? 'Appartement' : 'Maison' }} · {{ c.surface }} m²{{ descriptionLogement() ? ' · ' + descriptionLogement() : '' }}</dd>
+            </div>
+            @if (residenceLabel()) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Résidence</dt>
+                <dd class="ligne__valeur">{{ residenceLabel() }}</dd>
+              </div>
+            }
+            @if (statutLabel()) {
+              <div class="ligne">
+                <dt class="ligne__libelle">Qualité</dt>
+                <dd class="ligne__valeur">{{ statutLabel() }}</dd>
+              </div>
+            }
+          </dl>
+        </section>
+
+        <section class="section" aria-labelledby="titre-garanties">
+          <h2 id="titre-garanties" class="section__titre">Garanties</h2>
+          <dl class="lignes">
+            <div class="ligne">
+              <dt class="ligne__libelle">Formule</dt>
+              <dd class="ligne__valeur">{{ nomFormule() }}{{ plafondFormule() ? ' · contenu assuré jusqu\'à ' + plafondFormule() : '' }}</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Options</dt>
+              <dd class="ligne__valeur">{{ libellesOptions() }}</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Franchise</dt>
+              <dd class="ligne__valeur">
+                {{ c.franchise }} €
+                <span class="note">— Montant à votre charge en cas de sinistre</span>
+                <br>
+                <span class="note">Catastrophes naturelles : franchise légale de 380 €</span>
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="section" aria-labelledby="titre-cotisation">
+          <h2 id="titre-cotisation" class="section__titre">Cotisation et paiement</h2>
+          <dl class="lignes">
+            <div class="ligne">
+              <dt class="ligne__libelle">Cotisation</dt>
+              <dd class="ligne__valeur">{{ formaterPrix(c.cotisationMensuelle) }} € TTC/mois, soit {{ formaterPrix(c.cotisationAnnuelle) }} € TTC/an</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Prélèvement</dt>
+              <dd class="ligne__valeur">Le {{ c.jourPrelevement }} de chaque mois</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">IBAN</dt>
+              <dd class="ligne__valeur iban">{{ afficherIban(c.ibanDebut, c.ibanFin) }}</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Référence mandat (RUM)</dt>
+              <dd class="ligne__valeur">{{ c.rum }}</dd>
+            </div>
+            <div class="ligne">
+              <dt class="ligne__libelle">Date du 1er prélèvement</dt>
+              <dd class="ligne__valeur">{{ formaterDate(c.datePremierPrelevement) }}</dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="section" aria-labelledby="titre-date">
+          <h2 id="titre-date" class="section__titre">Date d'effet</h2>
+          <dl class="lignes">
+            <div class="ligne">
+              <dt class="ligne__libelle">Prise d'effet</dt>
+              <dd class="ligne__valeur">{{ formaterDateEffet(c.dateEffet) }}</dd>
+            </div>
+            @if (c.resiliationHamon) {
+              <div class="ligne ligne--hamon">
+                <dt class="ligne__libelle">Loi Hamon</dt>
+                <dd class="ligne__valeur">
+                  Assur'Easy résilie votre contrat actuel en votre nom, sans démarche de votre part,
+                  après la signature du présent contrat (art. L. 113-15-2 du Code des assurances).
+                </dd>
+              </div>
+            }
+          </dl>
+          <div class="renonciation-entete">
+            <button type="button" class="lien-details" (click)="renonciationEtendue.set(!renonciationEtendue())">
+              Droit de renonciation (14 jours)
+              <span aria-hidden="true">{{ renonciationEtendue() ? ' ▲' : ' ▼' }}</span>
+            </button>
+          </div>
+          @if (renonciationEtendue()) {
+            <p class="renonciation">
+              Conformément à l'article L. 112-2-1 du Code des assurances, vous disposez d'un délai de
+              <strong>14 jours calendaires</strong> à compter de la signature du contrat pour y renoncer,
+              sans frais ni pénalité, par courrier recommandé avec accusé de réception adressé à Assur'Easy.
+            </p>
+          }
+        </section>
+
+      </div>
+
+      <aside class="panneau-signature" aria-label="Signature en ligne">
+
+        @if (c.statut === 'SIGNE') {
+          <div class="signature-ok">
+            <span class="signature-ok__icone" aria-hidden="true">✓</span>
+            <p class="signature-ok__texte">Votre contrat a été signé.</p>
+          </div>
+        } @else {
+          <h2 class="panneau-signature__titre">Signer en ligne</h2>
+
+          @if (c.telephone) {
+            <p class="panneau-signature__sms">
+              Pour signer, saisissez le code à 6 chiffres reçu par SMS au
+              <strong>{{ masquerTelephone(c.telephone) }}</strong>.
+            </p>
+          }
+
+          <label class="checkbox-label">
+            <input
+              type="checkbox"
+              [checked]="mandatLu()"
+              (change)="mandatLu.set($any($event.target).checked)"
+            />
+            <span>J'ai lu et j'accepte les conditions particulières du contrat ci-dessus.</span>
+          </label>
+
+          <div class="champ-code">
+            <label for="code-signature" class="champ-code__label">Code reçu par SMS</label>
+            <input
+              id="code-signature"
+              type="text"
+              inputmode="numeric"
+              maxlength="6"
+              placeholder="000000"
+              class="champ-code__input"
+              [class.champ-code__input--erreur]="erreurSignature()"
+              [value]="codeSignature()"
+              (input)="saisirCode($any($event.target).value)"
+            />
+            @if (erreurSignature()) {
+              <p class="champ-code__erreur" role="alert">{{ erreurSignature() }}</p>
+            }
+          </div>
+
+          <button
+            type="button"
+            class="btn btn--large btn-pleine-largeur"
+            [disabled]="!peutSigner()"
+            (click)="signerContrat()"
+          >
+            {{ enCoursDeSignature() ? 'Validation…' : 'Valider ma signature' }}
+          </button>
+
+          <button type="button" class="lien-renvoyer">Renvoyer le code</button>
+
+          <p class="note-prototype">[Prototype] La vérification SMS n'est pas active. Utilisez le code 123456.</p>
+        }
+
+      </aside>
+
+    </div>
+  }
+
+</main>

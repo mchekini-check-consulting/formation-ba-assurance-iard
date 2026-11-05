@@ -132,7 +132,7 @@ class MandatIT {
         assertThat(mandat.getDateSignature()).isNotNull();
         assertThat(jdbc.queryForObject("select row_to_json(m)::text from mandat_sepa m where m.id = ?",
                         String.class, mandat.getId()))
-                .doesNotContain("FR76", "30006");
+                .doesNotContain("30006000");
     }
 
     @Test

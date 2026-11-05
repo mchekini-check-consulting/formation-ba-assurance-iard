@@ -213,6 +213,7 @@ export class DevisPaiement {
 
   private traiterResultat(resultat: ResultatSignature): void {
     if (resultat.statut === 'signe') {
+      this.devis.mandatSigne.set(true);
       void this.router.navigate(['/devis/contrat']);
     } else if (resultat.statut === 'session-expiree') {
       this.reconnecter();

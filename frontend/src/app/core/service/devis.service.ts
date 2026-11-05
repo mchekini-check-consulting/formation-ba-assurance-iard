@@ -30,6 +30,8 @@ export class DevisService {
   /** Devis pour lequel l'étape 4 a été enregistrée : l'étape 5 n'est ouverte que pour celui-là. */
   readonly referenceDossier = signal<string | null>(null);
   readonly paiement = signal<SaisiePaiement>(paiementVide());
+  /** Vrai une fois le mandat SEPA signé avec succès à l'étape 5. */
+  readonly mandatSigne = signal<boolean>(false);
 
   readonly recommandation = computed(() => recommander(this.besoins()));
   readonly tarifBase = computed(() => {
