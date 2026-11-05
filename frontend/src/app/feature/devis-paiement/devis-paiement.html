@@ -1,0 +1,205 @@
+<iard-devis-entete [etape]="5" />
+
+<main id="contenu" class="fond-gris">
+  <div class="conteneur">
+    <div class="en-tete-etape">
+      <h1 id="titre-etape" class="serif">Paiement</h1>
+      <p class="sous-titre">Choisissez la date de début de votre contrat et mettez en place votre prélèvement mensuel.</p>
+    </div>
+
+    <form class="formulaire formulaire--centre" novalidate aria-labelledby="titre-etape" (submit)="generer($event)">
+      <section class="carte" aria-labelledby="titre-prelevement">
+        <h2 id="titre-prelevement" class="carte__titre">Mon prélèvement</h2>
+
+        <div class="champ">
+          <label class="libelle" for="date-debut">Date de début du contrat</label>
+          <p id="aide-date-debut" class="aide">Au format JJ/MM/AAAA, entre demain et dans 90 jours</p>
+          <input
+            id="date-debut"
+            class="saisie"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            maxlength="10"
+            [class.saisie--erreur]="erreur('date-debut')"
+            [attr.aria-invalid]="erreur('date-debut') ? true : null"
+            [attr.aria-describedby]="erreur('date-debut') ? 'aide-date-debut erreur-date-debut' : 'aide-date-debut'"
+            [value]="saisie().dateDebut"
+            (input)="saisirDate($event)"
+            (blur)="quitterChamp('date-debut')"
+          />
+          @if (erreur('date-debut'); as message) {
+            <p id="erreur-date-debut" class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
+
+        <div class="champ">
+          <label class="libelle" for="titulaire">Titulaire du compte</label>
+          <input
+            id="titulaire"
+            class="saisie"
+            type="text"
+            autocomplete="off"
+            maxlength="140"
+            [class.saisie--erreur]="erreur('titulaire')"
+            [attr.aria-invalid]="erreur('titulaire') ? true : null"
+            [attr.aria-describedby]="erreur('titulaire') ? 'erreur-titulaire' : null"
+            [value]="saisie().titulaire"
+            (input)="saisirTitulaire($event)"
+            (blur)="quitterChamp('titulaire')"
+          />
+          @if (erreur('titulaire'); as message) {
+            <p id="erreur-titulaire" class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
+
+        <div class="champ">
+          <label class="libelle" for="iban">IBAN</label>
+          <input
+            id="iban"
+            class="saisie"
+            type="text"
+            autocomplete="off"
+            autocapitalize="characters"
+            spellcheck="false"
+            maxlength="50"
+            [class.saisie--erreur]="erreur('iban')"
+            [attr.aria-invalid]="erreur('iban') ? true : null"
+            [attr.aria-describedby]="erreur('iban') ? 'erreur-iban' : null"
+            [value]="saisie().iban"
+            (input)="saisirIban($event)"
+            (blur)="quitterChamp('iban')"
+          />
+          @if (erreur('iban'); as message) {
+            <p id="erreur-iban" class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
+
+        <div class="champ">
+          <span id="libelle-jour" class="libelle">Jour de prélèvement</span>
+          <p id="aide-jour" class="aide">Votre cotisation sera prélevée chaque mois à cette date.</p>
+          <div class="choix" role="group" aria-labelledby="libelle-jour" aria-describedby="aide-jour">
+            @for (jour of jours; track jour; let premier = $first) {
+              <button
+                type="button"
+                class="choix__option"
+                [id]="premier ? 'jour-prelevement' : null"
+                [class.choix__option--actif]="saisie().jour === jour"
+                [attr.aria-pressed]="saisie().jour === jour"
+                (click)="choisirJour(jour)"
+              >
+                Le {{ jour }}
+              </button>
+            }
+          </div>
+          @if (erreur('jour-prelevement'); as message) {
+            <p class="erreur" role="alert">{{ message }}</p>
+          }
+        </div>
+      </section>
+
+      <section class="carte" aria-labelledby="titre-recapitulatif">
+        <h2 id="titre-recapitulatif" class="carte__titre">Mon récapitulatif</h2>
+
+        @for (bloc of blocs(); track bloc.titre) {
+          <div class="bloc">
+            <div class="bloc__entete">
+              <h3 class="bloc__titre">{{ bloc.titre }}</h3>
+              <a class="bloc__modifier" [routerLink]="bloc.etape" [attr.aria-label]="'Modifier : ' + bloc.titre">Modifier</a>
+            </div>
+            <dl class="bloc__lignes">
+              @for (ligne of bloc.lignes; track ligne.libelle) {
+                <div class="bloc__ligne">
+                  <dt>{{ ligne.libelle }}</dt>
+                  <dd>{{ ligne.valeur }}</dd>
+                </div>
+              }
+            </dl>
+          </div>
+        }
+
+        <div class="bloc">
+          <div class="bloc__entete">
+            <h3 class="bloc__titre">Mon paiement</h3>
+            <button type="button" class="bloc__modifier" aria-label="Modifier : Mon paiement" (click)="modifierPaiement()">
+              Modifier
+            </button>
+          </div>
+          <dl class="bloc__lignes">
+            @for (ligne of lignesPaiement(); track ligne.libelle) {
+              <div class="bloc__ligne">
+                <dt>{{ ligne.libelle }}</dt>
+                <dd>{{ ligne.valeur }}</dd>
+              </div>
+            }
+          </dl>
+          <p class="aide">Votre échéancier vous sera envoyé au moins 14 jours avant le premier prélèvement.</p>
+        </div>
+      </section>
+
+      <section class="carte encadre-mandat" aria-labelledby="titre-mandat">
+        <h2 id="titre-mandat" class="carte__titre">Mandat de prélèvement SEPA</h2>
+        @if (mandat(); as m) {
+          <dl class="bloc__lignes">
+            <div class="bloc__ligne">
+              <dt>Créancier</dt>
+              <dd>{{ m.creancier }}</dd>
+            </div>
+            <div class="bloc__ligne">
+              <dt>Identifiant créancier SEPA (ICS)</dt>
+              <dd>{{ m.ics }}</dd>
+            </div>
+            <div class="bloc__ligne">
+              <dt>Référence unique du mandat (RUM)</dt>
+              <dd>{{ m.rum }}</dd>
+            </div>
+            <div class="bloc__ligne">
+              <dt>Type de paiement</dt>
+              <dd>Récurrent</dd>
+            </div>
+          </dl>
+        }
+        @if (erreurPreparation()) {
+          <div class="alerte alerte--bloquant" role="alert">
+            <p>Votre mandat n'a pas pu être préparé. Veuillez recharger votre devis ou réessayer plus tard.</p>
+          </div>
+        }
+        <p class="encadre-mandat__texte">
+          Vous disposez d'un droit de remboursement auprès de votre banque : sous 8 semaines à compter du débit pour un
+          prélèvement autorisé, sous 13 mois pour un prélèvement non autorisé.
+        </p>
+        <label class="autorisation" for="autorisation">
+          <input
+            id="autorisation"
+            type="checkbox"
+            [checked]="autorisation()"
+            (change)="basculerAutorisation($event)"
+          />
+          <span>J'autorise Assur'Easy à envoyer des instructions à ma banque pour débiter mon compte.</span>
+        </label>
+      </section>
+
+      <section class="carte carte--pourquoi" aria-labelledby="titre-renonciation">
+        <h2 id="titre-renonciation" class="carte__titre">Droit de renonciation</h2>
+        <p>Vous disposez de 14 jours après la signature pour renoncer à votre contrat, sans frais.</p>
+      </section>
+
+      @if (!autorisation()) {
+        <p class="invitation" role="status">Cochez l'autorisation de prélèvement pour générer votre contrat.</p>
+      }
+
+      @if (erreurEnvoi()) {
+        <div class="alerte alerte--bloquant" role="alert">
+          <p>Votre mandat n'a pas pu être enregistré. Veuillez réessayer.</p>
+        </div>
+      }
+
+      <div class="actions actions--deux">
+        <a class="btn btn--contour" routerLink="/devis/informations">← Retour à mes informations</a>
+        <button type="submit" class="btn btn--large" [disabled]="!autorisation() || !mandat() || envoi()">
+          Générer mon contrat
+        </button>
+      </div>
+    </form>
+  </div>
+</main>

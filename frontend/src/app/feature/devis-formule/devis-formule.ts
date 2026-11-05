@@ -72,16 +72,7 @@ export class DevisFormule {
     return valeurContenu > FORMULES[choisie].plafondValeur;
   });
 
-  protected readonly prixTotalMensuel = computed(() => {
-    const formule = this.choisie();
-    const tarif = this.devis.tarifBase();
-    if (!formule || !tarif) return null;
-    const base = prixFormule(tarif, formule);
-    const opts = this.optionsChoisies().reduce((s, o) => s + PRIX_OPTIONS[o], 0);
-    const f = this.franchise();
-    const ajustFranchise = f !== null ? AJUSTEMENTS_FRANCHISE[f] : 0;
-    return Math.round((base + opts + ajustFranchise) * 100) / 100;
-  });
+  protected readonly prixTotalMensuel = this.devis.prixMensuel;
 
   protected readonly lignesDevis = computed((): LigneDevis[] => {
     const formule = this.choisie();

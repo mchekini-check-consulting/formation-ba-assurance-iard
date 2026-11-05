@@ -15,3 +15,10 @@ export const formuleChoisieGuard: CanActivateFn = () => {
   const devis = inject(DevisService);
   return devis.reference() && devis.franchiseChoisie() ? true : inject(Router).parseUrl('/devis/formule');
 };
+
+/** L'étape 5 suppose l'étape 4 enregistrée pour le devis en cours. */
+export const informationsEnregistreesGuard: CanActivateFn = () => {
+  const devis = inject(DevisService);
+  const enregistre = devis.reference() !== null && devis.referenceDossier() === devis.reference();
+  return enregistre ? true : inject(Router).parseUrl('/devis/informations');
+};

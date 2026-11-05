@@ -170,6 +170,17 @@ describe('DevisBesoins', () => {
       expect(router.navigate).toHaveBeenCalledWith(['/devis/formule']);
     });
 
+    it('US-14 : repasser sans rien changer garde le devis et la formule choisie', () => {
+      repondreAToutes();
+      devis.validerRecommandation('ref-1', 'serenite');
+      valider();
+
+      http.expectNone('/api/devis/recommandations');
+      expect(devis.reference()).toBe('ref-1');
+      expect(devis.formuleChoisie()).toBe('serenite');
+      expect(router.navigate).toHaveBeenCalledWith(['/devis/formule']);
+    });
+
     it('n’envoie pas deux fois pendant l’enregistrement', () => {
       repondreAToutes();
       valider();

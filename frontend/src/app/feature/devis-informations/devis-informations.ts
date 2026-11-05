@@ -218,6 +218,7 @@ export class DevisInformations {
 
   private traiterResultat(resultat: ResultatInformations): void {
     if (resultat.statut === 'enregistre') {
+      this.devis.referenceDossier.set(this.devis.reference());
       void this.router.navigate(['/devis/paiement']);
     } else if (resultat.statut === 'session-expiree') {
       void this.router.navigate(['/connexion'], { queryParams: { retour: '/devis/informations' } });

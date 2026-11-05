@@ -1,7 +1,12 @@
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { DevisService } from '../service/devis.service';
-import { formuleChoisieGuard, logementRenseigneGuard, recommandationEnregistreeGuard } from './devis.guard';
+import {
+  formuleChoisieGuard,
+  informationsEnregistreesGuard,
+  logementRenseigneGuard,
+  recommandationEnregistreeGuard,
+} from './devis.guard';
 
 describe('gardes du devis', () => {
   let devis: DevisService;
@@ -49,5 +54,23 @@ describe('gardes du devis', () => {
     devis.validerRecommandation('ref-1', 'confort');
     devis.franchiseChoisie.set('300');
     expect(TestBed.runInInjectionContext(() => formuleChoisieGuard(route, etat))).toBe(true);
+  });
+
+  it('étape 5 : renvoie vers l’étape 4 sans devis', () => {
+    const resultat = TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat));
+    expect(adresse(resultat)).toBe('/devis/informations');
+  });
+
+  it('étape 5 : renvoie vers l’étape 4 si elle n’est pas enregistrée pour ce devis', () => {
+    devis.referenceDossier.set('ancien-devis');
+    devis.validerRecommandation('ref-1', 'confort');
+    const resultat = TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat));
+    expect(adresse(resultat)).toBe('/devis/informations');
+  });
+
+  it('étape 5 : laisse passer une fois l’étape 4 enregistrée', () => {
+    devis.validerRecommandation('ref-1', 'confort');
+    devis.referenceDossier.set('ref-1');
+    expect(TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat))).toBe(true);
   });
 });

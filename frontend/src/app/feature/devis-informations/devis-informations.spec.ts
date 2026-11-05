@@ -407,6 +407,7 @@ describe('DevisInformations', () => {
 
       requete.flush(null, { status: 204, statusText: 'No Content' });
       expect(router.navigate).toHaveBeenCalledWith(['/devis/paiement']);
+      expect(devis.referenceDossier()).toBe('ref-1');
     });
 
     it('n’envoie pas deux fois pendant l’enregistrement', async () => {
