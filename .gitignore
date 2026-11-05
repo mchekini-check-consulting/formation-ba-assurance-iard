@@ -11,3 +11,10 @@ Thumbs.db
 
 # Scripts temporaires de développement
 fix-spec.js
+
+# Fichiers locaux Claude Code
+.claude/settings.local.json
+.claude/scheduled_tasks.lock
+
+# package-lock.json généré par erreur à la racine (pas de package.json ici)
+/package-lock.json
