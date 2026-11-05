@@ -64,7 +64,7 @@ export class DevisService {
 
   private readonly choixTarifes = computed(() => {
     const { surface, typeLogement } = this.logement();
-    const options = [...this.optionsChoisies()].sort().join(',');
+    const options = [...this.optionsChoisies()].sort((a, b) => a.localeCompare(b)).join(',');
     return [surface, typeLogement, this.formuleChoisie(), options, this.franchiseChoisie()].join('|');
   });
 

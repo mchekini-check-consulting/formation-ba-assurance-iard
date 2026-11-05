@@ -1,4 +1,4 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { MENTION_CONSERVATION, formaterDate } from '../../core/model/devis-enregistre';
 import {
@@ -34,11 +34,12 @@ interface LigneDevis {
   styleUrls: ['../devis-logement/devis-logement.scss', './devis-formule.scss'],
   templateUrl: './devis-formule.html',
 })
-export class DevisFormule {
+export class DevisFormule implements OnInit {
   private readonly devis = inject(DevisService);
   private readonly router = inject(Router);
   private readonly devisEnregistres = inject(DevisEnregistreService);
   private readonly connexion = inject(ConnexionService);
+  private readonly route = inject(ActivatedRoute);
   private readonly sectionFranchise = viewChild<ElementRef<HTMLElement>>('sectionFranchise');
 
   private readonly tentative = signal(false);
@@ -131,9 +132,9 @@ export class DevisFormule {
     { valeur: '500', libelle: 'Franchise 500 €', ajustement: AJUSTEMENTS_FRANCHISE['500'] },
   ];
 
-  constructor() {
+  ngOnInit(): void {
     // AC2 : de retour de la connexion, le devis s'enregistre sans nouveau clic
-    if (inject(ActivatedRoute).snapshot.queryParamMap.get('enregistrer')) {
+    if (this.route.snapshot.queryParamMap.get('enregistrer')) {
       this.envoyerDevis();
       void this.router.navigate(['/devis/formule'], { replaceUrl: true });
     }
