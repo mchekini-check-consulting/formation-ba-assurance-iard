@@ -5,6 +5,20 @@
     <div class="en-tete-etape">
       <h1 class="serif">Ma formule</h1>
       <p class="sous-titre">Nous vous conseillons la formule {{ nomConseille() }}.</p>
+      <div class="toggle-periodicite" role="group" aria-label="Période de paiement">
+        <button
+          type="button"
+          class="toggle-periodicite__bouton"
+          [class.toggle-periodicite__bouton--actif]="!afficherAnnuel()"
+          (click)="choisirPeriodicite('mensuel')"
+        >Par mois</button>
+        <button
+          type="button"
+          class="toggle-periodicite__bouton"
+          [class.toggle-periodicite__bouton--actif]="afficherAnnuel()"
+          (click)="choisirPeriodicite('annuel')"
+        >Par an</button>
+      </div>
     </div>
 
     <div class="formules" role="group" aria-label="Choix de la formule">
@@ -15,9 +29,14 @@
           }
           <h2 class="formule__nom serif">{{ carte.nom }}</h2>
           <p class="formule__description">{{ carte.description }}</p>
-          <p class="formule__plafond">Contenu assuré jusqu'à <strong>{{ carte.plafond }}</strong></p>
+          <p class="formule__plafond">Capital mobilier : <strong>{{ carte.plafond }}</strong></p>
+          <ul class="formule__garanties">
+            @for (g of carte.garanties; track g) {
+              <li>{{ g }}</li>
+            }
+          </ul>
           <p class="encadre-tarif__prix serif">
-            {{ carte.prix }}&#160;€<span class="encadre-tarif__unite">/mois</span>
+            {{ carte.prix }}&#160;€<span class="encadre-tarif__unite">{{ unitePrix() }}</span>
           </p>
           <button
             type="button"
@@ -34,25 +53,105 @@
     </div>
     <p class="mention">Prix avant options · estimation provisoire</p>
 
-    <section class="carte" aria-labelledby="titre-raisons">
-      <h2 id="titre-raisons" class="carte__titre">Pourquoi la formule {{ nomConseille() }} ?</h2>
-      <ul class="liste">
-        @for (raison of recommandation()?.raisons; track raison) {
-          <li>{{ raison }}</li>
-        }
-      </ul>
+    <div class="mise-en-page">
+      <form class="formulaire" (submit)="souscrire($event)" novalidate>
 
-      <h2 class="carte__titre">Options conseillées</h2>
-      @if (options().length > 0) {
-        <ul class="liste">
-          @for (option of options(); track option) {
-            <li>{{ option }}</li>
+        @if (alerteFormuleInferieure()) {
+          <div class="alerte alerte--info" role="alert">
+            <p>Cette formule couvre moins que nos conseils. Ce choix sera noté dans votre fiche conseil.</p>
+          </div>
+        }
+
+        @if (alerteCapitalInsuffisant()) {
+          <div class="alerte alerte--info" role="alert">
+            <p>Le capital mobilier de la formule choisie est insuffisant pour couvrir votre contenu déclaré. Envisagez une formule supérieure.</p>
+          </div>
+        }
+
+        <section class="carte" aria-labelledby="titre-raisons">
+          <h2 id="titre-raisons" class="carte__titre">Pourquoi la formule {{ nomConseille() }} ?</h2>
+          <ul class="liste">
+            @for (raison of recommandation()?.raisons; track raison) {
+              <li>{{ raison }}</li>
+            }
+          </ul>
+
+          <h2 class="carte__titre">Options conseillées</h2>
+          @if (optionsConseillees().length > 0) {
+            <ul class="liste">
+              @for (option of optionsConseillees(); track option) {
+                <li>{{ option }}</li>
+              }
+            </ul>
+          } @else {
+            <p class="liste">Aucune option conseillée selon vos réponses.</p>
           }
-        </ul>
-      } @else {
-        <p class="liste">Aucune option conseillée selon vos réponses.</p>
-      }
-    </section>
+        </section>
+
+        <section class="carte" aria-labelledby="titre-options">
+          <h2 id="titre-options" class="carte__titre">Options</h2>
+          @for (opt of TOUTES_OPTIONS; track opt.code) {
+            <label class="option">
+              <input
+                type="checkbox"
+                [checked]="optionsChoisies().includes(opt.code)"
+                (change)="toggleOption(opt.code)"
+              />
+              <span class="option__libelle">{{ opt.libelle }}</span>
+              <span class="option__prix">+{{ formaterAjustement(opt.prix).slice(1) }}&#160;€{{ unitePrix() }}</span>
+            </label>
+          }
+        </section>
+
+        <section class="carte" aria-labelledby="titre-franchise" #sectionFranchise>
+          <h2 id="titre-franchise" class="carte__titre">Franchise</h2>
+          @for (f of FRANCHISES; track f.valeur) {
+            <label class="franchise">
+              <input
+                type="radio"
+                name="franchise"
+                [value]="f.valeur"
+                [checked]="franchise() === f.valeur"
+                (change)="choisirFranchise(f.valeur)"
+              />
+              <span class="franchise__libelle">{{ f.libelle }}</span>
+              @if (f.ajustement !== 0) {
+                <span class="franchise__ajustement">{{ formaterAjustement(f.ajustement) }}&#160;€{{ unitePrix() }}</span>
+              } @else {
+                <span class="franchise__ajustement franchise__ajustement--base">prix de base</span>
+              }
+            </label>
+          }
+          @if (erreurFranchise()) {
+            <p class="erreur" role="alert" id="erreur-franchise">Choisissez votre franchise</p>
+          }
+          <p class="mention-legale">La franchise catastrophe naturelle est fixée par la loi.</p>
+        </section>
+
+        <div class="actions">
+          <button type="submit" class="btn">Souscrire cette formule</button>
+        </div>
+      </form>
+
+      <aside class="recapitulatif">
+        <h2 class="recapitulatif__titre">Mon devis</h2>
+        @for (ligne of lignesDevis(); track ligne.libelle) {
+          <div class="recapitulatif__ligne">
+            <span>{{ ligne.libelle }}</span>
+            <span class="recapitulatif__montant">{{ ligne.montantFormate }}&#160;€</span>
+          </div>
+        }
+        @if (totalFormate() !== null) {
+          <div class="recapitulatif__total">
+            <span>Total TTC</span>
+            <span class="recapitulatif__montant--total">{{ totalFormate() }}&#160;€{{ unitePrix() }}</span>
+          </div>
+          @if (afficherAnnuel() && totalMensuelFormate() !== null) {
+            <p class="recapitulatif__mensuel">soit {{ totalMensuelFormate() }}&#160;€/mois</p>
+          }
+        }
+      </aside>
+    </div>
 
     <div class="actions actions--gauche">
       <a class="btn btn--contour" routerLink="/devis/besoins">← Retour à mes besoins</a>

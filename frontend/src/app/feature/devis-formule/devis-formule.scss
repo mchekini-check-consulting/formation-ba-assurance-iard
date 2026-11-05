@@ -8,7 +8,7 @@
   position: relative;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
   padding: 28px 24px 24px;
   border: 1.5px solid var(--bordure-claire);
   border-radius: 16px;
@@ -38,16 +38,24 @@
   }
 
   &__description {
-    flex: 1;
     margin: 0;
-    font-size: 14px;
-    line-height: 1.5;
+    font-size: 13px;
+    line-height: 1.4;
     color: var(--texte-doux);
   }
 
   &__plafond {
     margin: 0;
-    font-size: 14px;
+    font-size: 13px;
+  }
+
+  &__garanties {
+    flex: 1;
+    margin: 0;
+    padding-left: 16px;
+    font-size: 12px;
+    line-height: 1.6;
+    color: var(--texte-doux);
   }
 }
 
@@ -69,6 +77,179 @@ p.liste {
   padding-left: 0;
 }
 
+/* Toggle Mois / An */
+.toggle-periodicite {
+  display: inline-flex;
+  margin-top: 12px;
+  border: 1.5px solid var(--bordure);
+  border-radius: 10px;
+  overflow: hidden;
+
+  &__bouton {
+    padding: 6px 18px;
+    background: #fff;
+    border: none;
+    font: inherit;
+    font-size: 13px;
+    cursor: pointer;
+    color: var(--texte-doux);
+
+    &--actif {
+      background: var(--rouge);
+      color: #fff;
+      font-weight: 600;
+    }
+
+    &:focus-visible {
+      outline: 2px solid var(--rouge);
+      outline-offset: -2px;
+    }
+  }
+}
+
+/* Options (checkboxes) */
+.option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bordure-claire);
+  cursor: pointer;
+  font-size: 14px;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  input[type='checkbox'] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--rouge);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  &__libelle {
+    flex: 1;
+  }
+
+  &__prix {
+    font-size: 13px;
+    color: var(--texte-doux);
+    white-space: nowrap;
+  }
+}
+
+/* Franchise (radios) */
+.franchise {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bordure-claire);
+  cursor: pointer;
+  font-size: 14px;
+
+  &:last-of-type {
+    border-bottom: none;
+  }
+
+  input[type='radio'] {
+    width: 18px;
+    height: 18px;
+    accent-color: var(--rouge);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  &__libelle {
+    flex: 1;
+  }
+
+  &__ajustement {
+    font-size: 13px;
+    color: var(--texte-doux);
+    white-space: nowrap;
+
+    &--base {
+      font-style: italic;
+    }
+  }
+}
+
+/* Erreur franchise */
+.erreur {
+  margin: 4px 0 0;
+  padding: 8px 12px;
+  background: #fdf2f2;
+  border: 1px solid #f0c0bc;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #7a1f1f;
+}
+
+/* Récapitulatif Mon devis */
+.recapitulatif {
+  position: sticky;
+  top: 110px;
+  flex: none;
+  width: 240px;
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  border: 1px solid var(--bordure-claire);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 6%);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__titre {
+    margin: 0 0 8px;
+    font-size: 15px;
+    font-weight: 700;
+  }
+
+  &__ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+    color: var(--texte-doux);
+    padding-bottom: 4px;
+    border-bottom: 1px solid var(--bordure-claire);
+  }
+
+  &__montant {
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 8px;
+    padding-top: 4px;
+    font-size: 14px;
+    font-weight: 700;
+  }
+
+  &__montant--total {
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--rouge);
+    white-space: nowrap;
+  }
+
+  &__mensuel {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-discret);
+    text-align: right;
+  }
+}
+
 .actions--gauche {
   justify-content: flex-start;
   padding-top: 16px;
@@ -78,5 +259,11 @@ p.liste {
   .formules {
     grid-template-columns: 1fr;
     gap: 22px;
+  }
+
+  .recapitulatif {
+    position: static;
+    width: 100%;
+    order: -1;
   }
 }

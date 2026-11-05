@@ -70,5 +70,11 @@ export const routes: Routes = [
     canActivate: [recommandationEnregistreeGuard],
     title: "Ma formule – Assur'Easy",
   },
+  {
+    path: 'devis/informations',
+    component: PageSimple,
+    title: "Mes informations – Assur'Easy",
+    data: { titre: 'Cette étape (US-13) sera développée prochainement' },
+  },
   { path: '**', redirectTo: '' },
 ];

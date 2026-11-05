@@ -4,6 +4,8 @@ export type Formule = 'essentielle' | 'confort' | 'serenite';
 export type Remboursement = 'neuf' | 'vetuste';
 export type Priorite = 'prix' | 'equilibre' | 'protection';
 export type OptionConseillee = 'objets-valeur' | 'assistance-depannage' | 'protection-juridique';
+export type Franchise = '150' | '300' | '500';
+export type Periodicite = 'mensuel' | 'annuel';
 
 export interface ReponsesBesoins {
   valeurContenu: number | null;
@@ -25,6 +27,8 @@ export interface DetailFormule {
   nom: string;
   description: string;
   plafond: string;
+  plafondValeur: number;
+  garanties: string[];
   // PROVISOIRE : coefficients à valider, en attendant le vrai tarif par formule
   coefficient: number;
 }
@@ -38,18 +42,42 @@ export const FORMULES: Record<Formule, DetailFormule> = {
     nom: 'Essentielle',
     description: 'Les garanties indispensables : dégâts des eaux, incendie, vol et responsabilité civile.',
     plafond: '10 000 €',
+    plafondValeur: 10_000,
+    garanties: ['Dégâts des eaux', 'Incendie & explosion', 'Vol & vandalisme', 'Responsabilité civile'],
     coefficient: 1,
   },
   confort: {
     nom: 'Confort',
     description: "L'équilibre entre protection et budget, pour la plupart des logements.",
     plafond: '20 000 €',
+    plafondValeur: 20_000,
+    garanties: [
+      'Dégâts des eaux',
+      'Incendie & explosion',
+      'Vol & vandalisme',
+      'Responsabilité civile',
+      'Bris de glace',
+      'Catastrophes naturelles',
+      'Tempête, grêle, neige',
+    ],
     coefficient: 1.3,
   },
   serenite: {
     nom: 'Sérénité',
     description: 'La protection la plus large, avec remboursement à neuf.',
     plafond: '35 000 €',
+    plafondValeur: 35_000,
+    garanties: [
+      'Dégâts des eaux',
+      'Incendie & explosion',
+      'Vol & vandalisme',
+      'Responsabilité civile',
+      'Bris de glace',
+      'Catastrophes naturelles',
+      'Tempête, grêle, neige',
+      'Remboursement à neuf',
+      'Dommages électriques',
+    ],
     coefficient: 1.6,
   },
 };
@@ -58,6 +86,23 @@ export const LIBELLES_OPTIONS: Record<OptionConseillee, string> = {
   'objets-valeur': 'Objets de valeur',
   'assistance-depannage': 'Assistance dépannage',
   'protection-juridique': 'Protection juridique',
+};
+
+// PROVISOIRE : rang pour comparer les formules (alerte choix inférieur à la recommandation)
+export const RANG_FORMULE: Record<Formule, number> = { essentielle: 0, confort: 1, serenite: 2 };
+
+// PROVISOIRE : prix des options à valider avec le backend tarification
+export const PRIX_OPTIONS: Record<OptionConseillee, number> = {
+  'objets-valeur': 2.5,
+  'assistance-depannage': 1.5,
+  'protection-juridique': 2.9,
+};
+
+// PROVISOIRE : ajustements franchise à valider
+export const AJUSTEMENTS_FRANCHISE: Record<Franchise, number> = {
+  '150': 1.5,
+  '300': 0,
+  '500': -1.0,
 };
 
 export function reponsesVides(): ReponsesBesoins {

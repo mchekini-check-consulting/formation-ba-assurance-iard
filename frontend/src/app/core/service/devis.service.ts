@@ -1,6 +1,14 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { DevisLogement, StatutLogement, TypeLogement, estimerTarif, logementVide } from '../model/devis';
-import { Formule, ReponsesBesoins, recommander, reponsesVides } from '../model/recommandation';
+import {
+  Formule,
+  Franchise,
+  OptionConseillee,
+  Periodicite,
+  ReponsesBesoins,
+  recommander,
+  reponsesVides,
+} from '../model/recommandation';
 
 @Injectable({ providedIn: 'root' })
 export class DevisService {
@@ -9,6 +17,9 @@ export class DevisService {
   /** Référence de la recommandation enregistrée : vide dès qu'une réponse change. */
   readonly reference = signal<string | null>(null);
   readonly formuleChoisie = signal<Formule | null>(null);
+  readonly optionsChoisies = signal<OptionConseillee[]>([]);
+  readonly franchiseChoisie = signal<Franchise | null>(null);
+  readonly periodicite = signal<Periodicite>('mensuel');
 
   readonly recommandation = computed(() => recommander(this.besoins()));
   readonly tarifBase = computed(() => {
@@ -29,6 +40,12 @@ export class DevisService {
   validerRecommandation(reference: string, formule: Formule): void {
     this.reference.set(reference);
     this.formuleChoisie.set(formule);
+  }
+
+  toggleOption(option: OptionConseillee): void {
+    this.optionsChoisies.update((opts) =>
+      opts.includes(option) ? opts.filter((o) => o !== option) : [...opts, option],
+    );
   }
 
   // PROVISOIRE : 'proprietaire' de la landing est mappé sur 'proprietaire-occupant' par défaut
