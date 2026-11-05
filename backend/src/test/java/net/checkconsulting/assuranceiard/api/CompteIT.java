@@ -31,10 +31,11 @@ class CompteIT {
         mockMvc.perform(post("/comptes").contentType(MediaType.APPLICATION_JSON).content(CORPS))
                 .andExpect(status().isCreated());
 
+        // La base est partagée avec les autres tests : seul le compte de ce test compte ici
         assertThat(compteRepository.findAll())
+                .filteredOn(compte -> "paul@exemple.fr".equals(compte.getEmail()))
                 .singleElement()
                 .satisfies(compte -> {
-                    assertThat(compte.getEmail()).isEqualTo("paul@exemple.fr");
                     assertThat(compte.getMotDePasseHash()).startsWith("$2").doesNotContain("Abcdefg1");
                     assertThat(compte.getDateCreation()).isNotNull();
                 });
