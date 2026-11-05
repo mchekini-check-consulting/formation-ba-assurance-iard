@@ -1,5 +1,6 @@
-import { Component, ElementRef, computed, inject, signal, viewChild } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { MENTION_CONSERVATION, formaterDate } from '../../core/model/devis-enregistre';
 import {
   AJUSTEMENTS_FRANCHISE,
   FORMULES,
@@ -12,10 +13,15 @@ import {
   formaterPrix,
   prixFormule,
 } from '../../core/model/recommandation';
+import { ConnexionService } from '../../core/service/connexion.service';
+import { DevisEnregistreService } from '../../core/service/devis-enregistre.service';
 import { DevisService } from '../../core/service/devis.service';
 import { DevisEntete } from '../devis-entete/devis-entete';
 
 const ORDRE: Formule[] = ['essentielle', 'confort', 'serenite'];
+
+const RETOUR_ENREGISTREMENT = { retour: '/devis/formule?enregistrer=1' };
+const NOM_PDF = 'devis-assureasy.pdf';
 
 interface LigneDevis {
   libelle: string;
@@ -28,12 +34,24 @@ interface LigneDevis {
   styleUrls: ['../devis-logement/devis-logement.scss', './devis-formule.scss'],
   templateUrl: './devis-formule.html',
 })
-export class DevisFormule {
+export class DevisFormule implements OnInit {
   private readonly devis = inject(DevisService);
   private readonly router = inject(Router);
+  private readonly devisEnregistres = inject(DevisEnregistreService);
+  private readonly connexion = inject(ConnexionService);
+  private readonly route = inject(ActivatedRoute);
   private readonly sectionFranchise = viewChild<ElementRef<HTMLElement>>('sectionFranchise');
 
   private readonly tentative = signal(false);
+
+  protected readonly proposerCompte = signal(false);
+  protected readonly envoiEnCours = signal(false);
+  protected readonly telechargementEnCours = signal(false);
+  protected readonly finValidite = signal<string | null>(null);
+  protected readonly erreurDevis = signal<string | null>(null);
+  protected readonly RETOUR_ENREGISTREMENT = RETOUR_ENREGISTREMENT;
+  protected readonly MENTION_CONSERVATION = MENTION_CONSERVATION;
+  protected readonly messageReprise = this.devis.messageReprise;
 
   protected readonly recommandation = this.devis.recommandation;
   protected readonly choisie = this.devis.formuleChoisie;
@@ -114,16 +132,27 @@ export class DevisFormule {
     { valeur: '500', libelle: 'Franchise 500 €', ajustement: AJUSTEMENTS_FRANCHISE['500'] },
   ];
 
+  ngOnInit(): void {
+    // AC2 : de retour de la connexion, le devis s'enregistre sans nouveau clic
+    if (this.route.snapshot.queryParamMap.get('enregistrer')) {
+      this.envoyerDevis();
+      void this.router.navigate(['/devis/formule'], { replaceUrl: true });
+    }
+  }
+
   protected choisir(formule: Formule): void {
     this.devis.formuleChoisie.set(formule);
+    this.finValidite.set(null);
   }
 
   protected toggleOption(option: OptionConseillee): void {
     this.devis.toggleOption(option);
+    this.finValidite.set(null);
   }
 
   protected choisirFranchise(valeur: Franchise): void {
     this.devis.franchiseChoisie.set(valeur);
+    this.finValidite.set(null);
   }
 
   protected choisirPeriodicite(p: 'mensuel' | 'annuel'): void {
@@ -133,27 +162,78 @@ export class DevisFormule {
   protected souscrire(e: Event): void {
     e.preventDefault();
     this.tentative.set(true);
-    if (!this.franchise()) {
-      this.sectionFranchise()?.nativeElement.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
-      return;
-    }
+    if (this.franchiseManquante()) return;
     void this.router.navigate(['/devis/informations']);
   }
 
+  /** RG2 : l'enregistrement exige un compte. */
+  protected enregistrerDevis(): void {
+    if (this.envoiEnCours() || this.franchiseManquante()) return;
+    this.erreurDevis.set(null);
+    this.envoiEnCours.set(true);
+    this.connexion.sessionValide().subscribe((valide) => {
+      this.envoiEnCours.set(false);
+      if (valide) {
+        this.envoyerDevis();
+      } else {
+        this.proposerUnCompte();
+      }
+    });
+  }
+
+  /** RG2 et RG3 : sans compte, généré par le backend, sans envoi par e-mail. */
   protected telechargerDevis(): void {
-    const lignes = this.lignesDevis();
-    if (lignes.length === 0) return;
-    const contenu = [
-      "Mon devis – Assur'Easy",
-      '='.repeat(30),
-      ...lignes.map((l) => `${l.libelle} : ${l.montantFormate} €`),
-      '-'.repeat(30),
-      `Total TTC : ${this.totalFormate() ?? '-'} €${this.unitePrix()}`,
-    ].join('\n');
-    const a = document.createElement('a');
-    a.href = 'data:text/plain;charset=utf-8,' + encodeURIComponent(contenu);
-    a.download = 'mon-devis-assureasy.txt';
-    a.click();
+    const demande = this.devis.demandeDevis();
+    if (this.telechargementEnCours() || this.franchiseManquante() || !demande) return;
+    this.erreurDevis.set(null);
+    this.telechargementEnCours.set(true);
+    this.devisEnregistres.telechargerPdf(demande).subscribe((fichier) => {
+      this.telechargementEnCours.set(false);
+      if (fichier) {
+        this.enregistrerFichier(fichier);
+      } else {
+        this.erreurDevis.set("Le PDF n'a pas pu être généré. Réessayez dans quelques instants.");
+      }
+    });
+  }
+
+  private envoyerDevis(): void {
+    const demande = this.devis.demandeDevis();
+    if (!demande) return;
+    this.envoiEnCours.set(true);
+    this.devisEnregistres.enregistrer(demande).subscribe((resultat) => {
+      this.envoiEnCours.set(false);
+      if (resultat.statut === 'enregistre') {
+        this.finValidite.set(formaterDate(resultat.dateFinValidite));
+        this.proposerCompte.set(false);
+        this.devis.oublierBrouillon();
+      } else if (resultat.statut === 'session-expiree') {
+        this.proposerUnCompte();
+      } else {
+        this.erreurDevis.set("Votre devis n'a pas pu être enregistré. Réessayez dans quelques instants.");
+      }
+    });
+  }
+
+  private proposerUnCompte(): void {
+    this.devis.conserverBrouillon();
+    this.proposerCompte.set(true);
+  }
+
+  private franchiseManquante(): boolean {
+    this.tentative.set(true);
+    if (this.franchise()) return false;
+    this.sectionFranchise()?.nativeElement.querySelector<HTMLInputElement>('input[type="radio"]')?.focus();
+    return true;
+  }
+
+  private enregistrerFichier(fichier: Blob): void {
+    const adresse = URL.createObjectURL(fichier);
+    const lien = document.createElement('a');
+    lien.href = adresse;
+    lien.download = NOM_PDF;
+    lien.click();
+    URL.revokeObjectURL(adresse);
   }
 
   protected formaterAjustement(montant: number): string {

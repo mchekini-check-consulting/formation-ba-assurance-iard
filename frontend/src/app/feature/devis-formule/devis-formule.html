@@ -21,6 +21,12 @@
       </div>
     </div>
 
+    @if (messageReprise()) {
+      <div class="alerte alerte--info message-reprise" role="status">
+        <p>{{ messageReprise() }}</p>
+      </div>
+    }
+
     <div class="formules" role="group" aria-label="Choix de la formule">
       @for (carte of cartes(); track carte.code) {
         <article class="formule" [class.formule--choisie]="choisie() === carte.code">
@@ -151,9 +157,31 @@
           }
         }
         <div class="recapitulatif__actions">
-          <button type="button" class="btn" (click)="souscrire($event)">Enregistrer mon devis</button>
-          <button type="button" class="btn btn--contour" (click)="telechargerDevis()">Télécharger le devis</button>
+          <button type="button" class="btn" [disabled]="envoiEnCours()" (click)="enregistrerDevis()">Enregistrer mon devis</button>
+          <button type="button" class="btn btn--contour" [disabled]="telechargementEnCours()" (click)="telechargerDevis()">Télécharger mon devis (PDF)</button>
         </div>
+        <p class="recapitulatif__mention">{{ MENTION_CONSERVATION }}</p>
+
+        @if (finValidite()) {
+          <div class="alerte alerte--info" role="status">
+            <p>Votre devis est enregistré. Il est valable jusqu'au {{ finValidite() }}.</p>
+            <p><a routerLink="/espace-client/devis">Voir mes devis</a></p>
+          </div>
+        }
+
+        @if (erreurDevis()) {
+          <p class="erreur" role="alert">{{ erreurDevis() }}</p>
+        }
+
+        @if (proposerCompte()) {
+          <div class="alerte alerte--info encadre-compte" role="status">
+            <p>Pour enregistrer votre devis, créez un compte ou connectez-vous. Vos réponses sont conservées.</p>
+            <div class="encadre-compte__actions">
+              <a class="btn" routerLink="/inscription" [queryParams]="RETOUR_ENREGISTREMENT">Créer un compte</a>
+              <a class="btn btn--contour" routerLink="/connexion" [queryParams]="RETOUR_ENREGISTREMENT">Me connecter</a>
+            </div>
+          </div>
+        }
       </aside>
     </div>
 

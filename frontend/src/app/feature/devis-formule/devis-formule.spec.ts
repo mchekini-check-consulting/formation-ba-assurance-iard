@@ -1,5 +1,7 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { Router, provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 import { DevisService } from '../../core/service/devis.service';
 import { DevisFormule } from './devis-formule';
 
@@ -45,7 +47,10 @@ describe('DevisFormule', () => {
   const recapitulatif = (): string => page.querySelector('.recapitulatif')?.textContent ?? '';
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    sessionStorage.clear();
+    TestBed.configureTestingModule({
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
+    });
     devis = TestBed.inject(DevisService);
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -271,36 +276,145 @@ describe('DevisFormule', () => {
       expect(router.navigate).not.toHaveBeenCalled();
     });
 
-    it('Enregistrer mon devis : navigue vers /devis/informations quand la franchise est choisie', () => {
-      choisirFranchise('300');
-      const btn = Array.from(page.querySelectorAll<HTMLButtonElement>('.recapitulatif button')).find((b) =>
-        b.textContent?.includes('Enregistrer'),
-      )!;
-      btn.click();
-      fixture.detectChanges();
-      expect(router.navigate).toHaveBeenCalledWith(['/devis/informations']);
+    describe('US-12 : enregistrer et télécharger', () => {
+      const JETON = 'assureasy.session';
+      const remplir = (): void => {
+        devis.mettreAJour({ adresse: '12 rue des Lilas', codePostal: '75001', ville: 'Paris' });
+        choisirFranchise('300');
+      };
+      const flushSession = (http: HttpTestingController): void => {
+        http.expectOne('/api/session').flush({ email: 'marie@exemple.fr' });
+      };
+
+      afterEach(() => {
+        TestBed.inject(HttpTestingController).verify();
+        sessionStorage.clear();
+      });
+
+      it('AC1 : connecté, enregistre et confirme avec la date de validité', () => {
+        const http = TestBed.inject(HttpTestingController);
+        sessionStorage.setItem(JETON, 'jeton');
+        remplir();
+        cliquer('Enregistrer mon devis');
+        flushSession(http);
+        const requete = http.expectOne('/api/devis/enregistres');
+        expect(requete.request.body.franchise).toBe('300');
+        expect(requete.request.body.prixMensuel).toBeUndefined();
+        requete.flush({ dateFinValidite: '2026-12-05' });
+        fixture.detectChanges();
+        expect(page.querySelector('[role="status"]')?.textContent).toContain("valable jusqu'au 05/12/2026");
+        expect(page.querySelector('a[href="/espace-client/devis"]')).not.toBeNull();
+      });
+
+      it('AC2 : non connecté, propose de créer un compte ou de se connecter sans rien envoyer', () => {
+        const http = TestBed.inject(HttpTestingController);
+        remplir();
+        cliquer('Enregistrer mon devis');
+        http.expectNone('/api/devis/enregistres');
+        const liens = Array.from(page.querySelectorAll<HTMLAnchorElement>('.encadre-compte a')).map((a) =>
+          a.getAttribute('href'),
+        );
+        expect(liens[0]).toContain('/inscription?retour=');
+        expect(liens[1]).toContain('/connexion?retour=');
+        expect(decodeURIComponent(liens[1] ?? '')).toContain('/devis/formule?enregistrer=1');
+        expect(sessionStorage.getItem('assureasy.devis')).toContain('12 rue des Lilas');
+      });
+
+      it('AC2 : une session expirée propose aussi le compte', () => {
+        const http = TestBed.inject(HttpTestingController);
+        sessionStorage.setItem(JETON, 'jeton');
+        remplir();
+        cliquer('Enregistrer mon devis');
+        flushSession(http);
+        http.expectOne('/api/devis/enregistres').flush(null, { status: 401, statusText: 'Unauthorized' });
+        fixture.detectChanges();
+        expect(page.querySelector('.encadre-compte')).not.toBeNull();
+      });
+
+      it('AC2 : au retour de la connexion, enregistre seul et efface la copie', () => {
+        const http = TestBed.inject(HttpTestingController);
+        remplir();
+        devis.conserverBrouillon();
+        fixture.destroy();
+        vi.spyOn(TestBed.inject(ActivatedRoute).snapshot.queryParamMap, 'get').mockReturnValue('1');
+        creerEcran();
+        http.expectOne('/api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
+        fixture.detectChanges();
+        expect(page.textContent).toContain('Votre devis est enregistré');
+        expect(router.navigate).toHaveBeenCalledWith(['/devis/formule'], { replaceUrl: true });
+        expect(sessionStorage.getItem('assureasy.devis')).toBeNull();
+      });
+
+      it('signale un échec de l’enregistrement', () => {
+        const http = TestBed.inject(HttpTestingController);
+        sessionStorage.setItem(JETON, 'jeton');
+        remplir();
+        cliquer('Enregistrer mon devis');
+        flushSession(http);
+        http.expectOne('/api/devis/enregistres').flush(null, { status: 500, statusText: 'Erreur' });
+        fixture.detectChanges();
+        expect(page.querySelector('.recapitulatif [role="alert"]')?.textContent).toContain('pas pu être enregistré');
+      });
+
+      it('retire la confirmation dès qu’un choix change', () => {
+        const http = TestBed.inject(HttpTestingController);
+        sessionStorage.setItem(JETON, 'jeton');
+        remplir();
+        cliquer('Enregistrer mon devis');
+        flushSession(http);
+        http.expectOne('/api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
+        fixture.detectChanges();
+        choisirFranchise('500');
+        expect(page.textContent).not.toContain('Votre devis est enregistré');
+      });
+
+      it('AC6 : affiche le message de reprise', () => {
+        devis.messageReprise.set('Votre devis avait expiré.');
+        fixture.detectChanges();
+        expect(page.querySelector('.message-reprise')?.textContent).toContain('avait expiré');
+      });
+
+      it('informe de la durée de conservation', () => {
+        expect(page.querySelector('.recapitulatif__mention')?.textContent).toContain('conservé 3 ans');
+      });
+
+      it('AC4 : sans compte, télécharge un PDF', () => {
+        const http = TestBed.inject(HttpTestingController);
+        remplir();
+        const fakeA = { href: '', download: '', click: vi.fn() } as unknown as HTMLAnchorElement;
+        URL.createObjectURL = vi.fn().mockReturnValue('blob:devis');
+        URL.revokeObjectURL = vi.fn();
+        cliquer('Télécharger mon devis (PDF)');
+        vi.spyOn(document, 'createElement').mockReturnValueOnce(fakeA);
+        http.expectOne('/api/devis/pdf').flush(new Blob(['%PDF']));
+        expect(fakeA.download).toBe('devis-assureasy.pdf');
+        expect(fakeA.click).toHaveBeenCalled();
+        expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:devis');
+      });
+
+      it('AC4 : demande la franchise avant de télécharger', () => {
+        cliquer('Télécharger mon devis (PDF)');
+        expect(page.querySelector('#erreur-franchise')).not.toBeNull();
+        TestBed.inject(HttpTestingController).expectNone('/api/devis/pdf');
+      });
+
+      it('signale un PDF impossible à générer', () => {
+        const http = TestBed.inject(HttpTestingController);
+        remplir();
+        cliquer('Télécharger mon devis (PDF)');
+        http.expectOne('/api/devis/pdf').flush(new Blob(), { status: 500, statusText: 'Erreur' });
+        fixture.detectChanges();
+        expect(page.querySelector('.recapitulatif [role="alert"]')?.textContent).toContain('pas pu être généré');
+      });
     });
 
-    it('affiche le bouton Télécharger le devis dans le bloc Mon devis', () => {
+    it('affiche le bouton Télécharger mon devis (PDF) dans le bloc Mon devis', () => {
       const btn = Array.from(page.querySelectorAll('.recapitulatif button')).find((b) =>
         b.textContent?.includes('Télécharger'),
       );
       expect(btn).not.toBeNull();
     });
 
-    it("Télécharger le devis : crée un fichier texte avec le récapitulatif", () => {
-      choisirFranchise('300');
-      fixture.detectChanges();
-      const fakeA = { href: '', download: '', click: vi.fn() } as unknown as HTMLAnchorElement;
-      vi.spyOn(document, 'createElement').mockReturnValueOnce(fakeA);
-      const btn = Array.from(page.querySelectorAll<HTMLButtonElement>('.recapitulatif button')).find((b) =>
-        b.textContent?.includes('Télécharger'),
-      )!;
-      btn.click();
-      expect(fakeA.download).toBe('mon-devis-assureasy.txt');
-      expect(fakeA.href).toContain('data:text/plain');
-      expect(fakeA.click).toHaveBeenCalled();
-    });
   });
 
   describe('Bouton Souscrire cette formule', () => {

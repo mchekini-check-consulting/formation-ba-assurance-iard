@@ -15,8 +15,17 @@ describe('gardes du devis', () => {
   const adresse = (resultat: unknown): string => TestBed.inject(Router).serializeUrl(resultat as UrlTree);
 
   beforeEach(() => {
+    sessionStorage.clear();
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     devis = TestBed.inject(DevisService);
+  });
+
+  it('US-12 : étape 3 : retrouve le devis conservé après un rechargement', () => {
+    devis.validerRecommandation('ref-1', 'confort');
+    devis.conserverBrouillon();
+    devis.reference.set(null);
+    expect(TestBed.runInInjectionContext(() => recommandationEnregistreeGuard(route, etat))).toBe(true);
+    expect(devis.reference()).toBe('ref-1');
   });
 
   it('étape 2 : renvoie vers l’étape 1 sans tarif', () => {

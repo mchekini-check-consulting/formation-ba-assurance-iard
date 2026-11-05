@@ -20,6 +20,7 @@ import { DoubleAuthentification } from './feature/double-authentification/double
 import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
+import { MesDevis } from './feature/mes-devis/mes-devis';
 import { PageSimple } from './feature/page-simple/page-simple';
 import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
 
@@ -65,6 +66,12 @@ export const routes: Routes = [
     canActivate: [sessionGuard],
     title: "Mes documents – Assur'Easy",
     data: { titre: 'Mes documents' },
+  },
+  {
+    path: 'espace-client/devis',
+    component: MesDevis,
+    canActivate: [sessionGuard],
+    title: "Mes devis – Assur'Easy",
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {
