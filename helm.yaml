@@ -13,7 +13,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: f712f38
-      qualif: 7ff4599
+      qualif: f712f38
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -70,7 +70,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: f712f38
-      qualif: 7ff4599
+      qualif: f712f38
       preprod: ""
       prod: ""
     containerPort: 8080
