@@ -69,7 +69,7 @@ export function saisieVide(): SaisieInformations {
 const AGE_MAJORITE = 18;
 const ANNEE_MINIMALE = 1900;
 
-function lireDate(texte: string): { jour: number; mois: number; annee: number } | null {
+export function lireDate(texte: string): { jour: number; mois: number; annee: number } | null {
   const morceaux = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(texte);
   if (!morceaux) return null;
   const [jour, mois, annee] = morceaux.slice(1).map(Number);

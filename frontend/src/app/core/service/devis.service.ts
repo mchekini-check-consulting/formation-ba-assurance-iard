@@ -1,12 +1,16 @@
 import { Injectable, computed, signal } from '@angular/core';
 import { DevisLogement, StatutLogement, TypeLogement, estimerTarif, logementVide } from '../model/devis';
+import { SaisiePaiement, paiementVide } from '../model/devis-paiement';
 import { SaisieInformations, saisieVide } from '../model/informations';
 import {
+  AJUSTEMENTS_FRANCHISE,
   Formule,
   Franchise,
   OptionConseillee,
+  PRIX_OPTIONS,
   Periodicite,
   ReponsesBesoins,
+  prixFormule,
   recommander,
   reponsesVides,
 } from '../model/recommandation';
@@ -23,11 +27,26 @@ export class DevisService {
   readonly periodicite = signal<Periodicite>('mensuel');
   /** Étape 4, fichiers compris : gardée en mémoire jusqu'à un rechargement de la page. */
   readonly informations = signal<SaisieInformations>(saisieVide());
+  /** Devis pour lequel l'étape 4 a été enregistrée : l'étape 5 n'est ouverte que pour celui-là. */
+  readonly referenceDossier = signal<string | null>(null);
+  readonly paiement = signal<SaisiePaiement>(paiementVide());
 
   readonly recommandation = computed(() => recommander(this.besoins()));
   readonly tarifBase = computed(() => {
     const { surface, typeLogement } = this.logement();
     return estimerTarif(surface, typeLogement);
+  });
+
+  /** Cotisation par mois : formule, options et franchise choisies. */
+  readonly prixMensuel = computed(() => {
+    const formule = this.formuleChoisie();
+    const tarif = this.tarifBase();
+    if (!formule || !tarif) return null;
+    const base = prixFormule(tarif, formule);
+    const options = this.optionsChoisies().reduce((somme, option) => somme + PRIX_OPTIONS[option], 0);
+    const franchise = this.franchiseChoisie();
+    const ajustement = franchise !== null ? AJUSTEMENTS_FRANCHISE[franchise] : 0;
+    return Math.round((base + options + ajustement) * 100) / 100;
   });
 
   mettreAJour(partiel: Partial<DevisLogement>): void {

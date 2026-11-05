@@ -116,6 +116,10 @@ export class DevisBesoins {
     e.preventDefault();
     const recommandation = this.recommandation();
     if (!this.complet() || !recommandation || this.envoi()) return;
+    if (this.devis.reference()) {
+      void this.router.navigate(['/devis/formule']);
+      return;
+    }
 
     this.envoi.set(true);
     this.erreur.set(false);
