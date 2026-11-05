@@ -253,6 +253,56 @@ describe('DevisFormule', () => {
     });
   });
 
+  describe('Boutons du récapitulatif', () => {
+    it('affiche le bouton Enregistrer mon devis dans le bloc Mon devis', () => {
+      const btn = Array.from(page.querySelectorAll('.recapitulatif button')).find((b) =>
+        b.textContent?.includes('Enregistrer'),
+      );
+      expect(btn).not.toBeNull();
+    });
+
+    it("Enregistrer mon devis : affiche l'erreur franchise si aucune franchise n'est choisie", () => {
+      const btn = Array.from(page.querySelectorAll<HTMLButtonElement>('.recapitulatif button')).find((b) =>
+        b.textContent?.includes('Enregistrer'),
+      )!;
+      btn.click();
+      fixture.detectChanges();
+      expect(page.querySelector('#erreur-franchise')).not.toBeNull();
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('Enregistrer mon devis : navigue vers /devis/informations quand la franchise est choisie', () => {
+      choisirFranchise('300');
+      const btn = Array.from(page.querySelectorAll<HTMLButtonElement>('.recapitulatif button')).find((b) =>
+        b.textContent?.includes('Enregistrer'),
+      )!;
+      btn.click();
+      fixture.detectChanges();
+      expect(router.navigate).toHaveBeenCalledWith(['/devis/informations']);
+    });
+
+    it('affiche le bouton Télécharger le devis dans le bloc Mon devis', () => {
+      const btn = Array.from(page.querySelectorAll('.recapitulatif button')).find((b) =>
+        b.textContent?.includes('Télécharger'),
+      );
+      expect(btn).not.toBeNull();
+    });
+
+    it("Télécharger le devis : crée un fichier texte avec le récapitulatif", () => {
+      choisirFranchise('300');
+      fixture.detectChanges();
+      const fakeA = { href: '', download: '', click: vi.fn() } as unknown as HTMLAnchorElement;
+      vi.spyOn(document, 'createElement').mockReturnValueOnce(fakeA);
+      const btn = Array.from(page.querySelectorAll<HTMLButtonElement>('.recapitulatif button')).find((b) =>
+        b.textContent?.includes('Télécharger'),
+      )!;
+      btn.click();
+      expect(fakeA.download).toBe('mon-devis-assureasy.txt');
+      expect(fakeA.href).toContain('data:text/plain');
+      expect(fakeA.click).toHaveBeenCalled();
+    });
+  });
+
   describe('Bouton Souscrire cette formule', () => {
     it("affiche l'erreur franchise si aucune franchise n'est choisie", () => {
       soumettre();

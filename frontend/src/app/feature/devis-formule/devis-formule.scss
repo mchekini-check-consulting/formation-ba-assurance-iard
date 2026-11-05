@@ -248,6 +248,21 @@ p.liste {
     color: var(--texte-discret);
     text-align: right;
   }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px solid var(--bordure-claire);
+
+    .btn {
+      width: 100%;
+      justify-content: center;
+      font-size: 13px;
+    }
+  }
 }
 
 .actions--gauche {
