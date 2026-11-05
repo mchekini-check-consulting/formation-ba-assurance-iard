@@ -22,3 +22,9 @@ export const informationsEnregistreesGuard: CanActivateFn = () => {
   const enregistre = devis.reference() !== null && devis.referenceDossier() === devis.reference();
   return enregistre ? true : inject(Router).parseUrl('/devis/informations');
 };
+
+/** L'étape 6 suppose le mandat signé à l'étape 5. */
+export const mandatSigneGuard: CanActivateFn = () => {
+  const devis = inject(DevisService);
+  return devis.mandatSigne() ? true : inject(Router).parseUrl('/devis/paiement');
+};

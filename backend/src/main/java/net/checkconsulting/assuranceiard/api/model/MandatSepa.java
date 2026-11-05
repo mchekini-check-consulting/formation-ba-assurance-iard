@@ -40,6 +40,9 @@ public class MandatSepa {
     @Column(name = "iban_fin", length = 4)
     private String ibanFin;
 
+    @Column(name = "iban_debut", length = 4)
+    private String ibanDebut;
+
     @Column(name = "jour_prelevement")
     private Integer jourPrelevement;
 

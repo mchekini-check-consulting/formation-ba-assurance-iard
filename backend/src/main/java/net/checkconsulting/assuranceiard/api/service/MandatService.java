@@ -67,6 +67,7 @@ public class MandatService {
         MandatSepa mandat = mandatDuDossier(dossier);
         mandat.setTitulaire(demande.titulaire().trim());
         mandat.setIbanFin(ibanService.fin(iban));
+        mandat.setIbanDebut(ibanService.debut(iban));
         mandat.setJourPrelevement(demande.jourPrelevement());
         mandat.setDateDebut(demande.dateDebut());
         mandat.setDatePremierPrelevement(premierPrelevement);

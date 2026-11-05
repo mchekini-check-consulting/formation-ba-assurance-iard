@@ -1,0 +1,363 @@
+// Header
+.entete {
+  background: white;
+  border-bottom: 1px solid var(--bordure-claire);
+  padding: 0 24px;
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    max-width: 1200px;
+    margin: 0 auto;
+    height: 56px;
+  }
+
+  &__connexion {
+    font-size: 14px;
+    color: var(--texte-secondaire);
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: inherit;
+
+  &__pastille {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background: var(--rouge);
+    color: white;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+  }
+
+  &__nom {
+    font-size: 18px;
+    font-weight: 600;
+  }
+}
+
+// Layout
+.fond-gris {
+  min-height: calc(100vh - 56px);
+  background: var(--fond-gris, #f5f5f5);
+}
+
+.page-entete {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 32px 24px 16px;
+
+  h1 {
+    font-size: 24px;
+    margin: 0;
+  }
+}
+
+.page-corps {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.conteneur-chargement,
+.conteneur-erreur {
+  max-width: 640px;
+  margin: 48px auto;
+  padding: 0 24px;
+}
+
+.chargement {
+  text-align: center;
+  padding: 48px 0;
+  color: var(--texte-secondaire);
+}
+
+// Contract card
+.contrat-carte {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
+.contrat__entete {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+  border-bottom: 2px solid var(--bordure-claire);
+}
+
+.contrat__type {
+  font-weight: 600;
+  font-size: 15px;
+  margin: 0;
+}
+
+.contrat__sous-type {
+  font-size: 13px;
+  color: var(--texte-secondaire);
+  margin: 4px 0 0;
+}
+
+// Status badge
+.badge {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+
+  &--attente {
+    background: #fff3cd;
+    color: #856404;
+  }
+
+  &--signe {
+    background: #d1e7dd;
+    color: #0a3622;
+  }
+}
+
+// Sections
+.section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--bordure-claire);
+
+  &:last-child {
+    border-bottom: 0;
+  }
+
+  &__titre {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--texte-secondaire);
+    margin: 0 0 16px;
+  }
+}
+
+// Label-value grid
+.lignes {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.ligne {
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 8px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--bordure-claire);
+  align-items: baseline;
+
+  &:last-child {
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  &__libelle {
+    font-size: 13px;
+    color: var(--texte-secondaire);
+  }
+
+  &__valeur {
+    font-size: 14px;
+    font-weight: 500;
+
+    &.iban {
+      font-family: monospace;
+      font-size: 13px;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  &--hamon &__valeur {
+    color: var(--rouge);
+    font-size: 13px;
+    font-weight: 400;
+  }
+}
+
+.note {
+  font-size: 12px;
+  color: var(--texte-secondaire);
+  font-weight: 400;
+}
+
+.renonciation {
+  margin: 16px 0 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: var(--texte-secondaire);
+}
+
+.carte--erreur {
+  border-left: 4px solid var(--rouge);
+  padding-left: 16px;
+}
+
+// Signature panel
+.panneau-signature {
+  position: sticky;
+  top: 24px;
+  background: white;
+  border-radius: 8px;
+  padding: 24px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  &__titre {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 0;
+  }
+
+  &__sms {
+    font-size: 14px;
+    color: var(--texte-secondaire);
+    margin: 0;
+    line-height: 1.5;
+  }
+}
+
+.checkbox-label {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  cursor: pointer;
+  font-size: 14px;
+  line-height: 1.5;
+
+  input[type="checkbox"] {
+    margin-top: 2px;
+    flex-shrink: 0;
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+    accent-color: var(--rouge);
+  }
+}
+
+.champ-code {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__label {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texte-secondaire);
+  }
+
+  &__input {
+    padding: 10px 14px;
+    border: 1px solid var(--bordure-claire);
+    border-radius: 6px;
+    font-size: 20px;
+    font-family: monospace;
+    letter-spacing: 0.3em;
+    text-align: center;
+    width: 100%;
+    box-sizing: border-box;
+
+    &:focus {
+      outline: none;
+      border-color: var(--rouge);
+      box-shadow: 0 0 0 2px rgba(var(--rouge-rgb, 220, 53, 69), 0.15);
+    }
+
+    &--erreur {
+      border-color: var(--rouge);
+    }
+  }
+
+  &__erreur {
+    font-size: 13px;
+    color: var(--rouge);
+    margin: 0;
+  }
+}
+
+.bouton--pleine-largeur {
+  width: 100%;
+  justify-content: center;
+}
+
+.lien-renvoyer {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 13px;
+  color: var(--rouge);
+  cursor: pointer;
+  text-decoration: underline;
+  text-align: center;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.note-prototype {
+  font-size: 12px;
+  color: var(--texte-secondaire);
+  background: #f8f9fa;
+  border: 1px dashed var(--bordure-claire);
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin: 0;
+  text-align: center;
+}
+
+.signature-ok {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  text-align: center;
+
+  &__icone {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 48px;
+    height: 48px;
+    background: #d1e7dd;
+    color: #0a3622;
+    border-radius: 50%;
+    font-size: 24px;
+  }
+
+  &__texte {
+    font-weight: 600;
+    color: #0a3622;
+    margin: 0;
+  }
+}
