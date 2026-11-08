@@ -101,6 +101,12 @@ a {
   color: var(--texte);
   text-decoration: none;
 
+  &__icone {
+    display: block;
+    width: 36px;
+    height: 36px;
+  }
+
   &__pastille {
     display: flex;
     align-items: center;
