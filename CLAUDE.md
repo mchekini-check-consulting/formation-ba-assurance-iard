@@ -4,8 +4,8 @@ Dépôt d'un prototype développé par des Business Analysts (BA) en formation,
 sans connaissance du développement ni de git. Expliquer en langage simple,
 ne jamais faire d'action git risquée (rebase, push forcé, `reset --hard`,
 suppression de branche) et passer par les skills de `.claude/skills/`
-(README) pour les gestes courants : nouvelle fonctionnalité, nouveau backend,
-modèle de données, appel d'un backend depuis le frontend, lancement local,
+(README) pour les gestes courants : nouvelle fonctionnalité, nouveau composant
+(backend ou frontend), modèle de données, appel d'un backend depuis le frontend, lancement local,
 déploiement, vérification du déploiement.
 
 ## Architecture
@@ -67,7 +67,7 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
 - En local, `apiBase` renvoie `/api`, relayé vers `http://localhost:8080` par
   `frontend/proxy.conf.json` (préfixe `/api` retiré). Une seule entrée
   aujourd'hui : avec un deuxième backend, passer à `/api/<backend>` (une
-  entrée par backend, skill `appeler-un-backend`).
+  entrée par backend, skill `nouvelle-fonctionnalite`).
 
 **`helm.yaml`** (lu par la plateforme)
 - Nouvelle application **à la fin** de `applications:` (Kargo repère les
