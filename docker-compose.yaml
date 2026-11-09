@@ -40,6 +40,7 @@ services:
       SMTP_PORT: "1025"
       SMTP_TLS: "false"
       MAIL_FROM: noreply@assureasy.fr
+      MOTEUR_TARIFAIRE_URL: http://moteurtarifaire:8081
     ports:
       - "8080:8080"
     depends_on:
@@ -47,6 +48,24 @@ services:
         condition: service_healthy
       mailpit:
         condition: service_started
+      moteurtarifaire:
+        condition: service_started
+
+  moteurtarifaire:
+    build:
+      context: ./moteurtarifaire
+    container_name: moteurtarifaire
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/moteurtarifaire
+      SPRING_DATASOURCE_USERNAME: ${POSTGRES_USER}
+      SPRING_DATASOURCE_PASSWORD: ${POSTGRES_PASSWORD}
+      SERVER_PORT: "8081"
+      LOG_LEVEL: debug
+    ports:
+      - "8081:8081"
+    depends_on:
+      postgres:
+        condition: service_healthy
 
 volumes:
   postgres-data:

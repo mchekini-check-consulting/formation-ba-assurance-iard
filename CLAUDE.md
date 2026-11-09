@@ -83,9 +83,11 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
 - Il fige le routage : chaque backend y a un router `PathPrefix(`/<backend>`)`,
   un middleware `<backend>-strip`, un service `http://<backend>:80`, et le
   middleware `cors` commun (origines = frontends du projet, jamais `*`).
-- Exception : `moteurtarifaire` n'a pas de route. Il n'est appelé que par le
+- Exception : `moteurtarifaire` n'a qu'une route de documentation
+  (router `moteurtarifaire-docs` : `/moteurtarifaire/swagger-ui…` et
+  `/moteurtarifaire/v3/api-docs…`). Son API n'est appelée que par le
   backend, à l'intérieur du cluster (`http://moteurtarifaire:80`, client Feign).
-  Il n'a pas d'authentification : ne pas lui donner de route publique.
+  Il n'a pas d'authentification : ne jamais ouvrir son API (`/v1/...`) au public.
 - `{{ .project }}`, `{{ .env }}`, `{{ .domain }}` disponibles : une seule
   configuration pour les 4 environnements.
 
