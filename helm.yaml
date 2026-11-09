@@ -13,7 +13,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: bae10c2
-      qualif: 974cd39
+      qualif: bae10c2
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -82,7 +82,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: bae10c2
-      qualif: 7aa9764
+      qualif: bae10c2
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -106,7 +106,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: bae10c2
-      qualif: 405d6c8
+      qualif: bae10c2
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -122,7 +122,7 @@ applications:
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
     tag:
       dev: bae10c2
-      qualif: ""
+      qualif: bae10c2
       preprod: ""
       prod: ""
     containerPort: 8080
