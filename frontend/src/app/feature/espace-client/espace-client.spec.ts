@@ -41,7 +41,7 @@ describe('EspaceClient', () => {
 
   it("ferme la session, revient à l'accueil et confirme la déconnexion (US-07, AC3)", () => {
     page.querySelector<HTMLButtonElement>('header button')!.click();
-    const requete = http.expectOne('/api/session');
+    const requete = http.expectOne('/api/assurance-iard-api/session');
     expect(requete.request.method).toBe('DELETE');
     requete.flush(null, { status: 204, statusText: 'No Content' });
 

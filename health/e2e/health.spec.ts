@@ -57,7 +57,7 @@ async function simulerKeycloak(page: Page): Promise<void> {
   );
 }
 
-// Gateway simulé : réponses successives de /backend/actuator/health ; renvoie
+// Gateway simulé : réponses successives de /assurance-iard-api/actuator/health ; renvoie
 // les en-têtes Authorization reçus
 async function simulerSante(page: Page, ...reponses: [number, unknown][]): Promise<string[]> {
   const authorizations: string[] = [];

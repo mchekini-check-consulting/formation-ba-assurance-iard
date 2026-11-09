@@ -1,3 +1,4 @@
+import { RECO_CONFORT } from '../../core/model/tarif.exemples';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -33,7 +34,7 @@ const UN_CONTRAT = {
 };
 
 const remplirDevis = (devis: DevisService): void => {
-  devis.validerRecommandation('7c9e6679-7425-40de-944b-e07fc1f90ae7', 'confort');
+  devis.validerRecommandation('7c9e6679-7425-40de-944b-e07fc1f90ae7', RECO_CONFORT);
   devis.franchiseChoisie.set('300');
   devis.mettreAJour({
     adresse: '12 rue des Lilas',

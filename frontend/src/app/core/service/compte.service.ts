@@ -7,7 +7,7 @@ import { Compte, DemandeCreationCompte, ResultatCreationCompte } from '../model/
 @Injectable({ providedIn: 'root' })
 export class CompteService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/comptes`;
+  private readonly url = `${apiBase('assurance-iard-api')}/comptes`;
 
   readonly emailConnecte = signal<string | null>(null);
 

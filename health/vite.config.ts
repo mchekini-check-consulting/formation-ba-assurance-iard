@@ -3,7 +3,7 @@ import { defineConfig } from 'vitest/config';
 export default defineConfig({
   server: {
     port: 4201,
-    // En local : /api -> backend lancé sur le poste (pas de gateway, donc pas
+    // En local : /api -> assurance-iard-api lancé sur le poste (pas de gateway, donc pas
     // de vérification du token), préfixe retiré (src/config.ts)
     proxy: {
       '/api': {

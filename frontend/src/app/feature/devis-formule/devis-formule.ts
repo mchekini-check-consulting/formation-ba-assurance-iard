@@ -1,27 +1,30 @@
-import { Component, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { Component, DestroyRef, ElementRef, OnInit, computed, inject, signal, viewChild } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Observable, Subject, debounceTime, of, switchMap } from 'rxjs';
 import { MENTION_CONSERVATION, formaterDate } from '../../core/model/devis-enregistre';
 import {
-  AJUSTEMENTS_FRANCHISE,
   FORMULES,
   Formule,
   Franchise,
   LIBELLES_OPTIONS,
   OptionConseillee,
-  PRIX_OPTIONS,
   RANG_FORMULE,
   formaterPrix,
-  prixFormule,
 } from '../../core/model/recommandation';
+import { Tarif, recommandationDe } from '../../core/model/tarif';
 import { ConnexionService } from '../../core/service/connexion.service';
 import { DevisEnregistreService } from '../../core/service/devis-enregistre.service';
 import { DevisService } from '../../core/service/devis.service';
+import { TarifService } from '../../core/service/tarif.service';
 import { DevisEntete } from '../devis-entete/devis-entete';
 
 const ORDRE: Formule[] = ['essentielle', 'confort', 'serenite'];
 
 const RETOUR_ENREGISTREMENT = { retour: '/devis/formule?enregistrer=1' };
 const NOM_PDF = 'devis-assureasy.pdf';
+const ATTENTE_RECALCUL_MS = 300;
+const ERREUR_TARIF = "Votre tarif n'a pas pu être calculé. Réessayez dans quelques instants.";
 
 interface LigneDevis {
   libelle: string;
@@ -40,6 +43,9 @@ export class DevisFormule implements OnInit {
   private readonly devisEnregistres = inject(DevisEnregistreService);
   private readonly connexion = inject(ConnexionService);
   private readonly route = inject(ActivatedRoute);
+  private readonly tarifService = inject(TarifService);
+  private readonly destruction = inject(DestroyRef);
+  private readonly choixModifies = new Subject<void>();
   private readonly sectionFranchise = viewChild<ElementRef<HTMLElement>>('sectionFranchise');
 
   private readonly tentative = signal(false);
@@ -49,6 +55,8 @@ export class DevisFormule implements OnInit {
   protected readonly telechargementEnCours = signal(false);
   protected readonly finValidite = signal<string | null>(null);
   protected readonly erreurDevis = signal<string | null>(null);
+  protected readonly calculEnCours = signal(false);
+  protected readonly erreurTarif = signal<string | null>(null);
   protected readonly RETOUR_ENREGISTREMENT = RETOUR_ENREGISTREMENT;
   protected readonly MENTION_CONSERVATION = MENTION_CONSERVATION;
   protected readonly messageReprise = this.devis.messageReprise;
@@ -60,14 +68,17 @@ export class DevisFormule implements OnInit {
   protected readonly afficherAnnuel = computed(() => this.devis.periodicite() === 'annuel');
 
   protected readonly cartes = computed(() => {
-    const tarif = this.devis.tarifBase() ?? 0;
-    const mult = this.afficherAnnuel() ? 12 : 1;
-    return ORDRE.map((code) => ({
-      code,
-      ...FORMULES[code],
-      prix: formaterPrix(prixFormule(tarif, code) * mult),
-      conseillee: code === this.recommandation()?.formule,
-    }));
+    const prix = this.devis.tarif()?.prix ?? [];
+    return ORDRE.map((code) => {
+      const ligne = prix.find((p) => p.formule === code);
+      const montant = this.afficherAnnuel() ? ligne?.annuel : ligne?.mensuel;
+      return {
+        code,
+        ...FORMULES[code],
+        prix: montant === undefined ? '' : formaterPrix(montant),
+        conseillee: code === this.recommandation()?.formule,
+      };
+    });
   });
 
   protected readonly nomConseille = computed(() => this.cartes().find((c) => c.conseillee)?.nom);
@@ -93,22 +104,30 @@ export class DevisFormule implements OnInit {
   protected readonly prixTotalMensuel = this.devis.prixMensuel;
 
   protected readonly lignesDevis = computed((): LigneDevis[] => {
-    const formule = this.choisie();
-    const tarif = this.devis.tarifBase();
-    if (!formule || !tarif) return [];
+    const detail = this.devis.tarif()?.detail;
+    if (!detail) return [];
     const mult = this.afficherAnnuel() ? 12 : 1;
-    return [
-      ...this.lignesFormule(formule, tarif, mult),
-      ...this.lignesOptions(mult),
-      ...this.lignesFranchise(mult),
+    const lignes: LigneDevis[] = [
+      { libelle: `Formule ${FORMULES[detail.formule].nom}`, montantFormate: formaterPrix(detail.prixFormule * mult) },
+      ...detail.options.map((o) => ({
+        libelle: LIBELLES_OPTIONS[o.option],
+        montantFormate: `+${formaterPrix(o.prixMensuel * mult)}`,
+      })),
     ];
+    const franchise = this.franchise();
+    if (franchise) {
+      lignes.push({
+        libelle: `Franchise ${franchise} €`,
+        montantFormate: this.formaterAjustement(detail.ajustementFranchise),
+      });
+    }
+    return lignes;
   });
 
   protected readonly totalFormate = computed(() => {
-    const total = this.prixTotalMensuel();
-    if (total === null) return null;
-    const mult = this.afficherAnnuel() ? 12 : 1;
-    return formaterPrix(Math.round(total * mult * 100) / 100);
+    const detail = this.devis.tarif()?.detail;
+    if (!detail) return null;
+    return formaterPrix(this.afficherAnnuel() ? detail.totalAnnuel : detail.totalMensuel);
   });
 
   protected readonly totalMensuelFormate = computed(() => {
@@ -120,19 +139,34 @@ export class DevisFormule implements OnInit {
 
   protected readonly erreurFranchise = computed(() => this.tentative() && !this.franchise());
 
-  protected readonly TOUTES_OPTIONS: readonly { code: OptionConseillee; libelle: string; prix: number }[] = [
-    { code: 'objets-valeur', libelle: 'Objets de valeur', prix: PRIX_OPTIONS['objets-valeur'] },
-    { code: 'assistance-depannage', libelle: 'Assistance dépannage', prix: PRIX_OPTIONS['assistance-depannage'] },
-    { code: 'protection-juridique', libelle: 'Protection juridique', prix: PRIX_OPTIONS['protection-juridique'] },
-  ];
+  protected readonly toutesOptions = computed(() =>
+    (this.devis.tarif()?.prixOptions ?? []).map((o) => ({
+      code: o.option,
+      libelle: LIBELLES_OPTIONS[o.option],
+      prix: o.prixMensuel,
+    })),
+  );
 
-  protected readonly FRANCHISES: readonly { valeur: Franchise; libelle: string; ajustement: number }[] = [
-    { valeur: '150', libelle: 'Franchise 150 €', ajustement: AJUSTEMENTS_FRANCHISE['150'] },
-    { valeur: '300', libelle: 'Franchise 300 € (base)', ajustement: AJUSTEMENTS_FRANCHISE['300'] },
-    { valeur: '500', libelle: 'Franchise 500 €', ajustement: AJUSTEMENTS_FRANCHISE['500'] },
-  ];
+  protected readonly franchises = computed(() =>
+    (this.devis.tarif()?.ajustementsFranchise ?? []).map((f) => ({
+      valeur: String(f.franchise) as Franchise,
+      libelle: `Franchise ${f.franchise} €${f.ajustement === 0 ? ' (base)' : ''}`,
+      ajustement: f.ajustement,
+    })),
+  );
+
+  constructor() {
+    this.choixModifies
+      .pipe(
+        debounceTime(ATTENTE_RECALCUL_MS),
+        switchMap(() => this.calculer()),
+        takeUntilDestroyed(this.destruction),
+      )
+      .subscribe((tarif) => this.recevoirTarif(tarif));
+  }
 
   ngOnInit(): void {
+    this.chargerTarif();
     // AC2 : de retour de la connexion, le devis s'enregistre sans nouveau clic
     if (this.route.snapshot.queryParamMap.get('enregistrer')) {
       this.envoyerDevis();
@@ -143,16 +177,19 @@ export class DevisFormule implements OnInit {
   protected choisir(formule: Formule): void {
     this.devis.formuleChoisie.set(formule);
     this.finValidite.set(null);
+    this.recalculer();
   }
 
   protected toggleOption(option: OptionConseillee): void {
     this.devis.toggleOption(option);
     this.finValidite.set(null);
+    this.recalculer();
   }
 
   protected choisirFranchise(valeur: Franchise): void {
     this.devis.franchiseChoisie.set(valeur);
     this.finValidite.set(null);
+    this.recalculer();
   }
 
   protected choisirPeriodicite(p: 'mensuel' | 'annuel'): void {
@@ -162,13 +199,13 @@ export class DevisFormule implements OnInit {
   protected souscrire(e: Event): void {
     e.preventDefault();
     this.tentative.set(true);
-    if (this.franchiseManquante()) return;
+    if (this.franchiseManquante() || this.calculEnCours() || this.prixTotalMensuel() === null) return;
     void this.router.navigate(['/devis/informations']);
   }
 
   /** RG2 : l'enregistrement exige un compte. */
   protected enregistrerDevis(): void {
-    if (this.envoiEnCours() || this.franchiseManquante()) return;
+    if (this.envoiEnCours() || this.calculEnCours() || this.franchiseManquante()) return;
     this.erreurDevis.set(null);
     this.envoiEnCours.set(true);
     this.connexion.sessionValide().subscribe((valide) => {
@@ -184,7 +221,7 @@ export class DevisFormule implements OnInit {
   /** RG2 et RG3 : sans compte, généré par le backend, sans envoi par e-mail. */
   protected telechargerDevis(): void {
     const demande = this.devis.demandeDevis();
-    if (this.telechargementEnCours() || this.franchiseManquante() || !demande) return;
+    if (this.telechargementEnCours() || this.calculEnCours() || this.franchiseManquante() || !demande) return;
     this.erreurDevis.set(null);
     this.telechargementEnCours.set(true);
     this.devisEnregistres.telechargerPdf(demande).subscribe((fichier) => {
@@ -242,22 +279,48 @@ export class DevisFormule implements OnInit {
     return `${signe}${formaterPrix(Math.abs(montant) * mult)}`;
   }
 
-  private lignesFormule(formule: Formule, tarif: number, mult: number): LigneDevis[] {
-    return [{ libelle: `Formule ${FORMULES[formule].nom}`, montantFormate: formaterPrix(prixFormule(tarif, formule) * mult) }];
+  private chargerTarif(): void {
+    const tarif = this.devis.tarif();
+    const reference = this.devis.reference();
+    if (tarif?.detail || !reference) return;
+    this.calculEnCours.set(true);
+    const origine: Observable<Tarif | null> = tarif ? of(null) : this.tarifService.tarifRetenu(reference);
+    origine
+      .pipe(
+        switchMap((retrouve) => (retrouve ? of(retrouve) : this.calculer())),
+        takeUntilDestroyed(this.destruction),
+      )
+      .subscribe((resultat) => this.recevoirTarif(resultat));
   }
 
-  private lignesOptions(mult: number): LigneDevis[] {
-    return this.optionsChoisies().map((o) => ({
-      libelle: LIBELLES_OPTIONS[o],
-      montantFormate: `+${formaterPrix(PRIX_OPTIONS[o] * mult)}`,
-    }));
+  private recalculer(): void {
+    this.calculEnCours.set(true);
+    this.erreurTarif.set(null);
+    this.choixModifies.next();
   }
 
-  private lignesFranchise(mult: number): LigneDevis[] {
-    const f = this.franchise();
-    if (!f) return [];
-    const ajust = AJUSTEMENTS_FRANCHISE[f];
-    const signe = ajust >= 0 ? '+' : '-';
-    return [{ libelle: `Franchise ${f} €`, montantFormate: `${signe}${formaterPrix(Math.abs(ajust) * mult)}` }];
+  private calculer(): Observable<Tarif | null> {
+    return this.tarifService.tarifer(this.devis.reference() ?? '', {
+      logement: this.devis.logement(),
+      formule: this.choisie(),
+      options: this.optionsChoisies(),
+      franchise: this.franchise(),
+    });
+  }
+
+  private recevoirTarif(tarif: Tarif | null): void {
+    this.calculEnCours.set(false);
+    if (tarif === null) {
+      this.devis.tarif.update((actuel) => actuel && { ...actuel, detail: undefined });
+      this.erreurTarif.set(ERREUR_TARIF);
+      return;
+    }
+    if (!tarif.tarifable) {
+      this.erreurTarif.set(tarif.motif ?? ERREUR_TARIF);
+      return;
+    }
+    this.devis.tarif.set(tarif);
+    const recommandation = recommandationDe(tarif);
+    if (recommandation) this.devis.recommandation.set(recommandation);
   }
 }

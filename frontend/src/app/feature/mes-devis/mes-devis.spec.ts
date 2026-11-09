@@ -41,7 +41,7 @@ describe('MesDevis', () => {
   };
 
   const afficher = (liste: DevisEnregistre[]): void => {
-    http.expectOne('/api/devis/enregistres').flush(liste);
+    http.expectOne('/api/assurance-iard-api/devis/enregistres').flush(liste);
     fixture.detectChanges();
   };
   const cliquer = (texte: string, rang = 0): void => {
@@ -87,7 +87,7 @@ describe('MesDevis', () => {
   });
 
   it('signale un échec de chargement', () => {
-    http.expectOne('/api/devis/enregistres').flush(null, { status: 500, statusText: 'Erreur' });
+    http.expectOne('/api/assurance-iard-api/devis/enregistres').flush(null, { status: 500, statusText: 'Erreur' });
     fixture.detectChanges();
     expect(page.querySelector('[role="alert"]')?.textContent).toContain('pas pu être chargés');
   });
@@ -95,7 +95,7 @@ describe('MesDevis', () => {
   it('AC5 et AC6 : reprend le devis et prépare le message de recalcul', () => {
     afficher([expire]);
     cliquer('Reprendre');
-    http.expectOne('/api/devis/enregistres/ref-2/reprise').flush(reprise);
+    http.expectOne('/api/assurance-iard-api/devis/enregistres/ref-2/reprise').flush(reprise);
     const devis = TestBed.inject(DevisService);
     expect(devis.reference()).toBe('ref-2');
     expect(devis.messageReprise()).toContain('de 12,50 € à 14,30 €');
@@ -105,7 +105,7 @@ describe('MesDevis', () => {
   it('signale un devis impossible à reprendre', () => {
     afficher([valide]);
     cliquer('Reprendre');
-    http.expectOne('/api/devis/enregistres/ref-1/reprise').flush(null, { status: 404, statusText: 'Inconnu' });
+    http.expectOne('/api/assurance-iard-api/devis/enregistres/ref-1/reprise').flush(null, { status: 404, statusText: 'Inconnu' });
     fixture.detectChanges();
     expect(page.querySelector('[role="alert"]')?.textContent).toContain('pas pu être repris');
     expect(router.navigate).not.toHaveBeenCalled();
@@ -114,9 +114,9 @@ describe('MesDevis', () => {
   it('RGPD : demande confirmation, puis supprime le devis', () => {
     afficher([valide, expire]);
     cliquer('Supprimer');
-    http.expectNone('/api/devis/enregistres/ref-1');
+    http.expectNone('/api/assurance-iard-api/devis/enregistres/ref-1');
     cliquer('Confirmer la suppression');
-    http.expectOne('/api/devis/enregistres/ref-1').flush(null, { status: 204, statusText: 'No Content' });
+    http.expectOne('/api/assurance-iard-api/devis/enregistres/ref-1').flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
     expect(page.querySelectorAll('.devis-ligne')).toHaveLength(1);
   });
@@ -133,7 +133,7 @@ describe('MesDevis', () => {
     afficher([valide]);
     cliquer('Supprimer');
     cliquer('Confirmer la suppression');
-    http.expectOne('/api/devis/enregistres/ref-1').flush(null, { status: 500, statusText: 'Erreur' });
+    http.expectOne('/api/assurance-iard-api/devis/enregistres/ref-1').flush(null, { status: 500, statusText: 'Erreur' });
     fixture.detectChanges();
     expect(page.querySelectorAll('.devis-ligne')).toHaveLength(1);
     expect(page.querySelector('[role="alert"]')?.textContent).toContain('pas pu être supprimé');

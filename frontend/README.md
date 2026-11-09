@@ -14,7 +14,7 @@ src/app/
     interceptors/    # traitements communs des appels HTTP
     guards/          # protection d'accès aux pages
   feature/           # un dossier par écran (ex. feature/items/)
-proxy.conf.json      # relais local /api -> backend (port 8080)
+proxy.conf.json      # relais local /api/<backend> -> backend du poste
 nginx.conf           # serveur de l'image Docker (port 8080)
 ```
 
@@ -25,16 +25,16 @@ Préfixe des composants : `iard` (balises `<iard-...>`).
 Toujours via `apiBase('<backend>')` (`src/app/core/config/api.ts`), jamais
 d'URL écrite en dur :
 
-| Où           | `apiBase('backend')` renvoie |
+| Où           | `apiBase('assurance-iard-api')` renvoie |
 |--------------|------------------------------|
-| En ligne     | `https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/backend` |
-| En local     | `/api`, relayé vers `http://localhost:8080` par `proxy.conf.json` |
+| En ligne     | `https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/assurance-iard-api` |
+| En local     | `/api/<backend>`, relayé vers le backend du poste par `proxy.conf.json` (`assurance-iard-api` : 8080, `moteurtarifaire` : 8081) |
 
 ```ts
 @Injectable({ providedIn: 'root' })
 export class ItemsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/items`;
+  private readonly url = `${apiBase('assurance-iard-api')}/items`;
   lister(): Observable<Item[]> { return this.http.get<Item[]>(this.url); }
 }
 ```
@@ -46,8 +46,9 @@ npm install
 npm start
 ```
 
-http://localhost:4200/ (rechargement automatique). Le backend doit tourner
-sur le port 8080 pour que les appels `/api/...` répondent.
+http://localhost:4200/ (rechargement automatique). Les backends appelés doivent
+tourner sur le poste (`assurance-iard-api` : port 8080, `moteurtarifaire` : port 8081) pour que
+les appels `/api/<backend>/...` répondent.
 
 ## Qualité (mêmes contrôles qu'en CI)
 

@@ -11,8 +11,8 @@
 # plutôt que d'en écrire une copie par environnement.
 #
 # Authentification (middleware jwt, plugin Traefik activé par la plateforme
-# dès qu'un middleware l'utilise), uniquement sur /backend/actuator/health
-# (router backend-health) ; le reste de /backend reste public. Un appel à
+# dès qu'un middleware l'utilise), uniquement sur /assurance-iard-api/actuator/health
+# (router assurance-iard-api-health) ; le reste de /assurance-iard-api reste public. Un appel à
 # cette route doit porter un token Keycloak (en-tête Authorization: Bearer
 # <token>) émis par le realm check-projects-sso pour le client du frontend
 # (assureasy-frontend-client).
@@ -25,23 +25,23 @@
 gatewayConfig: |
   http:
     routers:
-      backend:
-        rule: "PathPrefix(`/backend`)"
-        service: backend
-        middlewares: [backend-strip, cors]
-      # Santé du backend (Spring Boot Actuator, et ses sous-chemins liveness/
+      assurance-iard-api:
+        rule: "PathPrefix(`/assurance-iard-api`)"
+        service: assurance-iard-api
+        middlewares: [assurance-iard-api-strip, cors]
+      # Santé de assurance-iard-api (Spring Boot Actuator, et ses sous-chemins liveness/
       # readiness) : token obligatoire. priority : choisi avant le router
-      # backend, plus large, qui correspond aussi à ce chemin.
-      backend-health:
-        rule: "PathPrefix(`/backend/actuator/health`)"
+      # assurance-iard-api, plus large, qui correspond aussi à ce chemin.
+      assurance-iard-api-health:
+        rule: "PathPrefix(`/assurance-iard-api/actuator/health`)"
         priority: 100
-        service: backend
+        service: assurance-iard-api
         # cors d'abord : il répond lui-même aux requêtes OPTIONS du navigateur
         # (preflight, envoyées sans token)
-        middlewares: [cors, jwt, backend-strip]
+        middlewares: [cors, jwt, assurance-iard-api-strip]
     middlewares:
-      backend-strip:
-        stripPrefix: {prefixes: ["/backend"]}
+      assurance-iard-api-strip:
+        stripPrefix: {prefixes: ["/assurance-iard-api"]}
       cors:
         headers:
           accessControlAllowOriginList:
@@ -66,5 +66,5 @@ gatewayConfig: |
             removeMissingHeaders: true
             forwardToken: false
     services:
-      backend:
-        loadBalancer: {servers: [{url: "http://backend:80"}]}
+      assurance-iard-api:
+        loadBalancer: {servers: [{url: "http://assurance-iard-api:80"}]}

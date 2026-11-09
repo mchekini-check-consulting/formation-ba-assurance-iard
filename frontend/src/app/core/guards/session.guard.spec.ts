@@ -45,7 +45,7 @@ describe('gardes de connexion', () => {
   it('ouvre la page demandée à un client connecté et surveille son inactivité', async () => {
     sessionStorage.setItem('assureasy.session', 'session');
     const navigation = router.navigateByUrl('/espace-client/documents');
-    await vi.waitFor(() => http.expectOne('/api/session').flush({ email: 'marie@exemple.fr' }));
+    await vi.waitFor(() => http.expectOne('/api/assurance-iard-api/session').flush({ email: 'marie@exemple.fr' }));
     await navigation;
     expect(router.url).toBe('/espace-client/documents');
     expect(surveiller).toHaveBeenCalled();
@@ -54,7 +54,7 @@ describe('gardes de connexion', () => {
   it('renvoie vers la connexion si la session a expiré', async () => {
     sessionStorage.setItem('assureasy.session', 'expiree');
     const navigation = router.navigateByUrl('/espace-client/documents');
-    await vi.waitFor(() => http.expectOne('/api/session').flush({}, { status: 401, statusText: 'Unauthorized' }));
+    await vi.waitFor(() => http.expectOne('/api/assurance-iard-api/session').flush({}, { status: 401, statusText: 'Unauthorized' }));
     await navigation;
     expect(router.url).toBe('/connexion?retour=%2Fespace-client%2Fdocuments');
   });

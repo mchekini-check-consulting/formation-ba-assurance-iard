@@ -57,7 +57,7 @@
         </article>
       }
     </div>
-    <p class="mention">Prix avant options · estimation provisoire</p>
+    <p class="mention">Prix avant options</p>
 
     <div class="mise-en-page">
       <form class="formulaire" (submit)="souscrire($event)" novalidate>
@@ -96,7 +96,7 @@
 
         <section class="carte" aria-labelledby="titre-options">
           <h2 id="titre-options" class="carte__titre">Options</h2>
-          @for (opt of TOUTES_OPTIONS; track opt.code) {
+          @for (opt of toutesOptions(); track opt.code) {
             <label class="option">
               <input
                 type="checkbox"
@@ -111,7 +111,7 @@
 
         <section class="carte" aria-labelledby="titre-franchise" #sectionFranchise>
           <h2 id="titre-franchise" class="carte__titre">Franchise</h2>
-          @for (f of FRANCHISES; track f.valeur) {
+          @for (f of franchises(); track f.valeur) {
             <label class="franchise">
               <input
                 type="radio"
@@ -135,7 +135,7 @@
         </section>
 
         <div class="actions">
-          <button type="submit" class="btn">Souscrire cette formule</button>
+          <button type="submit" class="btn" [disabled]="calculEnCours()">Souscrire cette formule</button>
         </div>
       </form>
 
@@ -147,6 +147,9 @@
             <span class="recapitulatif__montant">{{ ligne.montantFormate }}&#160;€</span>
           </div>
         }
+        @if (erreurTarif(); as erreur) {
+          <p class="erreur" role="alert">{{ erreur }}</p>
+        }
         @if (totalFormate() !== null) {
           <div class="recapitulatif__total">
             <span>Total TTC</span>
@@ -157,8 +160,8 @@
           }
         }
         <div class="recapitulatif__actions">
-          <button type="button" class="btn" [disabled]="envoiEnCours()" (click)="enregistrerDevis()">Enregistrer mon devis</button>
-          <button type="button" class="btn btn--contour" [disabled]="telechargementEnCours()" (click)="telechargerDevis()">Télécharger mon devis (PDF)</button>
+          <button type="button" class="btn" [disabled]="envoiEnCours() || calculEnCours()" (click)="enregistrerDevis()">Enregistrer mon devis</button>
+          <button type="button" class="btn btn--contour" [disabled]="telechargementEnCours() || calculEnCours()" (click)="telechargerDevis()">Télécharger mon devis (PDF)</button>
         </div>
         <p class="recapitulatif__mention">{{ MENTION_CONSERVATION }}</p>
 

@@ -12,7 +12,6 @@ const UNE_DEMANDE: DemandeContrat = {
   typeLogement: 'appartement',
   surface: 45,
   franchise: 300,
-  cotisationMensuelle: 18.5,
   resiliationHamon: false,
 };
 

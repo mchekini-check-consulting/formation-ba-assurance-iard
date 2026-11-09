@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { DemandeInformations, InformationsService, ResultatInformations } from './informations.service';
 
 describe('InformationsService', () => {
-  const url = '/api/devis/informations';
+  const url = '/api/assurance-iard-api/devis/informations';
   const demande: DemandeInformations = {
     referenceDevis: 'ref-1',
     civilite: 'madame',

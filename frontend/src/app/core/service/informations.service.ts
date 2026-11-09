@@ -25,7 +25,7 @@ export type ResultatInformations =
 @Injectable({ providedIn: 'root' })
 export class InformationsService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/devis/informations`;
+  private readonly url = `${apiBase('assurance-iard-api')}/devis/informations`;
 
   /** AC1 : un échec de lecture laisse simplement les champs vides. */
   lire(): Observable<IdentiteCompte | null> {

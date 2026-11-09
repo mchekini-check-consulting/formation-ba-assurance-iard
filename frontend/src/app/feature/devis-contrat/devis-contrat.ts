@@ -210,9 +210,8 @@ export class DevisContrat {
     const reference = this.devis.reference();
     const logement = this.devis.logement();
     const franchise = this.devis.franchiseChoisie();
-    const prixMensuel = this.devis.prixMensuel();
 
-    if (!reference || !logement.adresse || !logement.codePostal || !franchise || prixMensuel === null) {
+    if (!reference || !logement.adresse || !logement.codePostal || !franchise) {
       return null;
     }
 
@@ -224,7 +223,6 @@ export class DevisContrat {
       typeLogement: logement.typeLogement ?? 'appartement',
       surface: Number(logement.surface),
       franchise: Number(franchise as string),
-      cotisationMensuelle: prixMensuel,
       resiliationHamon: logement.antecedent === 'assure-plus-un-an',
     };
   }

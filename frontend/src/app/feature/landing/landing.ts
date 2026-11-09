@@ -48,6 +48,7 @@ export class Landing {
 
   protected readonly annonce = signal<string | null>(inject(AnnonceService).prendre());
 
+
   protected readonly questionOuverte = signal(-1);
 
   protected readonly questions: Question[] = [

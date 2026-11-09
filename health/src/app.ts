@@ -7,7 +7,7 @@ export type Session = Pick<Keycloak, 'token' | 'tokenParsed' | 'updateToken' | '
 const GABARIT = `
   <section class="carte">
     <header>
-      <h1>Santé du backend</h1>
+      <h1>Santé de l'API Assurance IARD</h1>
       <p class="utilisateur"></p>
     </header>
     <p class="etat" data-etat="attente"><span class="pastille"></span><span class="libelle">…</span></p>

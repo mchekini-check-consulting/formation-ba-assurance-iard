@@ -34,7 +34,7 @@ describe('RecommandationService', () => {
   it('envoie les réponses et la recommandation, puis renvoie la référence', () => {
     let resultat: string | null | undefined;
     service.enregistrer(reponses, recommandation).subscribe((r) => (resultat = r));
-    const requete = http.expectOne('/api/devis/recommandations');
+    const requete = http.expectOne('/api/assurance-iard-api/devis/recommandations');
     expect(requete.request.method).toBe('POST');
     expect(requete.request.body).toEqual({ ...reponses, ...recommandation });
     requete.flush({ reference: 'ref-1' }, { status: 201, statusText: 'Created' });
@@ -45,7 +45,7 @@ describe('RecommandationService', () => {
   it('renvoie null en cas d’échec', () => {
     let resultat: string | null | undefined;
     service.enregistrer(reponses, recommandation).subscribe((r) => (resultat = r));
-    http.expectOne('/api/devis/recommandations').flush(null, { status: 500, statusText: 'Erreur' });
+    http.expectOne('/api/assurance-iard-api/devis/recommandations').flush(null, { status: 500, statusText: 'Erreur' });
 
     expect(resultat).toBeNull();
   });

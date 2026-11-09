@@ -1,5 +1,5 @@
 # Push sur main uniquement : construit chaque dossier modifié qui contient un Dockerfile
-# (backend/, frontend/, ...) et pousse l'image dans ECR via OIDC. Kargo détecte
+# (assurance-iard-api/, moteurtarifaire/, frontend/, ...) et pousse l'image dans ECR via OIDC. Kargo détecte
 # l'image, écrit son sha dans helm.yaml (tag.dev) -> ArgoCD redéploie dev.
 # Les étapes viennent de formation-ba-gitops/ci-template.
 name: ci

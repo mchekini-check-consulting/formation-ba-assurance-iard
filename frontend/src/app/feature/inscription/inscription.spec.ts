@@ -12,7 +12,7 @@ describe('Inscription', () => {
   let http: HttpTestingController;
 
   const repondre = (corps: object, status: number): void => {
-    http.expectOne('/api/comptes').flush(corps, { status, statusText: String(status) });
+    http.expectOne('/api/assurance-iard-api/comptes').flush(corps, { status, statusText: String(status) });
     fixture.detectChanges();
   };
 
@@ -118,7 +118,7 @@ describe('Inscription', () => {
     saisir('#email', 'marie@exemple.fr');
     saisir('#mot-de-passe', 'Abcdefg1');
     valider();
-    http.expectOne('/api/comptes').error(new ProgressEvent('error'), { status: 0 });
+    http.expectOne('/api/assurance-iard-api/comptes').error(new ProgressEvent('error'), { status: 0 });
     fixture.detectChanges();
     expect(page.querySelector('.alerte')?.textContent).toContain('Le service est momentanément indisponible.');
     expect(router.navigate).not.toHaveBeenCalled();

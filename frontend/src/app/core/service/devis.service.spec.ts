@@ -1,3 +1,4 @@
+import { RECO_CONFORT, tarifDetaille } from '../model/tarif.exemples';
 import { TestBed } from '@angular/core/testing';
 import { logementVide } from '../model/devis';
 import { reponsesVides } from '../model/recommandation';
@@ -24,20 +25,6 @@ describe('DevisService', () => {
       dateFinValidite: '2026-12-05',
     };
 
-    it.each([
-      ['30', 'appartement', 'essentielle', [], '300', 8.7],
-      ['60', 'appartement', 'confort', ['assistance-depannage'], '300', 13.72],
-      ['60', 'maison', 'serenite', ['objets-valeur', 'assistance-depannage', 'protection-juridique'], '150', 23.92],
-      ['9', 'appartement', 'essentielle', [], '500', 7.1],
-      ['1000', 'maison', 'serenite', ['objets-valeur', 'assistance-depannage', 'protection-juridique'], '150', 69.04],
-    ] as const)('même prix que le backend (TarifServiceTest) : %s m², %s, %s', (surface, type, formule, options, franchise, prix) => {
-      service.mettreAJour({ surface, typeLogement: type });
-      service.validerRecommandation('ref-1', formule);
-      options.forEach((option) => service.toggleOption(option));
-      service.franchiseChoisie.set(franchise);
-      expect(service.prixMensuel()).toBe(prix);
-    });
-
     it('AC5 : remet toutes les réponses en place', () => {
       service.restaurer(reprise);
       expect(service.logement().adresse).toBe('12 rue des Lilas');
@@ -56,17 +43,11 @@ describe('DevisService', () => {
       expect(service.referenceDossier()).toBeNull();
     });
 
-    it('RG1 : garde le prix garanti tant que les choix ne changent pas', () => {
+    it('RG1 : relit le prix d’origine auprès du serveur plutôt que de le recalculer', () => {
+      service.tarif.set(tarifDetaille());
       service.restaurer(reprise);
-      expect(service.prixMensuel()).toBe(12.5);
-    });
-
-    it('applique le barème dès qu’un choix change, puis retrouve le prix garanti', () => {
-      service.restaurer(reprise);
-      service.franchiseChoisie.set('500');
-      expect(service.prixMensuel()).toBe(12.72);
-      service.franchiseChoisie.set('300');
-      expect(service.prixMensuel()).toBe(12.5);
+      expect(service.tarif()).toBeNull();
+      expect(service.prixMensuel()).toBeNull();
     });
 
     it('prépare la demande seulement si le devis est complet', () => {
@@ -114,26 +95,27 @@ describe('DevisService', () => {
     });
   });
 
-  it('reprend le tarif de l’étape 1', () => {
-    expect(service.tarifBase()).toBeNull();
-    service.mettreAJour({ surface: '60', typeLogement: 'appartement' });
-    expect(service.tarifBase()).toBe(9.4);
+  it('la cotisation vient du dernier tarif du serveur', () => {
+    expect(service.prixMensuel()).toBeNull();
+    service.tarif.set(tarifDetaille('confort', ['objets-valeur'], '500'));
+    expect(service.prixMensuel()).toBe(13.72);
   });
 
-  it('met la recommandation à jour à chaque réponse', () => {
-    expect(service.recommandation()).toBeNull();
+  it('oublie le conseil dès qu’une réponse change', () => {
+    service.validerRecommandation('ref-1', RECO_CONFORT);
     service.mettreAJourBesoins({ valeurContenu: 25000 });
-    expect(service.recommandation()?.formule).toBe('serenite');
+    expect(service.recommandation()).toBeNull();
+    expect(service.reference()).toBeNull();
   });
 
   it('sélectionne la formule conseillée une fois la recommandation enregistrée', () => {
-    service.validerRecommandation('ref-1', 'confort');
+    service.validerRecommandation('ref-1', RECO_CONFORT);
     expect(service.reference()).toBe('ref-1');
     expect(service.formuleChoisie()).toBe('confort');
   });
 
   it('oublie la référence dès qu’une réponse change', () => {
-    service.validerRecommandation('ref-1', 'confort');
+    service.validerRecommandation('ref-1', RECO_CONFORT);
     service.mettreAJourBesoins({ litiges: true });
     expect(service.reference()).toBeNull();
   });

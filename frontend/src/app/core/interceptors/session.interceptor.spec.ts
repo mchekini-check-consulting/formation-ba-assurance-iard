@@ -20,8 +20,8 @@ describe('sessionInterceptor', () => {
 
   it('ajoute le jeton aux appels vers le backend', () => {
     sessionStorage.setItem('assureasy.session', 'session');
-    client.get('/api/session').subscribe();
-    const requete = http.expectOne('/api/session');
+    client.get('/api/assurance-iard-api/session').subscribe();
+    const requete = http.expectOne('/api/assurance-iard-api/session');
     expect(requete.request.headers.get('Authorization')).toBe('Bearer session');
     requete.flush({});
   });
@@ -35,8 +35,8 @@ describe('sessionInterceptor', () => {
   });
 
   it("n'ajoute rien sans session", () => {
-    client.get('/api/session').subscribe();
-    const requete = http.expectOne('/api/session');
+    client.get('/api/assurance-iard-api/session').subscribe();
+    const requete = http.expectOne('/api/assurance-iard-api/session');
     expect(requete.request.headers.has('Authorization')).toBe(false);
     requete.flush({});
   });

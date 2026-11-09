@@ -32,7 +32,7 @@ export type ResultatSignature =
 @Injectable({ providedIn: 'root' })
 export class MandatService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/devis/mandats`;
+  private readonly url = `${apiBase('assurance-iard-api')}/devis/mandats`;
 
   preparer(referenceDevis: string): Observable<ResultatPreparation> {
     return this.http.post<MandatPrepare>(this.url, { referenceDevis }).pipe(

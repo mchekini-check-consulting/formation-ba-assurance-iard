@@ -6,7 +6,7 @@ describe('config', () => {
     expect(config('health.formation-ba-assurance-iard.qualif.check-consulting.net')).toEqual({
       keycloakUrl: 'https://keycloak.dev.check-consulting.net',
       healthUrl:
-        'https://gateway.formation-ba-assurance-iard.qualif.check-consulting.net/backend/actuator/health',
+        'https://gateway.formation-ba-assurance-iard.qualif.check-consulting.net/assurance-iard-api/actuator/health',
     });
   });
 

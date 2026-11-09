@@ -12,7 +12,7 @@ function refusDuLien(erreur: unknown): ResultatLien {
 @Injectable({ providedIn: 'root' })
 export class MotDePasseService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/mot-de-passe`;
+  private readonly url = `${apiBase('assurance-iard-api')}/mot-de-passe`;
 
   /** RG1 : rien dans la réponse n'indique si le compte existe. */
   demanderLien(email: string): Observable<boolean> {

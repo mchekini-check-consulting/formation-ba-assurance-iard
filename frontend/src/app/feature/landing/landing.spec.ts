@@ -1,3 +1,5 @@
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { AnnonceService } from '../../core/service/annonce.service';
@@ -32,7 +34,7 @@ describe('Landing', () => {
   const annonce = (): string | undefined => page.querySelector('[role="status"]')?.textContent?.trim();
 
   beforeEach(() => {
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
     fixture = TestBed.createComponent(Landing);
@@ -116,7 +118,7 @@ describe('Landing', () => {
 
   it('affiche le message préparé avant le retour à l’accueil (US-07, AC3)', () => {
     TestBed.resetTestingModule();
-    TestBed.configureTestingModule({ providers: [provideRouter([])] });
+    TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     TestBed.inject(AnnonceService).preparer('Vous êtes bien déconnecté.');
     const accueil = TestBed.createComponent(Landing);
     accueil.detectChanges();

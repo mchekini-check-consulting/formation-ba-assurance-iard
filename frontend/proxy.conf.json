@@ -1,6 +1,6 @@
 {
-  "/api": {
+  "/api/assurance-iard-api": {
     "target": "http://localhost:8080",
-    "pathRewrite": { "^/api": "" }
+    "pathRewrite": { "^/api/assurance-iard-api": "" }
   }
 }

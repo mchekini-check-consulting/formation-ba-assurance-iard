@@ -31,7 +31,7 @@ describe('ReinitialisationMotDePasse', () => {
 
   const ouvrirLienValable = (): void => {
     creer();
-    repondre('/api/mot-de-passe/lien', 204);
+    repondre('/api/assurance-iard-api/mot-de-passe/lien', 204);
   };
 
   const saisir = (valeur: string): void => {
@@ -55,7 +55,7 @@ describe('ReinitialisationMotDePasse', () => {
     creer();
     expect(page.textContent).toContain('Vérification du lien en cours');
     expect(page.querySelector('#mot-de-passe')).toBeNull();
-    repondre('/api/mot-de-passe/lien', 204);
+    repondre('/api/assurance-iard-api/mot-de-passe/lien', 204);
     expect(page.querySelector<HTMLInputElement>('#mot-de-passe')?.value).toBe('');
   });
 
@@ -78,7 +78,7 @@ describe('ReinitialisationMotDePasse', () => {
     ouvrirLienValable();
     saisir('Nouveau123');
     enregistrer();
-    const requete = http.expectOne('/api/mot-de-passe/reinitialisation');
+    const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/reinitialisation');
     expect(requete.request.body).toEqual({ jeton: 'jeton', motDePasse: 'Nouveau123' });
     requete.flush(null, { status: 204, statusText: 'No Content' });
     fixture.detectChanges();
@@ -89,7 +89,7 @@ describe('ReinitialisationMotDePasse', () => {
 
   it('explique un lien expiré ou déjà utilisé et permet d’en redemander un (AC5)', () => {
     creer();
-    repondre('/api/mot-de-passe/lien', 410);
+    repondre('/api/assurance-iard-api/mot-de-passe/lien', 410);
 
     expect(page.querySelector('h1')?.textContent).toContain('Lien expiré ou déjà utilisé');
     expect(page.querySelector('#mot-de-passe')).toBeNull();
@@ -107,14 +107,14 @@ describe('ReinitialisationMotDePasse', () => {
     ouvrirLienValable();
     saisir('Nouveau123');
     enregistrer();
-    repondre('/api/mot-de-passe/reinitialisation', 410);
+    repondre('/api/assurance-iard-api/mot-de-passe/reinitialisation', 410);
 
     expect(page.querySelector('h1')?.textContent).toContain('Lien expiré ou déjà utilisé');
   });
 
   it('prévient si le service est indisponible à l’ouverture', () => {
     creer();
-    repondre('/api/mot-de-passe/lien', 500);
+    repondre('/api/assurance-iard-api/mot-de-passe/lien', 500);
 
     expect(page.querySelector('.alerte')?.textContent).toContain('Le service est momentanément indisponible.');
   });
@@ -123,7 +123,7 @@ describe('ReinitialisationMotDePasse', () => {
     ouvrirLienValable();
     saisir('Nouveau123');
     enregistrer();
-    repondre('/api/mot-de-passe/reinitialisation', 500);
+    repondre('/api/assurance-iard-api/mot-de-passe/reinitialisation', 500);
 
     expect(page.querySelector('.alerte')?.textContent).toContain("Votre mot de passe n'a pas été modifié");
     expect(page.querySelector('#mot-de-passe')).not.toBeNull();

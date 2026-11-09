@@ -1,3 +1,4 @@
+import { RECO_CONFORT } from '../../core/model/tarif.exemples';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -5,7 +6,7 @@ import { Router, provideRouter } from '@angular/router';
 import { DevisService } from '../../core/service/devis.service';
 import { DevisInformations } from './devis-informations';
 
-const URL_API = '/api/devis/informations';
+const URL_API = '/api/assurance-iard-api/devis/informations';
 const PDF = new Uint8Array([0x25, 0x50, 0x44, 0x46, 0x2d, 0x31]);
 const PNG = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
 
@@ -90,7 +91,7 @@ describe('DevisInformations', () => {
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
     devis = TestBed.inject(DevisService);
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
     http = TestBed.inject(HttpTestingController);

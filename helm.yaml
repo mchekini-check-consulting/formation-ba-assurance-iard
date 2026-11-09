@@ -5,9 +5,9 @@
 #       backend : jamais d'URL directe (Service ClusterIP seulement), exposé par
 #       le pod "gateway" ci-dessous (type: gateway) : .../gateway/<backend>/...
 applications:
-  - name: backend
+  - name: assurance-iard-api
     type: backend
-    image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/backend
+    image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/assurance-iard-api
     # Écrit par Kargo (dev automatique ; qualif/preprod/prod : promotion par clic).
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
@@ -22,10 +22,10 @@ applications:
       port: 80
     # Pas d'Ingress direct : Service ClusterIP seulement. Exposé par le pod
     # "gateway" ci-dessous :
-    #   https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/backend/...  (préfixe retiré)
+    #   https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/assurance-iard-api/...  (préfixe retiré)
     # Appelable depuis le navigateur uniquement par les frontends de l'environnement (CORS).
     # Base PostgreSQL assurance_iard : créée et sauvegardée automatiquement.
-    # Consigne : dans le code (backend/src/database/database.module.ts), donner à
+    # Consigne : dans le code (assurance-iard-api/src/database/database.module.ts), donner à
     # TypeORM la variable injectée DATABASE_URL :
     #   url: process.env.DATABASE_URL
     # DATABASE_URL (postgresql://<user>:<password>@<hôte>:<port>/<base>) contient déjà
@@ -46,6 +46,9 @@ applications:
           qualif: https://frontend.formation-ba-assurance-iard.qualif.check-consulting.net
           preprod: https://frontend.formation-ba-assurance-iard.preprod.check-consulting.net
           prod: https://frontend.formation-ba-assurance-iard.prod.check-consulting.net
+      # Appel du moteur tarifaire à l'intérieur du cluster, sans passer par le gateway.
+      - key: MOTEUR_TARIFAIRE_URL
+        value: http://moteurtarifaire:80
       # US-13 : dossier temporaire, vidé à chaque redémarrage. Faux documents uniquement.
       - key: JUSTIFICATIFS_DOSSIER
         value: /tmp/justificatifs
@@ -95,7 +98,7 @@ applications:
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/health
     # Écran minimaliste de santé du backend : connexion Keycloak (realm
     # check-projects-sso, client assureasy-frontend-client), puis appel de
-    # /backend/actuator/health par le gateway avec le token (route protégée
+    # /assurance-iard-api/actuator/health par le gateway avec le token (route protégée
     # par le middleware jwt de gateway.yaml).
     # https://health.formation-ba-assurance-iard.<env>.check-consulting.net
     # Écrit par Kargo (dev automatique ; qualif/preprod/prod : promotion par clic).
@@ -114,3 +117,22 @@ applications:
       enabled: true
       path: /
       stripPrefix: false
+  - name: moteurtarifaire
+    type: backend
+    image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
+    tag:
+      dev: ""
+      qualif: ""
+      preprod: ""
+      prod: ""
+    containerPort: 8080
+    replicas: {dev: 1, qualif: 1, preprod: 2, prod: 2}
+    service:
+      port: 80
+    database:
+      name: moteurtarifaire
+    envList:
+      - key: LOG_LEVEL
+        value: {dev: debug, qualif: info, preprod: info, prod: warn}
+      - key: SERVER_PORT
+        value: "8080"
