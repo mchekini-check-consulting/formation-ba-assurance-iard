@@ -3,6 +3,7 @@ package net.checkconsulting.assuranceiard.api.service;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -17,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
@@ -45,8 +47,9 @@ class ContratServiceTest {
     private final ContratRepository contrats = mock(ContratRepository.class);
     private final MandatSepaRepository mandats = mock(MandatSepaRepository.class);
     private final RecommandationDevisRepository recommandations = mock(RecommandationDevisRepository.class);
+    private final CodeSignatureContratService codeSignatureService = mock(CodeSignatureContratService.class);
     private final ContratService service = new ContratService(
-            sessionService, dossiers, contrats, mandats, recommandations,
+            sessionService, dossiers, contrats, mandats, recommandations, codeSignatureService,
             Clock.fixed(MAINTENANT, ZoneOffset.UTC));
 
     private final Compte compte = new Compte();
@@ -156,19 +159,44 @@ class ContratServiceTest {
     }
 
     @Test
-    void signeLeContratAvecLeCodeDevCorrect() {
+    void envoyerCodeRetourneLEmailMasque() {
+        Contrat existant = unContratExistant();
+        when(contrats.findByDossier(dossier)).thenReturn(Optional.of(existant));
+        when(codeSignatureService.envoyer(existant)).thenReturn("j***@example.com");
+
+        EnvoyerCodeSignatureResponse reponse = service.envoyerCode(JETON, REFERENCE);
+
+        assertThat(reponse.emailMasque()).isEqualTo("j***@example.com");
+    }
+
+    @Test
+    void renvoyerCodeRetourneLEmailMasque() {
+        Contrat existant = unContratExistant();
+        when(contrats.findByDossier(dossier)).thenReturn(Optional.of(existant));
+        when(codeSignatureService.renvoyer(existant)).thenReturn("j***@example.com");
+
+        EnvoyerCodeSignatureResponse reponse = service.renvoyerCode(JETON, REFERENCE);
+
+        assertThat(reponse.emailMasque()).isEqualTo("j***@example.com");
+    }
+
+    @Test
+    void signeLeContratEtPasseLeStatutAActif() {
         Contrat existant = unContratExistant();
         when(contrats.findByDossier(dossier)).thenReturn(Optional.of(existant));
 
         ContratResponse reponse = service.signer(JETON, REFERENCE, new SignatureContratRequest("123456"));
 
-        assertThat(reponse.statut()).isEqualTo("SIGNE");
+        assertThat(reponse.statut()).isEqualTo("ACTIF");
+        verify(codeSignatureService).verifier(existant, "123456");
     }
 
     @Test
     void lanceCodeSignatureIncorrectSiCodeErrone() {
         Contrat existant = unContratExistant();
         when(contrats.findByDossier(dossier)).thenReturn(Optional.of(existant));
+        doThrow(new CodeSignatureIncorrectException(2))
+                .when(codeSignatureService).verifier(existant, "999999");
 
         assertThatThrownBy(() -> service.signer(JETON, REFERENCE, new SignatureContratRequest("999999")))
                 .isInstanceOf(CodeSignatureIncorrectException.class);

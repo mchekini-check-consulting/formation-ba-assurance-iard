@@ -49,6 +49,15 @@ applications:
       # US-13 : dossier temporaire, vidé à chaque redémarrage. Faux documents uniquement.
       - key: JUSTIFICATIFS_DOSSIER
         value: /tmp/justificatifs
+      # US-16 : envoi d'e-mail de signature via Mailpit (dev/qualif) ou SMTP réel (preprod/prod).
+      - key: SMTP_HOST
+        value: mailpit
+      - key: SMTP_PORT
+        value: "1025"
+      - key: SMTP_TLS
+        value: "false"
+      - key: MAIL_FROM
+        value: noreply@assureasy.fr
   - name: gateway
     type: gateway
     # Pas d'image/tag : fourni par la plateforme (petit Traefik autonome),

@@ -51,8 +51,10 @@
             <p class="contrat__type">Contrat d'assurance habitation</p>
             <p class="contrat__sous-type">Conditions particulières · N° {{ c.numero }}</p>
           </div>
-          <span class="badge" [class.badge--attente]="c.statut === 'EN_ATTENTE_DE_SIGNATURE'" [class.badge--signe]="c.statut === 'SIGNE'">
-            {{ c.statut === 'SIGNE' ? 'Signé' : 'En attente de signature' }}
+          <span class="badge"
+            [class.badge--attente]="c.statut === 'EN_ATTENTE_DE_SIGNATURE'"
+            [class.badge--signe]="c.statut === 'ACTIF' || c.statut === 'SIGNE'">
+            {{ c.statut === 'ACTIF' || c.statut === 'SIGNE' ? 'Actif' : 'En attente de signature' }}
           </span>
         </div>
 
@@ -189,60 +191,79 @@
 
       <aside class="panneau-signature" aria-label="Signature en ligne">
 
-        @if (c.statut === 'SIGNE') {
+        @if (c.statut === 'ACTIF' || c.statut === 'SIGNE') {
           <div class="signature-ok">
             <span class="signature-ok__icone" aria-hidden="true">✓</span>
-            <p class="signature-ok__texte">Votre contrat a été signé.</p>
+            <p class="signature-ok__texte">Votre contrat est actif.</p>
           </div>
         } @else {
           <h2 class="panneau-signature__titre">Signer en ligne</h2>
 
-          @if (c.telephone) {
-            <p class="panneau-signature__sms">
-              Pour signer, saisissez le code à 6 chiffres reçu par SMS au
-              <strong>{{ masquerTelephone(c.telephone) }}</strong>.
-            </p>
-          }
+          @if (etatSignature() === 'avant-code' || etatSignature() === 'envoi-en-cours') {
+            <label class="checkbox-label">
+              <input
+                type="checkbox"
+                [checked]="mandatLu()"
+                (change)="mandatLu.set($any($event.target).checked)"
+              />
+              <span>J'ai lu et j'accepte les conditions particulières du contrat ci-dessus.</span>
+            </label>
 
-          <label class="checkbox-label">
-            <input
-              type="checkbox"
-              [checked]="mandatLu()"
-              (change)="mandatLu.set($any($event.target).checked)"
-            />
-            <span>J'ai lu et j'accepte les conditions particulières du contrat ci-dessus.</span>
-          </label>
-
-          <div class="champ-code">
-            <label for="code-signature" class="champ-code__label">Code reçu par SMS</label>
-            <input
-              id="code-signature"
-              type="text"
-              inputmode="numeric"
-              maxlength="6"
-              placeholder="000000"
-              class="champ-code__input"
-              [class.champ-code__input--erreur]="erreurSignature()"
-              [value]="codeSignature()"
-              (input)="saisirCode($any($event.target).value)"
-            />
             @if (erreurSignature()) {
               <p class="champ-code__erreur" role="alert">{{ erreurSignature() }}</p>
             }
-          </div>
 
-          <button
-            type="button"
-            class="btn btn--large btn-pleine-largeur"
-            [disabled]="!peutSigner()"
-            (click)="signerContrat()"
-          >
-            {{ enCoursDeSignature() ? 'Validation…' : 'Valider ma signature' }}
-          </button>
+            <button
+              type="button"
+              class="btn btn--large btn-pleine-largeur"
+              [disabled]="!mandatLu() || etatSignature() === 'envoi-en-cours'"
+              (click)="envoyerCode()"
+            >
+              {{ etatSignature() === 'envoi-en-cours' ? 'Envoi en cours…' : 'Recevoir mon code par e-mail' }}
+            </button>
+          }
 
-          <button type="button" class="lien-renvoyer">Renvoyer le code</button>
+          @if (etatSignature() === 'attente-code' || etatSignature() === 'validation-en-cours' || etatSignature() === 'essais-epuises') {
+            @if (emailMasque()) {
+              <p class="panneau-signature__email">
+                Un code a été envoyé à <strong>{{ emailMasque() }}</strong>.
+              </p>
+            }
 
-          <p class="note-prototype">[Prototype] La vérification SMS n'est pas active. Utilisez le code 123456.</p>
+            <div class="champ-code">
+              <label for="code-signature" class="champ-code__label">Code reçu par e-mail</label>
+              <input
+                id="code-signature"
+                type="text"
+                inputmode="numeric"
+                maxlength="6"
+                placeholder="000000"
+                class="champ-code__input"
+                [class.champ-code__input--erreur]="erreurSignature()"
+                [value]="codeSignature()"
+                [disabled]="etatSignature() === 'essais-epuises' || etatSignature() === 'validation-en-cours'"
+                (input)="saisirCode($any($event.target).value)"
+              />
+              @if (erreurSignature()) {
+                <p class="champ-code__erreur" role="alert">{{ erreurSignature() }}</p>
+              }
+            </div>
+
+            @if (etatSignature() !== 'essais-epuises') {
+              <button
+                type="button"
+                class="btn btn--large btn-pleine-largeur"
+                [disabled]="!peutSigner()"
+                (click)="signerContrat()"
+              >
+                {{ etatSignature() === 'validation-en-cours' ? 'Validation…' : 'Valider ma signature' }}
+              </button>
+            }
+
+            <button type="button" class="lien-renvoyer" (click)="renvoyerCode()">
+              Renvoyer le code
+            </button>
+          }
         }
 
       </aside>
