@@ -39,9 +39,18 @@ gatewayConfig: |
         # cors d'abord : il répond lui-même aux requêtes OPTIONS du navigateur
         # (preflight, envoyées sans token)
         middlewares: [cors, jwt, assurance-iard-api-strip]
+      # moteurtarifaire : appelé par assurance-iard-api dans le cluster, sans
+      # authentification. Seule sa documentation (Swagger) passe par le gateway ;
+      # son API (/v1/...) n'a pas de route publique (404).
+      moteurtarifaire-docs:
+        rule: "Path(`/moteurtarifaire/swagger-ui.html`) || PathPrefix(`/moteurtarifaire/swagger-ui/`) || PathPrefix(`/moteurtarifaire/v3/api-docs`)"
+        service: moteurtarifaire
+        middlewares: [moteurtarifaire-strip, cors]
     middlewares:
       assurance-iard-api-strip:
         stripPrefix: {prefixes: ["/assurance-iard-api"]}
+      moteurtarifaire-strip:
+        stripPrefix: {prefixes: ["/moteurtarifaire"]}
       cors:
         headers:
           accessControlAllowOriginList:
@@ -68,3 +77,5 @@ gatewayConfig: |
     services:
       assurance-iard-api:
         loadBalancer: {servers: [{url: "http://assurance-iard-api:80"}]}
+      moteurtarifaire:
+        loadBalancer: {servers: [{url: "http://moteurtarifaire:80"}]}
