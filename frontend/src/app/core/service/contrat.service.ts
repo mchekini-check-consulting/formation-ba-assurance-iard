@@ -16,9 +16,17 @@ export type ResultatObtention =
   | { statut: 'session-expiree' }
   | { statut: 'erreur-technique' };
 
+export type ResultatEnvoiCode =
+  | { statut: 'envoye'; emailMasque: string }
+  | { statut: 'introuvable' }
+  | { statut: 'session-expiree' }
+  | { statut: 'erreur-technique' };
+
 export type ResultatSignature =
   | { statut: 'signe'; contrat: Contrat }
-  | { statut: 'code-incorrect' }
+  | { statut: 'code-incorrect'; essaisRestants: number | null }
+  | { statut: 'code-expire' }
+  | { statut: 'essais-epuises' }
   | { statut: 'session-expiree' }
   | { statut: 'erreur-technique' };
 
@@ -49,24 +57,57 @@ export class ContratService {
     );
   }
 
-  signer(referenceDevis: string, code: string): Observable<ResultatSignature> {
-    return this.http.post<Contrat>(`${this.url}/${referenceDevis}/signature`, { code }).pipe(
-      map((contrat): ResultatSignature => ({ statut: 'signe', contrat })),
+  envoyerCode(referenceDevis: string): Observable<ResultatEnvoiCode> {
+    return this.http.post<{ emailMasque: string }>(`${this.url}/${referenceDevis}/signature/code`, null).pipe(
+      map((reponse): ResultatEnvoiCode => ({ statut: 'envoye', emailMasque: reponse.emailMasque })),
       catchError((erreur: HttpErrorResponse) =>
-        of<ResultatSignature>(
+        of<ResultatEnvoiCode>(
           erreur.status === 401
             ? { statut: 'session-expiree' }
-            : erreur.status === 422
-              ? { statut: 'code-incorrect' }
+            : erreur.status === 404
+              ? { statut: 'introuvable' }
               : { statut: 'erreur-technique' },
         ),
       ),
     );
   }
 
+  renvoyerCode(referenceDevis: string): Observable<ResultatEnvoiCode> {
+    return this.http.post<{ emailMasque: string }>(`${this.url}/${referenceDevis}/signature/code/renvoyer`, null).pipe(
+      map((reponse): ResultatEnvoiCode => ({ statut: 'envoye', emailMasque: reponse.emailMasque })),
+      catchError((erreur: HttpErrorResponse) =>
+        of<ResultatEnvoiCode>(
+          erreur.status === 401
+            ? { statut: 'session-expiree' }
+            : erreur.status === 404
+              ? { statut: 'introuvable' }
+              : { statut: 'erreur-technique' },
+        ),
+      ),
+    );
+  }
+
+  signer(referenceDevis: string, code: string): Observable<ResultatSignature> {
+    return this.http.post<Contrat>(`${this.url}/${referenceDevis}/signature`, { code }).pipe(
+      map((contrat): ResultatSignature => ({ statut: 'signe', contrat })),
+      catchError((erreur: HttpErrorResponse) => of(this.resultatErreurSignature(erreur))),
+    );
+  }
+
   private resultatErreurGeneration(erreur: HttpErrorResponse): ResultatGeneration {
     if (erreur.status === 401) return { statut: 'session-expiree' };
     if (erreur.status === 422) return { statut: 'mandat-non-signe' };
+    return { statut: 'erreur-technique' };
+  }
+
+  private resultatErreurSignature(erreur: HttpErrorResponse): ResultatSignature {
+    if (erreur.status === 401) return { statut: 'session-expiree' };
+    if (erreur.status === 410) return { statut: 'code-expire' };
+    if (erreur.status === 409) return { statut: 'essais-epuises' };
+    if (erreur.status === 422) {
+      const essaisRestants = (erreur.error as { essaisRestants?: number })?.essaisRestants ?? null;
+      return { statut: 'code-incorrect', essaisRestants };
+    }
     return { statut: 'erreur-technique' };
   }
 }

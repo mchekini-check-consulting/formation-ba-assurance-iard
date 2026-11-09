@@ -8,6 +8,7 @@ import { ContratService } from '../../core/service/contrat.service';
 import { ConnexionService } from '../../core/service/connexion.service';
 
 type EtatPage = 'chargement' | 'affiche' | 'erreur-technique' | 'mandat-non-signe';
+type EtatSignature = 'avant-code' | 'envoi-en-cours' | 'attente-code' | 'validation-en-cours' | 'essais-epuises';
 
 @Component({
   selector: 'iard-devis-contrat',
@@ -28,11 +29,12 @@ export class DevisContrat {
   protected readonly mandatLu = signal(false);
   protected readonly codeSignature = signal('');
   protected readonly erreurSignature = signal<string | null>(null);
-  protected readonly enCoursDeSignature = signal(false);
+  protected readonly etatSignature = signal<EtatSignature>('avant-code');
+  protected readonly emailMasque = signal<string | null>(null);
   protected readonly renonciationEtendue = signal(false);
 
   protected readonly peutSigner = computed(
-    () => this.mandatLu() && this.codeSignature().length === 6 && !this.enCoursDeSignature(),
+    () => this.etatSignature() === 'attente-code' && this.codeSignature().length === 6,
   );
 
   protected readonly nomFormule = computed(() => {
@@ -89,22 +91,74 @@ export class DevisContrat {
     this.erreurSignature.set(null);
   }
 
+  protected envoyerCode(): void {
+    const ref = this.devis.reference();
+    if (!ref) return;
+    this.etatSignature.set('envoi-en-cours');
+    this.contrats.envoyerCode(ref).subscribe((resultat) => {
+      if (resultat.statut === 'envoye') {
+        this.emailMasque.set(resultat.emailMasque);
+        this.etatSignature.set('attente-code');
+        this.codeSignature.set('');
+        this.erreurSignature.set(null);
+      } else if (resultat.statut === 'session-expiree') {
+        void this.router.navigate(['/connexion'], { queryParams: { retour: '/devis/contrat' } });
+      } else {
+        this.etatSignature.set('avant-code');
+        this.erreurSignature.set("Impossible d'envoyer le code. Veuillez réessayer.");
+      }
+    });
+  }
+
+  protected renvoyerCode(): void {
+    const ref = this.devis.reference();
+    if (!ref) return;
+    this.etatSignature.set('envoi-en-cours');
+    this.erreurSignature.set(null);
+    this.contrats.renvoyerCode(ref).subscribe((resultat) => {
+      if (resultat.statut === 'envoye') {
+        this.emailMasque.set(resultat.emailMasque);
+        this.etatSignature.set('attente-code');
+        this.codeSignature.set('');
+        this.erreurSignature.set(null);
+      } else if (resultat.statut === 'session-expiree') {
+        void this.router.navigate(['/connexion'], { queryParams: { retour: '/devis/contrat' } });
+      } else {
+        this.etatSignature.set('essais-epuises');
+        this.erreurSignature.set("Impossible d'envoyer le code. Veuillez réessayer.");
+      }
+    });
+  }
+
   protected signerContrat(): void {
     const ref = this.devis.reference();
     if (!ref) return;
-    this.enCoursDeSignature.set(true);
+    this.etatSignature.set('validation-en-cours');
     this.erreurSignature.set(null);
     this.contrats.signer(ref, this.codeSignature()).subscribe((resultat) => {
-      this.enCoursDeSignature.set(false);
       if (resultat.statut === 'signe') {
         this.contrat.set(resultat.contrat);
         this.codeSignature.set('');
       } else if (resultat.statut === 'code-incorrect') {
-        this.erreurSignature.set('Code incorrect. Vérifiez le SMS reçu et réessayez.');
+        this.etatSignature.set('attente-code');
+        const msg =
+          resultat.essaisRestants !== null
+            ? `Code incorrect. Il vous reste ${resultat.essaisRestants} essai(s).`
+            : 'Code incorrect.';
+        this.erreurSignature.set(msg);
+        this.codeSignature.set('');
+      } else if (resultat.statut === 'essais-epuises') {
+        this.etatSignature.set('essais-epuises');
+        this.erreurSignature.set(null);
+        this.codeSignature.set('');
+      } else if (resultat.statut === 'code-expire') {
+        this.etatSignature.set('attente-code');
+        this.erreurSignature.set('Votre code a expiré. Cliquez sur « Renvoyer le code ».');
         this.codeSignature.set('');
       } else if (resultat.statut === 'session-expiree') {
         void this.router.navigate(['/connexion'], { queryParams: { retour: '/devis/contrat' } });
       } else {
+        this.etatSignature.set('attente-code');
         this.erreurSignature.set('Une erreur est survenue. Veuillez réessayer.');
       }
     });

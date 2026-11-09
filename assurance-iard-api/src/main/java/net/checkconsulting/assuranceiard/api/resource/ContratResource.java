@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
@@ -33,6 +34,20 @@ public class ContratResource {
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID referenceDevis) {
         return contratService.obtenir(authorization, referenceDevis);
+    }
+
+    @PostMapping("/devis/contrat/{referenceDevis}/signature/code")
+    public EnvoyerCodeSignatureResponse envoyerCode(
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable UUID referenceDevis) {
+        return contratService.envoyerCode(authorization, referenceDevis);
+    }
+
+    @PostMapping("/devis/contrat/{referenceDevis}/signature/code/renvoyer")
+    public EnvoyerCodeSignatureResponse renvoyerCode(
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
+            @PathVariable UUID referenceDevis) {
+        return contratService.renvoyerCode(authorization, referenceDevis);
     }
 
     @PostMapping("/devis/contrat/{referenceDevis}/signature")

@@ -21,6 +21,7 @@ import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
+import net.checkconsulting.assuranceiard.api.service.EnvoiEmailContrat;
 import net.checkconsulting.assuranceiard.api.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -37,9 +38,9 @@ import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
 import net.checkconsulting.assuranceiard.api.model.TarifDevis;
 import net.checkconsulting.assuranceiard.api.repository.TarifDevisRepository;
 
-/** US-15 sur une vraie base : génération, signature avec le code dev, rejet d'un mauvais code. */
+/** US-16 sur une vraie base : envoi du code, signature avec le bouchon, rejet d'un mauvais code. */
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = "assurance.connexion.code-bouchon-actif=true")
 @AutoConfigureMockMvc
 class ContratIT {
 
@@ -69,6 +70,9 @@ class ContratIT {
 
     @MockitoBean
     private MoteurTarifaireClient moteur;
+
+    @MockitoBean
+    private EnvoiEmailContrat envoiEmail;
 
     private String jeton;
     private UUID reference;
@@ -125,7 +129,7 @@ class ContratIT {
             """;
 
     @Test
-    void genereLeContratEtLeSigneAvecLeCodeDev() throws Exception {
+    void genereLeContratEnvoieLeCodeEtLeSigneAvecLeBouchon() throws Exception {
         retenirUnTarif(300);
 
         mockMvc.perform(post("/devis/contrat")
@@ -136,16 +140,21 @@ class ContratIT {
                 .andExpect(jsonPath("$.statut").value("EN_ATTENTE_DE_SIGNATURE"))
                 .andExpect(jsonPath("$.numero").value(org.hamcrest.Matchers.startsWith("AE-")));
 
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailMasque").exists());
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
-                        .content("{\"code\":\"" + "123456" + "\"}"))
+                        .content("{\"code\":\"123456\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("SIGNE"));
+                .andExpect(jsonPath("$.statut").value("ACTIF"));
 
         assertThat(contratRepository.findByDossier(dossier))
                 .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.getStatut()).isEqualTo("SIGNE"));
+                .hasValueSatisfying(c -> assertThat(c.getStatut()).isEqualTo("ACTIF"));
     }
 
     @Test
@@ -158,18 +167,23 @@ class ContratIT {
                         .content(CORPS_GENERATION.formatted(reference)))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk());
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
                         .content("{\"code\":\"999999\"}"))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(2));
     }
 
     @Test
     void signatureSansSessionEst401() throws Exception {
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\":\"" + "123456" + "\"}"))
+                        .content("{\"code\":\"123456\"}"))
                 .andExpect(status().isUnauthorized());
     }
 

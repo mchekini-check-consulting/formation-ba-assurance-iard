@@ -17,6 +17,13 @@ services:
       timeout: 3s
       retries: 10
 
+  mailpit:
+    image: axllent/mailpit
+    container_name: assurance-iard-mailpit
+    ports:
+      - "1025:1025"
+      - "8025:8025"
+
   assurance-iard-api:
     build:
       context: ./assurance-iard-api
@@ -29,11 +36,17 @@ services:
       LOG_LEVEL: debug
       CODE_BOUCHON_ACTIF: "true"
       JUSTIFICATIFS_DOSSIER: /tmp/justificatifs
+      SMTP_HOST: mailpit
+      SMTP_PORT: "1025"
+      SMTP_TLS: "false"
+      MAIL_FROM: noreply@assureasy.fr
     ports:
       - "8080:8080"
     depends_on:
       postgres:
         condition: service_healthy
+      mailpit:
+        condition: service_started
 
 volumes:
   postgres-data:

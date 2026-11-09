@@ -11,10 +11,10 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
-import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
 import net.checkconsulting.assuranceiard.api.exception.DevisInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.MandatNonSigneException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
@@ -37,9 +37,8 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class ContratService {
 
-    static final String CODE_SIGNATURE_DEV = "123456";
     private static final String STATUT_EN_ATTENTE = "EN_ATTENTE_DE_SIGNATURE";
-    private static final String STATUT_SIGNE = "SIGNE";
+    private static final String STATUT_ACTIF = "ACTIF";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
 
     private final SessionService sessionService;
@@ -49,6 +48,7 @@ public class ContratService {
     private final RecommandationDevisRepository recommandationRepository;
     private final TarifDevisService tarifDevisService;
     private final TarifDevisRepository tarifDevisRepository;
+    private final CodeSignatureContratService codeSignatureService;
     private final Clock horloge;
 
     /** Idempotent : renvoie le contrat existant si déjà généré pour ce dossier. */
@@ -69,16 +69,31 @@ public class ContratService {
         return construireReponse(contrat, dossier);
     }
 
-    /** Prototype : code 123456 accepté, tout autre code est refusé. */
+    @Transactional
+    public EnvoyerCodeSignatureResponse envoyerCode(String authorization, UUID referenceDevis) {
+        DossierSouscription dossier = dossierDuClient(authorization, referenceDevis);
+        Contrat contrat = contratRepository.findByDossier(dossier)
+                .orElseThrow(DevisInconnuException::new);
+        String emailMasque = codeSignatureService.envoyer(contrat);
+        return new EnvoyerCodeSignatureResponse(emailMasque);
+    }
+
+    @Transactional
+    public EnvoyerCodeSignatureResponse renvoyerCode(String authorization, UUID referenceDevis) {
+        DossierSouscription dossier = dossierDuClient(authorization, referenceDevis);
+        Contrat contrat = contratRepository.findByDossier(dossier)
+                .orElseThrow(DevisInconnuException::new);
+        String emailMasque = codeSignatureService.renvoyer(contrat);
+        return new EnvoyerCodeSignatureResponse(emailMasque);
+    }
+
     @Transactional
     public ContratResponse signer(String authorization, UUID referenceDevis, SignatureContratRequest demande) {
         DossierSouscription dossier = dossierDuClient(authorization, referenceDevis);
-        if (!CODE_SIGNATURE_DEV.equals(demande.code())) {
-            throw new CodeSignatureIncorrectException();
-        }
         Contrat contrat = contratRepository.findByDossier(dossier)
                 .orElseThrow(DevisInconnuException::new);
-        contrat.setStatut(STATUT_SIGNE);
+        codeSignatureService.verifier(contrat, demande.code());
+        contrat.setStatut(STATUT_ACTIF);
         contrat = contratRepository.save(contrat);
         return construireReponse(contrat, dossier);
     }

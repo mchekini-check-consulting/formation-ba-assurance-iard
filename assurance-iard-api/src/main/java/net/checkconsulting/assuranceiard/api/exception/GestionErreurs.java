@@ -13,6 +13,8 @@ import org.springframework.web.multipart.MaxUploadSizeExceededException;
 @RestControllerAdvice
 public class GestionErreurs {
 
+    private static final String PROP_MOTIF = "motif";
+
     @ExceptionHandler(EmailDejaUtiliseException.class)
     public ProblemDetail emailDejaUtilise(EmailDejaUtiliseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
@@ -40,7 +42,7 @@ public class GestionErreurs {
     @ExceptionHandler(NouveauCodeRequisException.class)
     public ProblemDetail nouveauCodeRequis(NouveauCodeRequisException exception) {
         ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
-        probleme.setProperty("motif", exception.getMotif());
+        probleme.setProperty(PROP_MOTIF, exception.getMotif());
         return probleme;
     }
 
@@ -79,7 +81,25 @@ public class GestionErreurs {
 
     @ExceptionHandler(CodeSignatureIncorrectException.class)
     public ProblemDetail codeSignatureIncorrect(CodeSignatureIncorrectException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        if (exception.getEssaisRestants() >= 0) {
+            probleme.setProperty("essaisRestants", exception.getEssaisRestants());
+        }
+        return probleme;
+    }
+
+    @ExceptionHandler(CodeSignatureExpireException.class)
+    public ProblemDetail codeSignatureExpire(CodeSignatureExpireException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.GONE, exception.getMessage());
+        probleme.setProperty(PROP_MOTIF, "code-expire");
+        return probleme;
+    }
+
+    @ExceptionHandler(CodeSignatureEpuiseException.class)
+    public ProblemDetail codeSignatureEpuise(CodeSignatureEpuiseException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        probleme.setProperty(PROP_MOTIF, "essais-epuises");
+        return probleme;
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)
