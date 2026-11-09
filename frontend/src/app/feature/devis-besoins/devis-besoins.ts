@@ -1,15 +1,16 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import {
-  FORMULES,
+  Recommandation,
   ReponsesBesoins,
   depassePlafondSerenite,
   formaterPrix,
-  prixFormule,
   reponsesCompletes,
 } from '../../core/model/recommandation';
 import { DevisService } from '../../core/service/devis.service';
 import { RecommandationService } from '../../core/service/recommandation.service';
+import { recommandationDe } from '../../core/model/tarif';
+import { TarifService } from '../../core/service/tarif.service';
 import { DevisEntete } from '../devis-entete/devis-entete';
 
 type CleChoix = Exclude<keyof ReponsesBesoins, 'valeurContenu'>;
@@ -35,6 +36,7 @@ const OUI_NON = [
 export class DevisBesoins {
   private readonly devis = inject(DevisService);
   private readonly recommandationService = inject(RecommandationService);
+  private readonly tarifService = inject(TarifService);
   private readonly router = inject(Router);
 
   protected readonly questions: QuestionChoix[] = [
@@ -84,20 +86,15 @@ export class DevisBesoins {
   ];
 
   protected readonly reponses = this.devis.besoins;
-  protected readonly recommandation = this.devis.recommandation;
   protected readonly envoi = signal(false);
   protected readonly erreur = signal(false);
+  protected readonly motifRefus = signal<string | null>(null);
 
   protected readonly valeurContenu = computed(() => this.reponses().valeurContenu?.toString() ?? '');
   protected readonly complet = computed(() => reponsesCompletes(this.reponses()));
-  protected readonly nomFormule = computed(() => {
-    const recommandation = this.recommandation();
-    return recommandation && FORMULES[recommandation.formule].nom;
-  });
-  protected readonly prix = computed(() => {
-    const recommandation = this.recommandation();
-    const tarif = this.devis.tarifBase();
-    return recommandation && tarif !== null ? formaterPrix(prixFormule(tarif, recommandation.formule)) : null;
+  protected readonly prixDes = computed(() => {
+    const prix = this.devis.tarif()?.prix;
+    return prix?.length ? formaterPrix(Math.min(...prix.map((p) => p.mensuel))) : null;
   });
   protected readonly depassePlafond = computed(() => depassePlafondSerenite(this.reponses()));
 
@@ -114,8 +111,7 @@ export class DevisBesoins {
 
   protected voirRecommandation(e: Event): void {
     e.preventDefault();
-    const recommandation = this.recommandation();
-    if (!this.complet() || !recommandation || this.envoi()) return;
+    if (!this.complet() || this.envoi()) return;
     if (this.devis.reference()) {
       void this.router.navigate(['/devis/formule']);
       return;
@@ -123,19 +119,41 @@ export class DevisBesoins {
 
     this.envoi.set(true);
     this.erreur.set(false);
+    this.motifRefus.set(null);
+    this.tarifService.estimer({ logement: this.devis.logement(), besoins: this.reponses() }).subscribe((tarif) => {
+      const recommandation = tarif && recommandationDe(tarif);
+      if (tarif && !tarif.tarifable) {
+        this.envoi.set(false);
+        this.motifRefus.set(tarif.motif ?? '');
+      } else if (!tarif || !recommandation) {
+        this.echec();
+      } else {
+        this.devis.tarif.set(tarif);
+        this.enregistrerRecommandation(recommandation);
+      }
+    });
+  }
+
+  private enregistrerRecommandation(recommandation: Recommandation): void {
     this.recommandationService.enregistrer(this.reponses(), recommandation).subscribe((reference) => {
-      this.envoi.set(false);
       if (reference === null) {
-        this.erreur.set(true);
+        this.echec();
         return;
       }
-      this.devis.validerRecommandation(reference, recommandation.formule);
+      this.envoi.set(false);
+      this.devis.validerRecommandation(reference, recommandation);
       void this.router.navigate(['/devis/formule']);
     });
   }
 
+  private echec(): void {
+    this.envoi.set(false);
+    this.erreur.set(true);
+  }
+
   private repondre(reponse: Partial<ReponsesBesoins>): void {
     this.erreur.set(false);
+    this.motifRefus.set(null);
     this.devis.mettreAJourBesoins(reponse);
   }
 }

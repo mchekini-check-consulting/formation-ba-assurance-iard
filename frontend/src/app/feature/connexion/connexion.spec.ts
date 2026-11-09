@@ -44,7 +44,7 @@ describe('Connexion', () => {
   };
 
   const repondre = (corps: object, status: number): void => {
-    http.expectOne('/api/connexion').flush(corps, { status, statusText: String(status) });
+    http.expectOne('/api/assurance-iard-api/connexion').flush(corps, { status, statusText: String(status) });
     fixture.detectChanges();
   };
 
@@ -110,7 +110,7 @@ describe('Connexion', () => {
     expect(bouton().disabled).toBe(true);
 
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    http.expectNone('/api/connexion');
+    http.expectNone('/api/assurance-iard-api/connexion');
 
     vi.advanceTimersByTime(15 * 60 * 1000);
     fixture.detectChanges();
@@ -136,7 +136,7 @@ describe('Connexion', () => {
     };
 
     const repondreOubli = (status: number): void => {
-      http.expectOne('/api/mot-de-passe/oubli').flush(null, { status, statusText: String(status) });
+      http.expectOne('/api/assurance-iard-api/mot-de-passe/oubli').flush(null, { status, statusText: String(status) });
       fixture.detectChanges();
     };
 

@@ -1,0 +1,17 @@
+spring:
+  application:
+    name: moteurtarifaire-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/moteurtarifaire
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+server:
+  port: 8081

@@ -1,3 +1,4 @@
+import { RECO_CONFORT, tarifEstime } from '../model/tarif.exemples';
 import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { DevisService } from '../service/devis.service';
@@ -21,7 +22,7 @@ describe('gardes du devis', () => {
   });
 
   it('US-12 : étape 3 : retrouve le devis conservé après un rechargement', () => {
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     devis.conserverBrouillon();
     devis.reference.set(null);
     expect(TestBed.runInInjectionContext(() => recommandationEnregistreeGuard(route, etat))).toBe(true);
@@ -34,7 +35,7 @@ describe('gardes du devis', () => {
   });
 
   it('étape 2 : laisse passer avec un tarif', () => {
-    devis.mettreAJour({ surface: '60', typeLogement: 'maison' });
+    devis.tarif.set(tarifEstime());
     expect(TestBed.runInInjectionContext(() => logementRenseigneGuard(route, etat))).toBe(true);
   });
 
@@ -44,7 +45,7 @@ describe('gardes du devis', () => {
   });
 
   it('choix de formule : laisse passer une fois la recommandation enregistrée', () => {
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     expect(TestBed.runInInjectionContext(() => recommandationEnregistreeGuard(route, etat))).toBe(true);
   });
 
@@ -54,13 +55,13 @@ describe('gardes du devis', () => {
   });
 
   it('étape 4 : renvoie vers le choix de formule sans franchise', () => {
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     const resultat = TestBed.runInInjectionContext(() => formuleChoisieGuard(route, etat));
     expect(adresse(resultat)).toBe('/devis/formule');
   });
 
   it('étape 4 : laisse passer une fois la franchise choisie', () => {
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     devis.franchiseChoisie.set('300');
     expect(TestBed.runInInjectionContext(() => formuleChoisieGuard(route, etat))).toBe(true);
   });
@@ -72,13 +73,13 @@ describe('gardes du devis', () => {
 
   it('étape 5 : renvoie vers l’étape 4 si elle n’est pas enregistrée pour ce devis', () => {
     devis.referenceDossier.set('ancien-devis');
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     const resultat = TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat));
     expect(adresse(resultat)).toBe('/devis/informations');
   });
 
   it('étape 5 : laisse passer une fois l’étape 4 enregistrée', () => {
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
     devis.referenceDossier.set('ref-1');
     expect(TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat))).toBe(true);
   });

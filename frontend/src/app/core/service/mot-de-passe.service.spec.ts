@@ -21,7 +21,7 @@ describe('MotDePasseService', () => {
   ])('demande un lien : réponse %i -> %s', (status, attendu) => {
     let resultat: boolean | undefined;
     service.demanderLien(' marie@exemple.fr ').subscribe((r) => (resultat = r));
-    const requete = http.expectOne('/api/mot-de-passe/oubli');
+    const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/oubli');
     expect(requete.request.body).toEqual({ email: 'marie@exemple.fr' });
     requete.flush(null, { status, statusText: String(status) });
 
@@ -35,7 +35,7 @@ describe('MotDePasseService', () => {
   ])('vérifie le lien : réponse %i -> %s', (status, attendu) => {
     let resultat: ResultatLien | undefined;
     service.verifierLien('jeton').subscribe((r) => (resultat = r));
-    const requete = http.expectOne('/api/mot-de-passe/lien');
+    const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/lien');
     expect(requete.request.body).toEqual({ jeton: 'jeton' });
     requete.flush(null, { status, statusText: String(status) });
 
@@ -49,7 +49,7 @@ describe('MotDePasseService', () => {
   ])('réinitialise : réponse %i -> %s', (status, attendu) => {
     let resultat: ResultatLien | undefined;
     service.reinitialiser('jeton', 'Nouveau123').subscribe((r) => (resultat = r));
-    const requete = http.expectOne('/api/mot-de-passe/reinitialisation');
+    const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/reinitialisation');
     expect(requete.request.body).toEqual({ jeton: 'jeton', motDePasse: 'Nouveau123' });
     requete.flush(null, { status, statusText: String(status) });
 

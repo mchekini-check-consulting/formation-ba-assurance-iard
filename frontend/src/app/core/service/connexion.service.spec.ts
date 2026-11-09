@@ -43,7 +43,7 @@ describe('ConnexionService', () => {
   it('connecte : garde la vérification et son adresse masquée (AC1)', () => {
     service.verification.set(null);
     const resultat = connecter();
-    const requete = http.expectOne('/api/connexion');
+    const requete = http.expectOne('/api/assurance-iard-api/connexion');
     expect(requete.request.body).toEqual({ email: 'marie@exemple.fr', motDePasse: 'Abcdefg1' });
     requete.flush({ verification: 'v2', emailMasque: 'm***@exemple.fr' });
 
@@ -57,13 +57,13 @@ describe('ConnexionService', () => {
     [500, {}, { statut: 'erreur-technique' }],
   ])('traduit le refus de connexion %i', (status, corps, attendu) => {
     const resultat = connecter();
-    repondre('/api/connexion', corps, status);
+    repondre('/api/assurance-iard-api/connexion', corps, status);
     expect(resultat()).toEqual(attendu);
   });
 
   it('ouvre la session quand le code est bon (AC2)', () => {
     const resultat = verifier();
-    const requete = http.expectOne('/api/connexion/verification');
+    const requete = http.expectOne('/api/assurance-iard-api/connexion/verification');
     expect(requete.request.body).toEqual({ verification: 'v1', code: '123456' });
     requete.flush({ jeton: 'session', email: 'marie@exemple.fr' });
 
@@ -80,7 +80,7 @@ describe('ConnexionService', () => {
     [500, {}, { statut: 'erreur-technique' }],
   ])('traduit le refus du code %i', (status, corps, attendu) => {
     const resultat = verifier();
-    repondre('/api/connexion/verification', corps, status);
+    repondre('/api/assurance-iard-api/connexion/verification', corps, status);
     expect(resultat()).toEqual(attendu);
     expect(service.jeton()).toBeNull();
   });
@@ -91,7 +91,7 @@ describe('ConnexionService', () => {
     [500, 'erreur-technique'],
   ])('traduit le renvoi du code %i', (status, attendu) => {
     const resultat = renvoyer();
-    repondre('/api/connexion/renvoi-code', {}, status);
+    repondre('/api/assurance-iard-api/connexion/renvoi-code', {}, status);
     expect(resultat()).toBe(attendu);
   });
 
@@ -109,7 +109,7 @@ describe('ConnexionService', () => {
     it('confirme une session valable et retrouve son e-mail', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       const resultat = valide();
-      repondre('/api/session', { email: 'marie@exemple.fr' }, 200);
+      repondre('/api/assurance-iard-api/session', { email: 'marie@exemple.fr' }, 200);
 
       expect(resultat()).toBe(true);
       expect(service.emailClient()).toBe('marie@exemple.fr');
@@ -118,7 +118,7 @@ describe('ConnexionService', () => {
     it('oublie une session refusée par le backend', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       const resultat = valide();
-      repondre('/api/session', {}, 401);
+      repondre('/api/assurance-iard-api/session', {}, 401);
 
       expect(resultat()).toBe(false);
       expect(service.jeton()).toBeNull();
@@ -127,7 +127,7 @@ describe('ConnexionService', () => {
     it('garde le jeton si le service est indisponible', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       const resultat = valide();
-      repondre('/api/session', {}, 503);
+      repondre('/api/assurance-iard-api/session', {}, 503);
 
       expect(resultat()).toBe(false);
       expect(service.jeton()).toBe('session');
@@ -137,7 +137,7 @@ describe('ConnexionService', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       service.emailClient.set('marie@exemple.fr');
       service.deconnecter().subscribe();
-      const requete = http.expectOne('/api/session');
+      const requete = http.expectOne('/api/assurance-iard-api/session');
       expect(requete.request.method).toBe('DELETE');
       requete.flush(null, { status, statusText: String(status) });
 

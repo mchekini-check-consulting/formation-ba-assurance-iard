@@ -1,3 +1,4 @@
+import { RECO_CONFORT, tarifDetaille } from '../../core/model/tarif.exemples';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -17,18 +18,28 @@ describe('DevisFormule', () => {
     page = fixture.nativeElement as HTMLElement;
   };
 
+  const synchroniser = (): void => {
+    vi.advanceTimersByTime(300);
+    TestBed.inject(HttpTestingController)
+      .match('/api/assurance-iard-api/devis/ref-1/tarif')
+      .forEach((requete) =>
+        requete.flush(tarifDetaille(devis.formuleChoisie() ?? 'confort', devis.optionsChoisies(), devis.franchiseChoisie())),
+      );
+    fixture.detectChanges();
+  };
+
   const carteChoisie = (): string => page.querySelector('.formule--choisie .formule__nom')?.textContent ?? '';
 
   const cliquer = (texte: string): void => {
     const bouton = Array.from(page.querySelectorAll('button')).find((b) => b.textContent?.trim() === texte);
     bouton!.click();
-    fixture.detectChanges();
+    synchroniser();
   };
 
   const choisirFranchise = (valeur: string): void => {
     const radio = page.querySelector<HTMLInputElement>(`input[type="radio"][value="${valeur}"]`)!;
     radio.click();
-    fixture.detectChanges();
+    synchroniser();
   };
 
   const cocherOption = (libelle: string): void => {
@@ -36,7 +47,7 @@ describe('DevisFormule', () => {
     const label = labels.find((l) => l.textContent?.includes(libelle));
     const checkbox = label?.querySelector<HTMLInputElement>('input[type="checkbox"]')!;
     checkbox.click();
-    fixture.detectChanges();
+    synchroniser();
   };
 
   const soumettre = (): void => {
@@ -46,8 +57,13 @@ describe('DevisFormule', () => {
 
   const recapitulatif = (): string => page.querySelector('.recapitulatif')?.textContent ?? '';
 
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
   beforeEach(() => {
     sessionStorage.clear();
+    vi.useFakeTimers();
     TestBed.configureTestingModule({
       providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     });
@@ -64,7 +80,8 @@ describe('DevisFormule', () => {
       litiges: false,
       priorite: 'prix',
     });
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
+    devis.tarif.set(tarifDetaille());
     creerEcran();
   });
 
@@ -251,7 +268,7 @@ describe('DevisFormule', () => {
     it("affiche l'alerte quand le contenu dépasse le capital de la formule choisie", () => {
       // 40 000 > plafond Sérénité (35 000), formule conseillée = serenite (pas d'alerte inférieure)
       devis.mettreAJourBesoins({ valeurContenu: 40000 });
-      devis.validerRecommandation('ref-2', 'serenite');
+      devis.validerRecommandation('ref-2', { ...RECO_CONFORT, formule: 'serenite' });
       fixture.detectChanges();
       const alertes = Array.from(page.querySelectorAll('[role="alert"]'));
       expect(alertes.some((a) => a.textContent?.includes('insuffisant'))).toBe(true);
@@ -283,7 +300,7 @@ describe('DevisFormule', () => {
         choisirFranchise('300');
       };
       const flushSession = (http: HttpTestingController): void => {
-        http.expectOne('/api/session').flush({ email: 'marie@exemple.fr' });
+        http.expectOne('/api/assurance-iard-api/session').flush({ email: 'marie@exemple.fr' });
       };
 
       afterEach(() => {
@@ -297,7 +314,7 @@ describe('DevisFormule', () => {
         remplir();
         cliquer('Enregistrer mon devis');
         flushSession(http);
-        const requete = http.expectOne('/api/devis/enregistres');
+        const requete = http.expectOne('/api/assurance-iard-api/devis/enregistres');
         expect(requete.request.body.franchise).toBe('300');
         expect(requete.request.body.prixMensuel).toBeUndefined();
         requete.flush({ dateFinValidite: '2026-12-05' });
@@ -310,7 +327,7 @@ describe('DevisFormule', () => {
         const http = TestBed.inject(HttpTestingController);
         remplir();
         cliquer('Enregistrer mon devis');
-        http.expectNone('/api/devis/enregistres');
+        http.expectNone('/api/assurance-iard-api/devis/enregistres');
         const liens = Array.from(page.querySelectorAll<HTMLAnchorElement>('.encadre-compte a')).map((a) =>
           a.getAttribute('href'),
         );
@@ -326,7 +343,7 @@ describe('DevisFormule', () => {
         remplir();
         cliquer('Enregistrer mon devis');
         flushSession(http);
-        http.expectOne('/api/devis/enregistres').flush(null, { status: 401, statusText: 'Unauthorized' });
+        http.expectOne('/api/assurance-iard-api/devis/enregistres').flush(null, { status: 401, statusText: 'Unauthorized' });
         fixture.detectChanges();
         expect(page.querySelector('.encadre-compte')).not.toBeNull();
       });
@@ -338,7 +355,7 @@ describe('DevisFormule', () => {
         fixture.destroy();
         vi.spyOn(TestBed.inject(ActivatedRoute).snapshot.queryParamMap, 'get').mockReturnValue('1');
         creerEcran();
-        http.expectOne('/api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
+        http.expectOne('/api/assurance-iard-api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
         fixture.detectChanges();
         expect(page.textContent).toContain('Votre devis est enregistré');
         expect(router.navigate).toHaveBeenCalledWith(['/devis/formule'], { replaceUrl: true });
@@ -351,7 +368,7 @@ describe('DevisFormule', () => {
         remplir();
         cliquer('Enregistrer mon devis');
         flushSession(http);
-        http.expectOne('/api/devis/enregistres').flush(null, { status: 500, statusText: 'Erreur' });
+        http.expectOne('/api/assurance-iard-api/devis/enregistres').flush(null, { status: 500, statusText: 'Erreur' });
         fixture.detectChanges();
         expect(page.querySelector('.recapitulatif [role="alert"]')?.textContent).toContain('pas pu être enregistré');
       });
@@ -362,7 +379,7 @@ describe('DevisFormule', () => {
         remplir();
         cliquer('Enregistrer mon devis');
         flushSession(http);
-        http.expectOne('/api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
+        http.expectOne('/api/assurance-iard-api/devis/enregistres').flush({ dateFinValidite: '2026-12-05' });
         fixture.detectChanges();
         choisirFranchise('500');
         expect(page.textContent).not.toContain('Votre devis est enregistré');
@@ -386,7 +403,7 @@ describe('DevisFormule', () => {
         URL.revokeObjectURL = vi.fn();
         cliquer('Télécharger mon devis (PDF)');
         vi.spyOn(document, 'createElement').mockReturnValueOnce(fakeA);
-        http.expectOne('/api/devis/pdf').flush(new Blob(['%PDF']));
+        http.expectOne('/api/assurance-iard-api/devis/pdf').flush(new Blob(['%PDF']));
         expect(fakeA.download).toBe('devis-assureasy.pdf');
         expect(fakeA.click).toHaveBeenCalled();
         expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:devis');
@@ -395,14 +412,14 @@ describe('DevisFormule', () => {
       it('AC4 : demande la franchise avant de télécharger', () => {
         cliquer('Télécharger mon devis (PDF)');
         expect(page.querySelector('#erreur-franchise')).not.toBeNull();
-        TestBed.inject(HttpTestingController).expectNone('/api/devis/pdf');
+        TestBed.inject(HttpTestingController).expectNone('/api/assurance-iard-api/devis/pdf');
       });
 
       it('signale un PDF impossible à générer', () => {
         const http = TestBed.inject(HttpTestingController);
         remplir();
         cliquer('Télécharger mon devis (PDF)');
-        http.expectOne('/api/devis/pdf').flush(new Blob(), { status: 500, statusText: 'Erreur' });
+        http.expectOne('/api/assurance-iard-api/devis/pdf').flush(new Blob(), { status: 500, statusText: 'Erreur' });
         fixture.detectChanges();
         expect(page.querySelector('.recapitulatif [role="alert"]')?.textContent).toContain('pas pu être généré');
       });
@@ -441,6 +458,96 @@ describe('DevisFormule', () => {
       expect(page.querySelector('#erreur-franchise')).not.toBeNull();
       choisirFranchise('500');
       expect(page.querySelector('#erreur-franchise')).toBeNull();
+    });
+  });
+
+  describe('Tarif du serveur', () => {
+    const URL = '/api/assurance-iard-api/devis/ref-1/tarif';
+    const requetes = (): HttpTestingController => TestBed.inject(HttpTestingController);
+
+    afterEach(() => requetes().verify());
+
+    it('n’appelle pas le serveur à l’arrivée si le prix est déjà connu', () => {
+      requetes().expectNone(URL);
+    });
+
+    it('envoie les choix du client', () => {
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="500"]')!.click();
+      vi.advanceTimersByTime(300);
+      const requete = requetes().expectOne(URL);
+      expect(requete.request.body.formule).toBe('confort');
+      expect(requete.request.body.franchise).toBe('500');
+      requete.flush(tarifDetaille('confort', [], '500'));
+    });
+
+    it('plusieurs clics rapides ne font qu’un seul calcul', () => {
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="500"]')!.click();
+      vi.advanceTimersByTime(100);
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="150"]')!.click();
+      vi.advanceTimersByTime(300);
+      expect(requetes().expectOne(URL).request.body.franchise).toBe('150');
+    });
+
+    it('bloque la souscription tant que le calcul est en cours', () => {
+      choisirFranchise('300');
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="500"]')!.click();
+      fixture.detectChanges();
+      const souscrire = page.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      expect(souscrire.disabled).toBe(true);
+      synchroniser();
+      expect(souscrire.disabled).toBe(false);
+    });
+
+    it('affiche un message et aucun total si le calcul échoue', () => {
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="500"]')!.click();
+      vi.advanceTimersByTime(300);
+      requetes().expectOne(URL).flush(null, { status: 503, statusText: 'Indisponible' });
+      fixture.detectChanges();
+      expect(recapitulatif()).toContain("n'a pas pu être calculé");
+      expect(recapitulatif()).not.toContain('Total TTC');
+      soumettre();
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('affiche le motif si le moteur refuse', () => {
+      page.querySelector<HTMLInputElement>('input[type="radio"][value="500"]')!.click();
+      vi.advanceTimersByTime(300);
+      requetes().expectOne(URL).flush({ idTarif: 'x', tarifable: false, motif: 'Motif de refus' });
+      fixture.detectChanges();
+      expect(recapitulatif()).toContain('Motif de refus');
+    });
+
+    it('à l’arrivée depuis l’étape 2, calcule le détail du prix', () => {
+      devis.tarif.set({ ...tarifDetaille(), detail: undefined });
+      fixture.destroy();
+      creerEcran();
+      const requete = requetes().expectOne(URL);
+      expect(requete.request.method).toBe('POST');
+      requete.flush(tarifDetaille());
+      fixture.detectChanges();
+      expect(recapitulatif()).toContain('Total TTC');
+    });
+
+    it('un devis repris retrouve son tarif d’origine', () => {
+      devis.tarif.set(null);
+      fixture.destroy();
+      creerEcran();
+      const relecture = requetes().expectOne(URL);
+      expect(relecture.request.method).toBe('GET');
+      relecture.flush(tarifDetaille());
+      fixture.detectChanges();
+      expect(devis.recommandation()).toEqual(RECO_CONFORT);
+      expect(recapitulatif()).toContain('12,22');
+    });
+
+    it('un devis repris dont le tarif a expiré obtient un nouveau calcul', () => {
+      devis.tarif.set(null);
+      fixture.destroy();
+      creerEcran();
+      requetes().expectOne(URL).flush(null, { status: 410, statusText: 'Expiré' });
+      const calcul = requetes().expectOne(URL);
+      expect(calcul.request.method).toBe('POST');
+      calcul.flush(tarifDetaille());
     });
   });
 });

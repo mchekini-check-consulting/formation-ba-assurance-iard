@@ -4,7 +4,7 @@ import { TestBed } from '@angular/core/testing';
 import { DemandeSignature, MandatService, ResultatPreparation, ResultatSignature } from './mandat.service';
 
 describe('MandatService', () => {
-  const url = '/api/devis/mandats';
+  const url = '/api/assurance-iard-api/devis/mandats';
   const demande: DemandeSignature = {
     referenceDevis: 'ref-1',
     titulaire: 'Marie Durand',

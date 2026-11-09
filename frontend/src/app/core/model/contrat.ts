@@ -8,7 +8,6 @@ export interface DemandeContrat {
   typeLogement: string;
   surface: number;
   franchise: number;
-  cotisationMensuelle: number;
   resiliationHamon: boolean;
 }
 

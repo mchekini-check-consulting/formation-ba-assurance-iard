@@ -14,6 +14,9 @@ export type Antecedent =
   | 'resiliation-autre'
   | 'resiliation-non-paiement';
 
+export type Etage = 'rdc' | 'intermediaire' | 'dernier';
+export type TypeDependances = 'aucune' | 'jardin' | 'garage' | 'piscine' | 'plusieurs';
+
 export interface DevisLogement {
   statut: StatutLogement | null;
   residence: TypeResidence | null;
@@ -27,7 +30,7 @@ export interface DevisLogement {
   resilieContrat: string;
   assuranceAntecedent: string;
   etage: string;
-  dependances: boolean | null;
+  dependances: TypeDependances | null;
   nombreColocataires: string;
   assureurActuel: string;
   nombreSinistres: string;
@@ -69,12 +72,3 @@ export function colocatairesValides(s: string): boolean {
   return s.trim() !== '' && Number.isInteger(n) && n >= 2 && n <= 10;
 }
 
-// PROVISOIRE : formule basée sur surface et type uniquement — à remplacer par un appel au backend devis
-// Facteurs RG4 manquants : statut, pièces, zone code postal, résidence secondaire, étage, dépendances, sinistres
-export function estimerTarif(surface: string, typeLogement: TypeLogement | null): number | null {
-  if (!surfaceValide(surface) || !typeLogement) return null;
-  const s = Number(surface);
-  const base = 7.9;
-  const facteur = typeLogement === 'maison' ? 0.03 : 0.025;
-  return Math.round((base + s * facteur) * 10) / 10;
-}

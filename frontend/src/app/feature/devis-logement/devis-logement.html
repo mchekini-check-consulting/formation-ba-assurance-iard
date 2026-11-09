@@ -292,18 +292,20 @@
             @if (estAppartement()) {
               <div class="champ">
                 <label class="libelle" for="etage">&#201;tage</label>
-                <input
+                <select
                   #champEtage
                   id="etage"
                   class="saisie"
                   [class.saisie--erreur]="erreurEtage()"
-                  inputmode="numeric"
-                  placeholder="Ex. 3  (0 pour rez-de-chauss&#233;e)"
-                  [value]="etage()"
                   [attr.aria-invalid]="erreurEtage() || null"
                   [attr.aria-describedby]="erreurEtage() ? 'erreur-etage' : null"
-                  (input)="saisirEtage($event)"
-                />
+                  (change)="choisirEtageDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="rdc" [selected]="etage() === 'rdc'">Rez-de-chauss&#233;e</option>
+                  <option value="intermediaire" [selected]="etage() === 'intermediaire'">&#201;tage interm&#233;diaire</option>
+                  <option value="dernier" [selected]="etage() === 'dernier'">Dernier &#233;tage</option>
+                </select>
                 @if (erreurEtage()) {
                   <p id="erreur-etage" class="erreur" role="alert">Indiquez l&#39;&#233;tage.</p>
                 }
@@ -313,26 +315,25 @@
             <!-- AC2 : d&#233;pendances (maison uniquement) -->
             @if (estMaison()) {
               <div class="champ">
-                <span class="libelle" id="libelle-dependances">Avez-vous des d&#233;pendances (garage, cave&#8230;)&#160;?</span>
-                <div class="choix" role="group" aria-labelledby="libelle-dependances">
-                  <button
-                    #premierBoutonDependances
-                    type="button"
-                    class="choix__option"
-                    [class.choix__option--actif]="dependances() === true"
-                    [attr.aria-pressed]="dependances() === true"
-                    (click)="choisirDependances(true)"
-                  >Oui</button>
-                  <button
-                    type="button"
-                    class="choix__option"
-                    [class.choix__option--actif]="dependances() === false"
-                    [attr.aria-pressed]="dependances() === false"
-                    (click)="choisirDependances(false)"
-                  >Non</button>
-                </div>
+                <label class="libelle" for="dependances">D&#233;pendances</label>
+                <select
+                  #champDependances
+                  id="dependances"
+                  class="saisie"
+                  [class.saisie--erreur]="erreurDependances()"
+                  [attr.aria-invalid]="erreurDependances() || null"
+                  [attr.aria-describedby]="erreurDependances() ? 'erreur-dependances' : null"
+                  (change)="choisirDependancesDepuisSelect($event)"
+                >
+                  <option value="">S&#233;lectionnez</option>
+                  <option value="aucune" [selected]="dependances() === 'aucune'">Aucune</option>
+                  <option value="jardin" [selected]="dependances() === 'jardin'">Jardin</option>
+                  <option value="garage" [selected]="dependances() === 'garage'">Garage</option>
+                  <option value="piscine" [selected]="dependances() === 'piscine'">Piscine</option>
+                  <option value="plusieurs" [selected]="dependances() === 'plusieurs'">Plusieurs</option>
+                </select>
                 @if (erreurDependances()) {
-                  <p class="erreur" role="alert">Indiquez si vous avez des d&#233;pendances.</p>
+                  <p id="erreur-dependances" class="erreur" role="alert">Indiquez vos d&#233;pendances.</p>
                 }
               </div>
             }
@@ -477,12 +478,21 @@
 
           <!-- Bouton d&#39;action -->
           <div class="actions">
+            @if (erreurCalcul()) {
+              <p class="erreur" role="alert">Votre tarif n&#39;a pas pu &#234;tre calcul&#233;. R&#233;essayez dans quelques instants.</p>
+            }
+            @if (motifRefus(); as motif) {
+              <div class="alerte alerte--bloquant" role="alert">
+                <p>{{ motif }}</p>
+                <button type="button" class="btn" (click)="rappelerConseiller()">&#202;tre rappel&#233; par un conseiller</button>
+              </div>
+            }
             @if (estBloque()) {
               <button type="button" class="btn btn--large" (click)="rappelerConseiller()">
                 &#202;tre rappel&#233; par un conseiller
               </button>
             } @else {
-              <button type="submit" class="btn btn--large">
+              <button type="submit" class="btn btn--large" [disabled]="envoi()">
                 Continuer vers mes besoins
               </button>
             }
@@ -494,12 +504,7 @@
       <!-- Encadr&#233; tarif (AC6) &#8212; toujours visible -->
       <aside class="encadre-tarif" aria-live="polite" aria-label="Estimation du tarif">
         <p class="encadre-tarif__label">Votre tarif</p>
-        @if (tarifFormate(); as tarif) {
-          <p class="encadre-tarif__prix serif">d&#232;s {{ tarif }}&#160;&#8364;<span class="encadre-tarif__unite">/mois</span></p>
-          <p class="encadre-tarif__mention">Estimation provisoire&#160;&#183; tarif d&#233;finitif &#224; l&#39;&#233;tape suivante</p>
-        } @else {
-          <p class="encadre-tarif__guide">Indiquez le code postal et la surface pour voir une premi&#232;re estimation.</p>
-        }
+        <p class="encadre-tarif__guide">Votre tarif est calcul&#233; d&#232;s que le formulaire est complet.</p>
       </aside>
 
     </div>

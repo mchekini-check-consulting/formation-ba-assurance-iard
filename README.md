@@ -4,9 +4,9 @@ Monorepo du projet Assurance IARD : une API Spring Boot et une application
 Angular, déployées sur la plateforme (dev, qualif, preprod, prod).
 
 ```
-backend/                  # API Spring Boot (assurance-iard-api)       -> backend/README.md
+assurance-iard-api/                  # API Spring Boot       -> assurance-iard-api/README.md
 frontend/                 # application Angular (assurance-iard-web)    -> frontend/README.md
-docker-compose.yaml       # base PostgreSQL + backend, pour le poste local
+docker-compose.yaml       # base PostgreSQL + assurance-iard-api, pour le poste local
 helm.yaml                 # applications déployées (lu par la plateforme)
 gateway.yaml              # routage du gateway vers les backends, CORS
 ```
@@ -15,8 +15,8 @@ gateway.yaml              # routage du gateway vers les backends, CORS
 
 ```
 navigateur ──> https://frontend.formation-ba-assurance-iard.<env>.check-consulting.net          (écran)
-navigateur ──> https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/backend/... (API)
-                 └─ gateway : vérifie l'origine (CORS), retire /backend ──> backend
+navigateur ──> https://gateway.formation-ba-assurance-iard.<env>.check-consulting.net/assurance-iard-api/... (API)
+                 └─ gateway : vérifie l'origine (CORS), retire /assurance-iard-api ──> assurance-iard-api
 ```
 
 - Le navigateur n'appelle **que le gateway** : le backend n'a pas d'adresse publique.
@@ -56,7 +56,7 @@ Prérequis : Docker, Java 21, Node.js 24.
 ### 1. Base de données
 
 Depuis la racine du projet, la première fois : créer un fichier `.env` contenant
-`POSTGRES_USER=...` et `POSTGRES_PASSWORD=...`, avec les valeurs de `backend/src/main/resources/application.yaml`
+`POSTGRES_USER=...` et `POSTGRES_PASSWORD=...`, avec les valeurs de `assurance-iard-api/src/main/resources/application.yaml`
 (le fichier `.env` reste sur le poste, il n'est jamais commité).
 
 ```bash
@@ -68,14 +68,14 @@ PostgreSQL sur `localhost:5432`, base `assurance_iard`, utilisateur `postgres` /
 ### 2. Backend
 
 ```bash
-cd backend
+cd assurance-iard-api
 ./mvnw spring-boot:run
 ```
 
 Disponible sur http://localhost:8080/ (santé : `/actuator/health`,
 documentation de l'API : `/swagger-ui.html`).
 
-Variante tout-en-Docker (base + backend) : `docker compose up -d --build`.
+Variante tout-en-Docker (base + assurance-iard-api) : `docker compose up -d --build`.
 
 ### 3. Frontend
 
@@ -86,7 +86,7 @@ npm start
 ```
 
 Disponible sur http://localhost:4200/ ; les appels `/api/...` sont relayés
-vers le backend sur le port 8080.
+vers assurance-iard-api sur le port 8080.
 
 ### Tout arrêter
 

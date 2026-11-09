@@ -1,6 +1,10 @@
+import { DevisService } from '../../core/service/devis.service';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { tarifEstime } from '../../core/model/tarif.exemples';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
-import { codePostalValide, colocatairesValides, estimerTarif, surfaceValide } from '../../core/model/devis';
+import { codePostalValide, colocatairesValides, surfaceValide } from '../../core/model/devis';
 import { DevisLogement } from './devis-logement';
 
 describe('DevisLogement', () => {
@@ -47,7 +51,7 @@ describe('DevisLogement', () => {
     saisir('#adresse', '12 rue de la Paix');
     saisir('#code-postal', '75001');
     saisir('#ville', 'Paris');
-    saisir('#etage', '2');
+    selectionner('#etage', 'intermediaire');
     selectionner('#sinistres', '0');
     selectionner('#resilie-contrat', 'non');
     selectionner('#antecedent-assurance', 'non-assure');
@@ -55,7 +59,7 @@ describe('DevisLogement', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      providers: [provideRouter([])],
+      providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()],
     }).compileComponents();
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -73,6 +77,7 @@ describe('DevisLogement', () => {
   it('reprend les reponses deja donnees au retour de etape 2', () => {
     remplirFormulaire();
     bouton('Continuer vers mes besoins').click();
+    TestBed.inject(HttpTestingController).expectOne('/api/assurance-iard-api/devis/tarifs').flush(tarifEstime());
 
     fixture = TestBed.createComponent(DevisLogement);
     fixture.detectChanges();
@@ -85,6 +90,7 @@ describe('DevisLogement', () => {
 
     vi.mocked(router.navigate).mockClear();
     bouton('Continuer vers mes besoins').click();
+    TestBed.inject(HttpTestingController).expectOne('/api/assurance-iard-api/devis/tarifs').flush(tarifEstime());
     expect(router.navigate).toHaveBeenCalledWith(['/devis/besoins']);
   });
 
@@ -98,6 +104,7 @@ describe('DevisLogement', () => {
       remplirFormulaire();
       bouton('Continuer vers mes besoins').click();
       fixture.detectChanges();
+      TestBed.inject(HttpTestingController).expectOne('/api/assurance-iard-api/devis/tarifs').flush(tarifEstime());
       expect(router.navigate).toHaveBeenCalledWith(['/devis/besoins']);
     });
 
@@ -162,18 +169,8 @@ describe('DevisLogement', () => {
 
     it('permet de choisir les dependances pour une maison', () => {
       selectionner('#type-logement', 'maison');
-      cliquer('Oui');
-      expect(
-        page.querySelector<HTMLButtonElement>('[aria-labelledby="libelle-dependances"] [aria-pressed="true"]')?.textContent?.trim(),
-      ).toBe('Oui');
-    });
-
-    it('permet de choisir non pour les dependances (maison)', () => {
-      selectionner('#type-logement', 'maison');
-      cliquer('Non');
-      expect(
-        page.querySelector<HTMLButtonElement>('[aria-labelledby="libelle-dependances"] [aria-pressed="true"]')?.textContent?.trim(),
-      ).toBe('Non');
+      selectionner('#dependances', 'piscine');
+      expect(page.querySelector<HTMLSelectElement>('#dependances')?.value).toBe('piscine');
     });
 
     it("enregistre le nom de l'assureur actuel", () => {
@@ -216,7 +213,7 @@ describe('DevisLogement', () => {
       saisir('#adresse', '12 rue Rivoli');
       saisir('#code-postal', '75001');
       saisir('#ville', 'Paris');
-      saisir('#etage', '1');
+      selectionner('#etage', 'rdc');
     });
 
     it('affiche alerte bloquante si resiliation non-paiement', () => {
@@ -307,7 +304,7 @@ describe('DevisLogement', () => {
       saisir('#adresse', '12 rue de la Paix');
       saisir('#code-postal', '75001');
       saisir('#ville', 'Paris');
-      saisir('#etage', '2');
+      selectionner('#etage', 'intermediaire');
       selectionner('#sinistres', '0');
       selectionner('#resilie-contrat', 'non');
       selectionner('#antecedent-assurance', 'assure-plus-un-an');
@@ -326,7 +323,7 @@ describe('DevisLogement', () => {
       saisir('#adresse', '12 rue de la Paix');
       saisir('#code-postal', '75001');
       saisir('#ville', 'Paris');
-      saisir('#etage', '2');
+      selectionner('#etage', 'intermediaire');
       selectionner('#resilie-contrat', 'non');
       selectionner('#antecedent-assurance', 'non-assure');
       bouton('Continuer vers mes besoins').click();
@@ -336,61 +333,60 @@ describe('DevisLogement', () => {
     });
   });
 
-  describe('AC6 — estimation du tarif', () => {
-    it("affiche un message guide sans surface valide", () => {
-      selectionner('#type-logement', 'appartement');
-      expect(page.querySelector('.encadre-tarif')).not.toBeNull();
+  describe('AC6 : tarif du moteur à la validation', () => {
+    const URL = '/api/assurance-iard-api/devis/tarifs';
+    const valider = (): void => {
+      remplirFormulaire();
+      bouton('Continuer vers mes besoins').click();
+      fixture.detectChanges();
+    };
+
+    it('n’affiche aucun prix pendant la saisie', () => {
+      saisir('#surface', '60');
       expect(page.querySelector('.encadre-tarif__prix')).toBeNull();
       expect(page.querySelector('.encadre-tarif__guide')).not.toBeNull();
     });
 
-    it('affiche encadre tarif avec surface et type valides', () => {
-      selectionner('#type-logement', 'appartement');
-      saisir('#surface', '60');
-      expect(page.querySelector('.encadre-tarif')).not.toBeNull();
-      expect(page.querySelector('.encadre-tarif__prix')?.textContent).toContain('€');
+    it('envoie le logement, garde le tarif et passe aux besoins', () => {
+      valider();
+      const requete = TestBed.inject(HttpTestingController).expectOne(URL);
+      expect(requete.request.body.logement.etage).toBe('intermediaire');
+      requete.flush(tarifEstime());
+      expect(TestBed.inject(DevisService).tarif()).toEqual(tarifEstime());
+      expect(router.navigate).toHaveBeenCalledWith(['/devis/besoins']);
     });
 
-    it('met a jour le tarif quand la surface change', () => {
-      selectionner('#type-logement', 'appartement');
-      saisir('#surface', '40');
-      const tarif1 = page.querySelector('.encadre-tarif__prix')?.textContent;
-      saisir('#surface', '80');
-      const tarif2 = page.querySelector('.encadre-tarif__prix')?.textContent;
-      expect(tarif1).not.toBe(tarif2);
+    it('n’envoie pas deux fois pendant le calcul', () => {
+      valider();
+      bouton('Continuer vers mes besoins').click();
+      TestBed.inject(HttpTestingController).expectOne(URL).flush(tarifEstime());
     });
 
-    it('affiche un tarif plus eleve pour une maison que pour un appartement', () => {
-      selectionner('#type-logement', 'appartement');
-      saisir('#surface', '80');
-      const prixAppartement = page.querySelector('.encadre-tarif__prix')?.textContent ?? '';
+    it('affiche le motif et le conseiller si le moteur refuse', () => {
+      valider();
+      TestBed.inject(HttpTestingController).expectOne(URL).flush({ idTarif: 'x', tarifable: false, motif: 'Motif de refus' });
+      fixture.detectChanges();
+      expect(page.textContent).toContain('Motif de refus');
+      expect(page.textContent).toContain('Être rappelé par un conseiller');
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('reste sur l’écran avec un message si le calcul échoue', () => {
+      valider();
+      TestBed.inject(HttpTestingController).expectOne(URL).flush(null, { status: 503, statusText: 'Indisponible' });
+      fixture.detectChanges();
+      expect(page.textContent).toContain('n’a pas pu être calculé'.replace('’', "'"));
+      expect(router.navigate).not.toHaveBeenCalled();
+    });
+
+    it('demande le type de dépendance pour une maison', () => {
       selectionner('#type-logement', 'maison');
-      const prixMaison = page.querySelector('.encadre-tarif__prix')?.textContent ?? '';
-      expect(prixMaison).not.toBe(prixAppartement);
+      selectionner('#dependances', 'jardin');
+      expect(page.querySelector<HTMLSelectElement>('#dependances')?.value).toBe('jardin');
     });
   });
 });
 
-describe('estimerTarif', () => {
-  it('retourne null sans type de logement', () => {
-    expect(estimerTarif('60', null)).toBeNull();
-  });
-
-  it('retourne null avec surface invalide', () => {
-    expect(estimerTarif('5', 'appartement')).toBeNull();
-    expect(estimerTarif('', 'appartement')).toBeNull();
-  });
-
-  it('calcule un tarif pour un appartement', () => {
-    const tarif = estimerTarif('60', 'appartement');
-    expect(tarif).not.toBeNull();
-    expect(tarif!).toBeGreaterThan(7.9);
-  });
-
-  it('calcule un tarif maison superieur au tarif appartement', () => {
-    expect(estimerTarif('60', 'maison')!).toBeGreaterThan(estimerTarif('60', 'appartement')!);
-  });
-});
 
 describe('surfaceValide', () => {
   it.each([

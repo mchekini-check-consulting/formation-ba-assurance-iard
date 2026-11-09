@@ -38,7 +38,7 @@ obligerait ensuite à forcer l'envoi.
 
 1. Lister les fichiers qui vont être enregistrés (`git status --porcelain`)
    et les présenter au BA regroupés par dossier, en langage simple
-   (« 3 fichiers modifiés dans backend/, 1 nouveau fichier dans frontend/ »).
+   (« 3 fichiers modifiés dans assurance-iard-api/, 1 nouveau fichier dans frontend/ »).
 2. **Bloquer** — ne pas les enregistrer, les signaler au BA — les fichiers qui
    n'ont rien à faire sur GitHub :
    - fichiers d'environnement ou de secrets : `.env`, `.env.*`, `*.pem`,

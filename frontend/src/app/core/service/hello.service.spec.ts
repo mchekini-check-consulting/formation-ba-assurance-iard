@@ -17,12 +17,12 @@ describe('HelloService', () => {
 
   afterEach(() => http.verify());
 
-  it('appelle GET /hello du backend et renvoie le texte', () => {
+  it('appelle GET /hello de assurance-iard-api et renvoie le texte', () => {
     let message: string | undefined;
     service.direBonjour().subscribe((m) => (message = m));
 
     // Les tests tournent sur localhost : adresse du proxy local
-    const requete = http.expectOne('/api/hello');
+    const requete = http.expectOne('/api/assurance-iard-api/hello');
     expect(requete.request.method).toBe('GET');
     requete.flush('Hello Assurance IARD');
 

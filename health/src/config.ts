@@ -1,7 +1,7 @@
 // Adresses déduites du host de la page (comme apiBase du frontend) :
 //   https://health.<projet>.<env>.<domaine>
 //   -> Keycloak : https://keycloak.<env>.<domaine>, realm check-projects-sso
-//   -> santé    : https://gateway.<projet>.<env>.<domaine>/backend/actuator/health
+//   -> santé    : https://gateway.<projet>.<env>.<domaine>/assurance-iard-api/actuator/health
 //                 (route protégée par le middleware jwt de gateway.yaml)
 // Même image dans tous les environnements (promotion Kargo) : rien à configurer.
 // En local (localhost) : Keycloak de dev (http://localhost:4201/* doit être une
@@ -24,6 +24,6 @@ export function config(hostname: string = location.hostname): Config {
   const suffixe = `${env}.${domaine.join('.')}`;
   return {
     keycloakUrl: `https://keycloak.dev.check-consulting.net`,
-    healthUrl: `https://gateway.${projet}.${suffixe}/backend/actuator/health`,
+    healthUrl: `https://gateway.${projet}.${suffixe}/assurance-iard-api/actuator/health`,
   };
 }

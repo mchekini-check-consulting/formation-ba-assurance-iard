@@ -8,7 +8,7 @@ Thumbs.db
 
 # Justificatifs déposés en local (US-13) : jamais commités
 /justificatifs/
-/backend/justificatifs/
+/assurance-iard-api/justificatifs/
 
 # Journaux de démarrage locaux
 *.log

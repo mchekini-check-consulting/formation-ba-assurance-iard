@@ -68,6 +68,11 @@
           </div>
         }
 
+        @if (motifRefus(); as motif) {
+          <div class="alerte alerte--bloquant" role="alert">
+            <p>{{ motif }}</p>
+          </div>
+        }
         <div class="actions actions--deux">
           <a class="btn btn--contour" routerLink="/devis/logement">← Retour à mon logement</a>
           <button type="submit" class="btn btn--large" [disabled]="!complet() || envoi()">
@@ -76,25 +81,16 @@
         </div>
       </form>
 
-      <aside class="encadre-tarif encadre-reco" aria-live="polite" aria-label="Formule conseillée">
-        <p class="encadre-tarif__label">Formule conseillée</p>
-        @if (recommandation(); as reco) {
-          <p class="encadre-reco__nom serif">{{ nomFormule() }}</p>
+      <aside class="encadre-tarif encadre-reco" aria-live="polite" aria-label="Votre tarif">
+        <p class="encadre-tarif__label">Votre tarif</p>
+        @if (prixDes(); as prix) {
           <p class="encadre-tarif__prix serif">
-            {{ prix() }}&#160;€<span class="encadre-tarif__unite">/mois</span>
+            d&#232;s {{ prix }}&#160;&#8364;<span class="encadre-tarif__unite">/mois</span>
           </p>
-          <p class="encadre-tarif__mention">Prix avant options · estimation provisoire</p>
-          <p class="encadre-reco__pourquoi">Pourquoi ?</p>
-          <ul class="encadre-reco__raisons">
-            @for (raison of reco.raisons; track raison) {
-              <li>{{ raison }}</li>
-            }
-          </ul>
-          @if (depassePlafond()) {
-            <p class="encadre-reco__plafond">Votre contenu dépasse le plafond de 35 000 € de cette formule.</p>
-          }
-        } @else {
-          <p class="encadre-tarif__guide">Répondez aux questions pour découvrir votre formule</p>
+        }
+        <p class="encadre-tarif__guide">Validez vos r&#233;ponses pour d&#233;couvrir la formule conseill&#233;e.</p>
+        @if (depassePlafond()) {
+          <p class="encadre-reco__plafond">Votre contenu d&#233;passe le plafond de 35 000 &#8364; de nos formules.</p>
         }
       </aside>
     </div>

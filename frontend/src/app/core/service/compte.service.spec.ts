@@ -28,7 +28,7 @@ describe('CompteService', () => {
 
   it('envoie POST /comptes au backend, puis connecte la personne', () => {
     creer(' Marie@Exemple.fr ');
-    const requete = http.expectOne('/api/comptes');
+    const requete = http.expectOne('/api/assurance-iard-api/comptes');
     expect(requete.request.method).toBe('POST');
     expect(requete.request.body).toEqual({ email: 'Marie@Exemple.fr', motDePasse: 'Abcdefg1' });
     requete.flush({ id: 7, email: 'marie@exemple.fr' }, { status: 201, statusText: 'Created' });
@@ -39,7 +39,7 @@ describe('CompteService', () => {
 
   it('signale un e-mail déjà utilisé quand le backend répond 409 (RG1)', () => {
     creer('deja@exemple.fr');
-    http.expectOne('/api/comptes').flush({ detail: 'Un compte existe déjà avec cette adresse.' }, { status: 409, statusText: 'Conflict' });
+    http.expectOne('/api/assurance-iard-api/comptes').flush({ detail: 'Un compte existe déjà avec cette adresse.' }, { status: 409, statusText: 'Conflict' });
 
     expect(resultat).toBe('email-deja-utilise');
     expect(service.emailConnecte()).toBeNull();
@@ -47,7 +47,7 @@ describe('CompteService', () => {
 
   it('signale une erreur technique si le backend ne répond pas', () => {
     creer('marie@exemple.fr');
-    http.expectOne('/api/comptes').error(new ProgressEvent('error'), { status: 0 });
+    http.expectOne('/api/assurance-iard-api/comptes').error(new ProgressEvent('error'), { status: 0 });
 
     expect(resultat).toBe('erreur-technique');
     expect(service.emailConnecte()).toBeNull();

@@ -1,0 +1,50 @@
+spring:
+  cloud:
+    openfeign:
+      client:
+        config:
+          moteurtarifaire:
+            connect-timeout: 1000
+            read-timeout: 2000
+
+  application:
+    name: assurance-iard-api
+
+  datasource:
+    url: jdbc:postgresql://localhost:5432/assurance_iard
+    username: postgres
+    password: postgres
+    driver-class-name: org.postgresql.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+
+  # US-13 : le service contrôle les 5 Mo avec un message précis ;
+  # ces limites plus larges bloquent seulement les envois démesurés.
+  servlet:
+    multipart:
+      max-file-size: 6MB
+      max-request-size: 13MB
+
+# Une valeur refusée (téléphone, nom...) ne doit jamais finir dans les logs
+logging:
+  level:
+    org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver: ERROR
+
+server:
+  port: 8080
+
+assurance:
+  connexion:
+    # Bouchons : code 123456 accepté et lien de réinitialisation écrit dans les logs.
+    # Désactivés par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
+    code-bouchon-actif: ${CODE_BOUCHON_ACTIF:false}
+    url-frontend: ${FRONTEND_URL:http://localhost:4200}
+  justificatifs:
+    # Dossier local exclu de Git ; en ligne, dossier temporaire (voir helm.yaml).
+    dossier: ${JUSTIFICATIFS_DOSSIER:justificatifs}
+
+moteur-tarifaire:
+  url: ${MOTEUR_TARIFAIRE_URL:http://localhost:8081}

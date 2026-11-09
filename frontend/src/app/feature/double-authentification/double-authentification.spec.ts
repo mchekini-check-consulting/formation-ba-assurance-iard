@@ -79,32 +79,32 @@ describe('DoubleAuthentification', () => {
     creer();
     soumettre();
     expect(valider().disabled).toBe(true);
-    repondre('/api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
+    repondre('/api/assurance-iard-api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/espace-client');
   });
 
   it('ouvre la page initialement demandée (AC2, AC6)', () => {
     creer({ retour: '/espace-client/documents' });
     soumettre();
-    repondre('/api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
+    repondre('/api/assurance-iard-api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/espace-client/documents');
   });
 
   it("n'accepte pas de page de retour extérieure au site", () => {
     creer({ retour: 'https://pirate.example' });
     soumettre();
-    repondre('/api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
+    repondre('/api/assurance-iard-api/connexion/verification', { jeton: 'session', email: 'marie@exemple.fr' }, 200);
     expect(router.navigateByUrl).toHaveBeenCalledWith('/espace-client');
   });
 
   it('indique un code incorrect et les essais restants (AC3)', () => {
     creer();
     soumettre();
-    repondre('/api/connexion/verification', { essaisRestants: 2 }, 401);
+    repondre('/api/assurance-iard-api/connexion/verification', { essaisRestants: 2 }, 401);
     expect(page.querySelector('.alerte')?.textContent).toContain('Code incorrect. Il vous reste 2 essais.');
 
     soumettre();
-    repondre('/api/connexion/verification', { essaisRestants: 1 }, 401);
+    repondre('/api/assurance-iard-api/connexion/verification', { essaisRestants: 1 }, 401);
     expect(page.querySelector('.alerte')?.textContent).toContain('Il vous reste 1 essai.');
     expect(valider().disabled).toBe(false);
   });
@@ -112,16 +112,16 @@ describe('DoubleAuthentification', () => {
   it('impose un nouveau code après 3 erreurs, puis permet de réessayer (AC3, RG2)', () => {
     creer();
     soumettre();
-    repondre('/api/connexion/verification', { motif: 'essais-epuises' }, 409);
+    repondre('/api/assurance-iard-api/connexion/verification', { motif: 'essais-epuises' }, 409);
     expect(page.querySelector('.alerte')?.textContent).toContain('vous devez demander un nouveau code');
     expect(valider().disabled).toBe(true);
 
     page.querySelector('form')!.dispatchEvent(new Event('submit', { cancelable: true }));
-    http.expectNone('/api/connexion/verification');
+    http.expectNone('/api/assurance-iard-api/connexion/verification');
 
     renvoyer().click();
     fixture.detectChanges();
-    const requete = http.expectOne('/api/connexion/renvoi-code');
+    const requete = http.expectOne('/api/assurance-iard-api/connexion/renvoi-code');
     expect(requete.request.body).toEqual({ verification: 'v1' });
     requete.flush({ verification: 'v1', emailMasque: 'm***@exemple.fr' });
     fixture.detectChanges();
@@ -139,7 +139,7 @@ describe('DoubleAuthentification', () => {
   it('impose un nouveau code après 10 minutes (RG2)', () => {
     creer();
     soumettre();
-    repondre('/api/connexion/verification', { motif: 'code-expire' }, 409);
+    repondre('/api/assurance-iard-api/connexion/verification', { motif: 'code-expire' }, 409);
     expect(page.querySelector('.alerte')?.textContent).toContain('Ce code a expiré.');
     expect(valider().disabled).toBe(true);
   });
@@ -147,20 +147,20 @@ describe('DoubleAuthentification', () => {
   it('renvoie à la connexion si la vérification n’existe plus', () => {
     creer();
     soumettre();
-    repondre('/api/connexion/verification', {}, 404);
+    repondre('/api/assurance-iard-api/connexion/verification', {}, 404);
     expect(router.navigate).toHaveBeenCalledWith(['/connexion']);
   });
 
   it('renvoie à la connexion si le renvoi ne trouve plus la vérification', () => {
     creer();
     renvoyer().click();
-    repondre('/api/connexion/renvoi-code', {}, 404);
+    repondre('/api/assurance-iard-api/connexion/renvoi-code', {}, 404);
     expect(router.navigate).toHaveBeenCalledWith(['/connexion']);
   });
 
   it.each([
-    ['la vérification', () => soumettre(), '/api/connexion/verification'],
-    ['le renvoi', () => renvoyer().click(), '/api/connexion/renvoi-code'],
+    ['la vérification', () => soumettre(), '/api/assurance-iard-api/connexion/verification'],
+    ['le renvoi', () => renvoyer().click(), '/api/assurance-iard-api/connexion/renvoi-code'],
   ])('prévient si le service est indisponible pendant %s', (_nom, action, url) => {
     creer();
     action();

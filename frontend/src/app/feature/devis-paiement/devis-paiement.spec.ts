@@ -1,3 +1,4 @@
+import { RECO_CONFORT, tarifDetaille } from '../../core/model/tarif.exemples';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
@@ -6,7 +7,7 @@ import { formaterDate, premierPrelevement } from '../../core/model/premier-prele
 import { DevisService } from '../../core/service/devis.service';
 import { DevisPaiement } from './devis-paiement';
 
-const URL_API = '/api/devis/mandats';
+const URL_API = '/api/assurance-iard-api/devis/mandats';
 const IBAN_TEST = 'FR7630006000011234567890189';
 const IBAN_FAUX = 'FR7630006000011234567890188';
 const MANDAT = { creancier: "Assur'Easy", ics: 'FR00ZZZ000000', rum: 'AE-2026-ABCDEFGH' };
@@ -95,7 +96,8 @@ describe('DevisPaiement', () => {
     });
     devis = TestBed.inject(DevisService);
     devis.mettreAJour({ surface: '60', typeLogement: 'appartement', statut: 'locataire' });
-    devis.validerRecommandation('ref-1', 'confort');
+    devis.validerRecommandation('ref-1', RECO_CONFORT);
+    devis.tarif.set(tarifDetaille());
     devis.franchiseChoisie.set('300');
     devis.informations.update((s) => ({ ...s, civilite: 'madame', nom: 'Durand ', prenom: ' Marie' }));
     devis.referenceDossier.set('ref-1');

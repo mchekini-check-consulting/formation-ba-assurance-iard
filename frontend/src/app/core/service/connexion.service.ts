@@ -20,7 +20,7 @@ function statutDe(erreur: unknown): number | null {
 @Injectable({ providedIn: 'root' })
 export class ConnexionService {
   private readonly http = inject(HttpClient);
-  private readonly url = apiBase('backend');
+  private readonly url = apiBase('assurance-iard-api');
 
   /** Étape « double authentification » en cours, gardée en mémoire : un rechargement renvoie à la connexion. */
   readonly verification = signal<VerificationEnCours | null>(null);

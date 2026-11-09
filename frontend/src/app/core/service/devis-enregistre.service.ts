@@ -12,7 +12,7 @@ export type ResultatEnregistrement =
 @Injectable({ providedIn: 'root' })
 export class DevisEnregistreService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/devis`;
+  private readonly url = `${apiBase('assurance-iard-api')}/devis`;
 
   enregistrer(demande: DemandeDevis): Observable<ResultatEnregistrement> {
     return this.http.post<DevisEnregistre>(`${this.url}/enregistres`, demande).pipe(

@@ -2,15 +2,17 @@ import { Component, ElementRef, computed, inject, signal, viewChild } from '@ang
 import { Router, RouterLink } from '@angular/router';
 import {
   Antecedent,
+  Etage,
   StatutLogement,
+  TypeDependances,
   TypeLogement,
   TypeResidence,
   codePostalValide,
   colocatairesValides,
-  estimerTarif,
   surfaceValide,
 } from '../../core/model/devis';
 import { DevisService } from '../../core/service/devis.service';
+import { TarifService } from '../../core/service/tarif.service';
 
 @Component({
   selector: 'iard-devis-logement',
@@ -20,11 +22,12 @@ import { DevisService } from '../../core/service/devis.service';
 })
 export class DevisLogement {
   private readonly devisService = inject(DevisService);
+  private readonly tarifService = inject(TarifService);
   private readonly router = inject(Router);
 
   private readonly premierBoutonStatut = viewChild<ElementRef<HTMLButtonElement>>('premierBoutonStatut');
   private readonly premierBoutonColocation = viewChild<ElementRef<HTMLButtonElement>>('premierBoutonColocation');
-  private readonly premierBoutonDependances = viewChild<ElementRef<HTMLButtonElement>>('premierBoutonDependances');
+  private readonly champDependances = viewChild<ElementRef<HTMLSelectElement>>('champDependances');
   private readonly champResidence = viewChild<ElementRef<HTMLSelectElement>>('champResidence');
   private readonly champType = viewChild<ElementRef<HTMLSelectElement>>('champType');
   private readonly champNombrePiecesSelect = viewChild<ElementRef<HTMLSelectElement>>('champNombrePiecesSelect');
@@ -32,7 +35,7 @@ export class DevisLogement {
   private readonly champAdresse = viewChild<ElementRef<HTMLInputElement>>('champAdresse');
   private readonly champCodePostal = viewChild<ElementRef<HTMLInputElement>>('champCodePostal');
   private readonly champVille = viewChild<ElementRef<HTMLInputElement>>('champVille');
-  private readonly champEtage = viewChild<ElementRef<HTMLInputElement>>('champEtage');
+  private readonly champEtage = viewChild<ElementRef<HTMLSelectElement>>('champEtage');
   private readonly champColocataires = viewChild<ElementRef<HTMLInputElement>>('champColocataires');
   private readonly champSinistresSelect = viewChild<ElementRef<HTMLSelectElement>>('champSinistresSelect');
   private readonly champResilientContrat = viewChild<ElementRef<HTMLSelectElement>>('champResilientContrat');
@@ -54,7 +57,10 @@ export class DevisLogement {
   protected readonly surface = signal(this.saisie.surface);
   protected readonly nombrePieces = signal(this.saisie.nombrePieces);
   protected readonly etage = signal(this.saisie.etage);
-  protected readonly dependances = signal<boolean | null>(this.saisie.dependances);
+  protected readonly dependances = signal<TypeDependances | null>(this.saisie.dependances);
+  protected readonly envoi = signal(false);
+  protected readonly erreurCalcul = signal(false);
+  protected readonly motifRefus = signal<string | null>(null);
   protected readonly nombreColocataires = signal(this.saisie.nombreColocataires);
   protected readonly nombreSinistres = signal(this.saisie.nombreSinistres);
   protected readonly resilieContrat = signal(this.saisie.resilieContrat);
@@ -87,13 +93,6 @@ export class DevisLogement {
   protected readonly estAssurePlusUnAn = computed(() => this.antecedent() === 'assure-plus-un-an');
   // AC4
   protected readonly estBloque = computed(() => this.antecedent() === 'resiliation-non-paiement');
-  // AC6
-  protected readonly tarifEstime = computed(() => estimerTarif(this.surface(), this.typeLogement()));
-  protected readonly tarifFormate = computed(() => {
-    const t = this.tarifEstime();
-    return t !== null ? t.toFixed(2).replace('.', ',') : null;
-  });
-
   // AC5 — erreurs de validation
   protected readonly erreurStatut = computed(() => this.tentative() && !this.statut() && !this.groupeLocataire());
   protected readonly erreurSousStatut = computed(() => this.tentative() && this.groupeLocataire() && !this.statut());
@@ -208,12 +207,12 @@ export class DevisLogement {
     this.ville.set((e.target as HTMLInputElement).value);
   }
 
-  protected saisirEtage(e: Event): void {
-    this.etage.set((e.target as HTMLInputElement).value);
+  protected choisirEtageDepuisSelect(e: Event): void {
+    this.etage.set((e.target as HTMLSelectElement).value as Etage | '');
   }
 
-  protected choisirDependances(v: boolean): void {
-    this.dependances.set(v);
+  protected choisirDependancesDepuisSelect(e: Event): void {
+    this.dependances.set(((e.target as HTMLSelectElement).value as TypeDependances | '') || null);
   }
 
   protected saisirNombreColocataires(e: Event): void {
@@ -242,7 +241,7 @@ export class DevisLogement {
   protected continuer(e: Event): void {
     e.preventDefault();
     this.tentative.set(true);
-    if (this.estNonOccupant()) return;
+    if (this.estNonOccupant() || this.envoi()) return;
     if (!this.formulaireValide()) {
       this.focusPremierChampErreur();
       return;
@@ -265,7 +264,20 @@ export class DevisLogement {
       assureurActuel: this.assureurActuel(),
       nombreSinistres: this.nombreSinistres(),
     });
-    void this.router.navigate(['/devis/besoins']);
+    this.envoi.set(true);
+    this.erreurCalcul.set(false);
+    this.motifRefus.set(null);
+    this.tarifService.estimer({ logement: this.devisService.logement() }).subscribe((tarif) => {
+      this.envoi.set(false);
+      if (tarif === null) {
+        this.erreurCalcul.set(true);
+      } else if (tarif.tarifable) {
+        this.devisService.tarif.set(tarif);
+        void this.router.navigate(['/devis/besoins']);
+      } else {
+        this.motifRefus.set(tarif.motif ?? '');
+      }
+    });
   }
 
   // PROVISOIRE : redirige vers /contact en attendant un formulaire de rappel CRM
@@ -284,7 +296,7 @@ export class DevisLogement {
     if (this.erreurCodePostal()) { this.champCodePostal()?.nativeElement.focus(); return; }
     if (this.erreurVille()) { this.champVille()?.nativeElement.focus(); return; }
     if (this.erreurEtage()) { this.champEtage()?.nativeElement.focus(); return; }
-    if (this.erreurDependances()) { this.premierBoutonDependances()?.nativeElement.focus(); return; }
+    if (this.erreurDependances()) { this.champDependances()?.nativeElement.focus(); return; }
     if (this.erreurNombreColocataires()) { this.champColocataires()?.nativeElement.focus(); return; }
     if (this.erreurNombreSinistres()) { this.champSinistresSelect()?.nativeElement.focus(); return; }
     if (this.erreurResilientContrat()) { this.champResilientContrat()?.nativeElement.focus(); return; }

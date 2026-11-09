@@ -25,7 +25,7 @@ export type ResultatSignature =
 @Injectable({ providedIn: 'root' })
 export class ContratService {
   private readonly http = inject(HttpClient);
-  private readonly url = `${apiBase('backend')}/devis/contrat`;
+  private readonly url = `${apiBase('assurance-iard-api')}/devis/contrat`;
 
   generer(demande: DemandeContrat): Observable<ResultatGeneration> {
     return this.http.post<Contrat>(this.url, demande).pipe(
