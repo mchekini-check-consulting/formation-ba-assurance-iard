@@ -75,7 +75,25 @@ public class GestionErreurs {
 
     @ExceptionHandler(CodeSignatureIncorrectException.class)
     public ProblemDetail codeSignatureIncorrect(CodeSignatureIncorrectException exception) {
-        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        if (exception.getEssaisRestants() >= 0) {
+            probleme.setProperty("essaisRestants", exception.getEssaisRestants());
+        }
+        return probleme;
+    }
+
+    @ExceptionHandler(CodeSignatureExpireException.class)
+    public ProblemDetail codeSignatureExpire(CodeSignatureExpireException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.GONE, exception.getMessage());
+        probleme.setProperty("motif", "code-expire");
+        return probleme;
+    }
+
+    @ExceptionHandler(CodeSignatureEpuiseException.class)
+    public ProblemDetail codeSignatureEpuise(CodeSignatureEpuiseException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+        probleme.setProperty("motif", "essais-epuises");
+        return probleme;
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

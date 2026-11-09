@@ -1,4 +1,4 @@
-export type StatutContrat = 'EN_ATTENTE_DE_SIGNATURE' | 'SIGNE' | 'ANNULE';
+export type StatutContrat = 'EN_ATTENTE_DE_SIGNATURE' | 'SIGNE' | 'ACTIF' | 'ANNULE';
 
 export interface DemandeContrat {
   referenceDevis: string;

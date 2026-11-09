@@ -5,7 +5,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
@@ -20,6 +19,7 @@ import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
+import net.checkconsulting.assuranceiard.api.service.EnvoiEmailContrat;
 import net.checkconsulting.assuranceiard.api.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -29,11 +29,12 @@ import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-/** US-15 sur une vraie base : génération, signature avec le code dev, rejet d'un mauvais code. */
+/** US-16 sur une vraie base : envoi du code, signature avec le bouchon, rejet d'un mauvais code. */
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest
+@SpringBootTest(properties = "assurance.connexion.code-bouchon-actif=true")
 @AutoConfigureMockMvc
 class ContratIT {
 
@@ -57,6 +58,9 @@ class ContratIT {
 
     @Autowired
     private SessionService sessionService;
+
+    @MockitoBean
+    private EnvoiEmailContrat envoiEmail;
 
     private String jeton;
     private UUID reference;
@@ -113,7 +117,7 @@ class ContratIT {
             """;
 
     @Test
-    void genereLeContratEtLeSigneAvecLeCodeDev() throws Exception {
+    void genereLeContratEnvoieLeCodeEtLeSigneAvecLeBouchon() throws Exception {
         mockMvc.perform(post("/devis/contrat")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
@@ -122,16 +126,21 @@ class ContratIT {
                 .andExpect(jsonPath("$.statut").value("EN_ATTENTE_DE_SIGNATURE"))
                 .andExpect(jsonPath("$.numero").value(org.hamcrest.Matchers.startsWith("AE-")));
 
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailMasque").exists());
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
-                        .content("{\"code\":\"" + "123456" + "\"}"))
+                        .content("{\"code\":\"123456\"}"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("SIGNE"));
+                .andExpect(jsonPath("$.statut").value("ACTIF"));
 
         assertThat(contratRepository.findByDossier(dossier))
                 .isPresent()
-                .hasValueSatisfying(c -> assertThat(c.getStatut()).isEqualTo("SIGNE"));
+                .hasValueSatisfying(c -> assertThat(c.getStatut()).isEqualTo("ACTIF"));
     }
 
     @Test
@@ -142,18 +151,23 @@ class ContratIT {
                         .content(CORPS_GENERATION.formatted(reference)))
                 .andExpect(status().isOk());
 
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk());
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
                         .content("{\"code\":\"999999\"}"))
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(2));
     }
 
     @Test
     void signatureSansSessionEst401() throws Exception {
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\":\"" + "123456" + "\"}"))
+                        .content("{\"code\":\"123456\"}"))
                 .andExpect(status().isUnauthorized());
     }
 }

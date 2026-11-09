@@ -14,6 +14,9 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
+import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
+import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
 import net.checkconsulting.assuranceiard.api.exception.DevisInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.GestionErreurs;
@@ -58,6 +61,16 @@ class ContratResourceTest {
 
     private ResultActions obtenir(UUID reference) throws Exception {
         return mockMvc.perform(get("/devis/contrat/" + reference)
+                .header(HttpHeaders.AUTHORIZATION, JETON));
+    }
+
+    private ResultActions envoyerCode(UUID reference) throws Exception {
+        return mockMvc.perform(post("/devis/contrat/" + reference + "/signature/code")
+                .header(HttpHeaders.AUTHORIZATION, JETON));
+    }
+
+    private ResultActions renvoyerCode(UUID reference) throws Exception {
+        return mockMvc.perform(post("/devis/contrat/" + reference + "/signature/code/renvoyer")
                 .header(HttpHeaders.AUTHORIZATION, JETON));
     }
 
@@ -124,9 +137,29 @@ class ContratResourceTest {
     }
 
     @Test
+    void envoyerCodeRetourneLEmailMasque() throws Exception {
+        when(contratService.envoyerCode(JETON, REFERENCE))
+                .thenReturn(new EnvoyerCodeSignatureResponse("j***@example.com"));
+
+        envoyerCode(REFERENCE)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailMasque").value("j***@example.com"));
+    }
+
+    @Test
+    void renvoyerCodeRetourneLEmailMasque() throws Exception {
+        when(contratService.renvoyerCode(JETON, REFERENCE))
+                .thenReturn(new EnvoyerCodeSignatureResponse("j***@example.com"));
+
+        renvoyerCode(REFERENCE)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.emailMasque").value("j***@example.com"));
+    }
+
+    @Test
     void signeLeContrat() throws Exception {
         ContratResponse signee = new ContratResponse(
-                "AE-2026-000001", "SIGNE", "M.", "Jean", "Dupont", "0612345678",
+                "AE-2026-000001", "ACTIF", "M.", "Jean", "Dupont", "0612345678",
                 "12 rue des Lilas", "75001", "Paris", "appartement", 45,
                 "confort", List.of("assistance-depannage"), 300,
                 new BigDecimal("18.50"), new BigDecimal("222.00"), 10,
@@ -137,16 +170,37 @@ class ContratResourceTest {
 
         signer(REFERENCE, "{\"code\":\"123456\"}")
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.statut").value("SIGNE"));
+                .andExpect(jsonPath("$.statut").value("ACTIF"));
     }
 
     @Test
     void retourne422SiCodeSignatureIncorrect() throws Exception {
         when(contratService.signer(eq(JETON), eq(REFERENCE), any()))
-                .thenThrow(new CodeSignatureIncorrectException());
+                .thenThrow(new CodeSignatureIncorrectException(2));
 
         signer(REFERENCE, "{\"code\":\"999999\"}")
-                .andExpect(status().isUnprocessableEntity());
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(2));
+    }
+
+    @Test
+    void retourne410SiCodeExpire() throws Exception {
+        when(contratService.signer(eq(JETON), eq(REFERENCE), any()))
+                .thenThrow(new CodeSignatureExpireException());
+
+        signer(REFERENCE, "{\"code\":\"123456\"}")
+                .andExpect(status().isGone())
+                .andExpect(jsonPath("$.motif").value("code-expire"));
+    }
+
+    @Test
+    void retourne409SiEssaisEpuises() throws Exception {
+        when(contratService.signer(eq(JETON), eq(REFERENCE), any()))
+                .thenThrow(new CodeSignatureEpuiseException());
+
+        signer(REFERENCE, "{\"code\":\"123456\"}")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.motif").value("essais-epuises"));
     }
 
     private ContratResponse uneReponse() {

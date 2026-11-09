@@ -13,6 +13,18 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+  mail:
+    host: ${SMTP_HOST:localhost}
+    port: ${SMTP_PORT:1025}
+    username: ${SMTP_USER:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          starttls:
+            enable: ${SMTP_TLS:false}
+            required: ${SMTP_TLS:false}
+
   # US-13 : le service contrôle les 5 Mo avec un message précis ;
   # ces limites plus larges bloquent seulement les envois démesurés.
   servlet:
@@ -37,3 +49,5 @@ assurance:
   justificatifs:
     # Dossier local exclu de Git ; en ligne, dossier temporaire (voir helm.yaml).
     dossier: ${JUSTIFICATIFS_DOSSIER:justificatifs}
+  mail:
+    from: ${MAIL_FROM:noreply@assureasy.fr}

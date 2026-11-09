@@ -105,15 +105,17 @@ describe('ContratService', () => {
   });
 
   it.each([
-    [401, 'session-expiree'],
-    [422, 'code-incorrect'],
-    [500, 'erreur-technique'],
-  ])('signature refusée (%i) : %s', (status, statut) => {
+    [401, { statut: 'session-expiree' }],
+    [422, { statut: 'code-incorrect', essaisRestants: null }],
+    [409, { statut: 'essais-epuises' }],
+    [410, { statut: 'code-expire' }],
+    [500, { statut: 'erreur-technique' }],
+  ])('signature refusee (%i)', (status, attendu) => {
     const resultats: ResultatSignature[] = [];
     service.signer('ref-1', '999999').subscribe((r) => resultats.push(r));
     http
       .expectOne((req) => req.method === 'POST' && req.url.includes('/signature'))
-      .flush({}, { status, statusText: 'Erreur' });
-    expect(resultats).toEqual([{ statut }]);
+      .flush({}, { status: status as number, statusText: 'Erreur' });
+    expect(resultats).toEqual([attendu]);
   });
 });
