@@ -153,20 +153,54 @@ describe('Connexion', () => {
       repondreOubli(204);
 
       expect(page.querySelector('.information')?.textContent).toContain(
-        'Si un compte existe, un lien de réinitialisation a été envoyé.',
+        'Si un compte existe avec cette adresse, un lien de réinitialisation vous a été envoyé.',
       );
       expect(oublie().disabled).toBe(false);
     });
 
-    it.each([[''], ['prenom.nom']])('invite à saisir une adresse pour « %s » (AC2)', (email) => {
+    it('affiche le même message quand le compte n’existe pas (RG1)', () => {
       creer();
-      saisir('#email', email);
+      saisir('#email', 'inconnu@exemple.fr');
+      cliquerOublie();
+      repondreOubli(204);
+
+      expect(page.querySelector('.information')?.textContent).toContain(
+        'Si un compte existe avec cette adresse, un lien de réinitialisation vous a été envoyé.',
+      );
+    });
+
+    it('accepte une adresse avec « + » et en majuscules, sans les espaces autour', () => {
+      creer();
+      saisir('#email', '  Marie+IARD@Exemple.fr  ');
       cliquerOublie();
 
-      expect(page.querySelector('.alerte')?.textContent).toContain('Saisissez votre adresse e-mail');
-      expect(document.activeElement).toBe(page.querySelector('#email'));
-      expect(page.querySelector('.information')).toBeNull();
+      const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/oubli');
+      expect(requete.request.body).toEqual({ email: 'Marie+IARD@Exemple.fr' });
+      requete.flush(null, { status: 204, statusText: 'No Content' });
     });
+
+    it('accepte une adresse de 254 caractères', () => {
+      creer();
+      saisir('#email', `${'a'.repeat(64)}@${'b'.repeat(63)}.${'c'.repeat(63)}.${'d'.repeat(58)}.fr`);
+      cliquerOublie();
+
+      repondreOubli(204);
+      expect(page.querySelector('.information')).not.toBeNull();
+    });
+
+    it.each([[''], ['   '], ['prenom.nom'], ['prenom nom@exemple.fr'], [`${'a'.repeat(64)}@${'b'.repeat(187)}.fr`]])(
+      'invite à saisir une adresse valide sans rien envoyer pour « %s » (AC2)',
+      (email) => {
+        creer();
+        saisir('#email', email);
+        cliquerOublie();
+
+        expect(page.querySelector('.alerte')?.textContent).toContain('Saisissez une adresse e-mail valide');
+        expect(document.activeElement).toBe(page.querySelector('#email'));
+        expect(page.querySelector('.information')).toBeNull();
+        http.expectNone('/api/assurance-iard-api/mot-de-passe/oubli');
+      },
+    );
 
     it('retire les messages quand on modifie l’adresse', () => {
       creer();

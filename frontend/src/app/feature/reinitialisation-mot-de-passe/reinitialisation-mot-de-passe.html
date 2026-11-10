@@ -55,6 +55,23 @@
           }
         </div>
 
+        <div class="champ">
+          <label class="libelle" for="confirmation-mot-de-passe">Confirmer le mot de passe</label>
+          <input
+            #champConfirmation
+            id="confirmation-mot-de-passe"
+            type="password"
+            class="saisie"
+            [class.saisie--erreur]="erreurConfirmation()"
+            autocomplete="new-password"
+            [attr.aria-invalid]="erreurConfirmation()"
+            (input)="saisirConfirmation($event)"
+          />
+          @if (erreurConfirmation()) {
+            <p class="erreur" role="alert">Les deux mots de passe ne sont pas identiques.</p>
+          }
+        </div>
+
         <button type="submit" class="btn btn--large" [disabled]="envoiEnCours()">Enregistrer</button>
       </form>
     }

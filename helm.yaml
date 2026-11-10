@@ -36,11 +36,12 @@ applications:
     envList:
       - key: LOG_LEVEL
         value: {dev: debug, qualif: info, preprod: info, prod: warn}
-      # Bouchons US-07 et signature de contrat (code 123456 de signature, lien dans les logs). Jamais en preprod ni en prod.
+      # Bouchon de la signature de contrat (code de signature 123456). Jamais en preprod ni en prod.
       # Le code de connexion US-06 est envoyé par e-mail (Mailpit) : pas de code de test (CODE_TEST_CONNEXION_ACTIF éteint).
       - key: CODE_BOUCHON_ACTIF
         value: {dev: "true", qualif: "true", preprod: "false", prod: "false"}
-      # US-07 : adresse de l'écran, pour construire le lien de réinitialisation du mot de passe.
+      # US-07 : adresse de l'écran de chaque environnement, base du lien de réinitialisation envoyé par e-mail.
+      # Durée du lien : 24 heures par défaut (LIEN_REINITIALISATION_VALIDITE, non renseignée ici).
       - key: FRONTEND_URL
         value:
           dev: https://frontend.formation-ba-assurance-iard.dev.check-consulting.net

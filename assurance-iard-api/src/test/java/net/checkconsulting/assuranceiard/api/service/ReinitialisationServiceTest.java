@@ -1,10 +1,13 @@
 package net.checkconsulting.assuranceiard.api.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.startsWith;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
@@ -14,8 +17,12 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.Executor;
 import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
+import net.checkconsulting.assuranceiard.api.config.ReinitialisationProperties;
 import net.checkconsulting.assuranceiard.api.exception.LienInvalideException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.LienReinitialisation;
@@ -29,7 +36,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.mail.MailSendException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.support.TransactionOperations;
 
 @ExtendWith(MockitoExtension.class)
 class ReinitialisationServiceTest {
@@ -55,6 +64,9 @@ class ReinitialisationServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
+    /** Exécute la demande tout de suite, pour vérifier son traitement. */
+    private final Executor executeur = Runnable::run;
+
     private ReinitialisationService service;
     private Compte compte;
     private LienReinitialisation lien;
@@ -63,7 +75,8 @@ class ReinitialisationServiceTest {
     void preparer() {
         service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
                 envoiLien, passwordEncoder, new ConnexionProperties(true, "http://ecran"),
-                Clock.fixed(MAINTENANT, ZoneOffset.UTC));
+                new ReinitialisationProperties(Duration.ofHours(24)),
+                Clock.fixed(MAINTENANT, ZoneOffset.UTC), executeur, TransactionOperations.withoutTransaction());
         compte = new Compte();
         compte.setEmail("marie@exemple.fr");
         lien = new LienReinitialisation();
@@ -90,6 +103,47 @@ class ReinitialisationServiceTest {
         assertThat(envoye.getValue()).startsWith("http://ecran/reinitialisation-mot-de-passe?jeton=");
         String jeton = envoye.getValue().substring(envoye.getValue().indexOf('=') + 1);
         assertThat(enregistre.getValue().getJetonHash()).isEqualTo(Jetons.empreinte(jeton)).isNotEqualTo(jeton);
+    }
+
+    @Test
+    void laDureeDuLienSuitLeReglage() {
+        service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
+                envoiLien, passwordEncoder, new ConnexionProperties(false, "https://frontend.qualif"),
+                new ReinitialisationProperties(Duration.ofMinutes(2)), Clock.fixed(MAINTENANT, ZoneOffset.UTC),
+                executeur, TransactionOperations.withoutTransaction());
+        when(compteRepository.findByEmail("marie@exemple.fr")).thenReturn(Optional.of(compte));
+
+        service.demander("marie@exemple.fr");
+
+        ArgumentCaptor<LienReinitialisation> enregistre = ArgumentCaptor.forClass(LienReinitialisation.class);
+        verify(lienRepository).save(enregistre.capture());
+        assertThat(enregistre.getValue().getDateExpiration()).isEqualTo(MAINTENANT.plus(Duration.ofMinutes(2)));
+        verify(envoiLien).envoyer(eq("marie@exemple.fr"),
+                startsWith("https://frontend.qualif/reinitialisation-mot-de-passe?jeton="));
+    }
+
+    @Test
+    void laDemandeEstTraiteeEnArrierePlanPourRepondreAussiViteQueLeCompteExisteOuNon() {
+        List<Runnable> enAttente = new ArrayList<>();
+        service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
+                envoiLien, passwordEncoder, new ConnexionProperties(false, "http://ecran"),
+                new ReinitialisationProperties(Duration.ofHours(24)), Clock.fixed(MAINTENANT, ZoneOffset.UTC),
+                enAttente::add, TransactionOperations.withoutTransaction());
+        when(compteRepository.findByEmail("marie@exemple.fr")).thenReturn(Optional.of(compte));
+
+        service.demander("marie@exemple.fr");
+
+        verifyNoInteractions(compteRepository, lienRepository, envoiLien);
+        enAttente.forEach(Runnable::run);
+        verify(envoiLien).envoyer(eq("marie@exemple.fr"), anyString());
+    }
+
+    @Test
+    void unEchecDEnvoiNeRemontePas() {
+        when(compteRepository.findByEmail("marie@exemple.fr")).thenReturn(Optional.of(compte));
+        doThrow(new MailSendException("marie@exemple.fr injoignable")).when(envoiLien).envoyer(anyString(), anyString());
+
+        assertThatCode(() -> service.demander("marie@exemple.fr")).doesNotThrowAnyException();
     }
 
     @Test

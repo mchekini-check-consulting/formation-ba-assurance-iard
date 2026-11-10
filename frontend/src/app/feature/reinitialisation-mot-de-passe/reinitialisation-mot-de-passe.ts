@@ -15,12 +15,18 @@ export class ReinitialisationMotDePasse {
   private readonly motDePasseService = inject(MotDePasseService);
   private readonly jeton = inject(ActivatedRoute).snapshot.queryParamMap.get('jeton');
   private readonly champMotDePasse = viewChild<ElementRef<HTMLInputElement>>('champMotDePasse');
+  private readonly champConfirmation = viewChild<ElementRef<HTMLInputElement>>('champConfirmation');
 
   protected readonly etape = signal<Etape>('verification');
   protected readonly motDePasse = signal('');
   private readonly tentative = signal(false);
   protected readonly regles = computed(() => reglesMotDePasse(this.motDePasse()));
   protected readonly erreurMotDePasse = computed(() => this.tentative() && !motDePasseConforme(this.motDePasse()));
+  protected readonly confirmation = signal('');
+  /** US-07 : le nouveau mot de passe est saisi deux fois, à l'identique. */
+  protected readonly erreurConfirmation = computed(
+    () => this.tentative() && !this.erreurMotDePasse() && this.confirmation() !== this.motDePasse(),
+  );
   protected readonly erreurTechnique = signal(false);
   protected readonly envoiEnCours = signal(false);
 
@@ -42,11 +48,19 @@ export class ReinitialisationMotDePasse {
     this.motDePasse.set((event.target as HTMLInputElement).value);
   }
 
+  protected saisirConfirmation(event: Event): void {
+    this.confirmation.set((event.target as HTMLInputElement).value);
+  }
+
   protected valider(event: Event): void {
     event.preventDefault();
     this.tentative.set(true);
     if (this.erreurMotDePasse()) {
       this.champMotDePasse()?.nativeElement.focus();
+      return;
+    }
+    if (this.erreurConfirmation()) {
+      this.champConfirmation()?.nativeElement.focus();
       return;
     }
     this.envoiEnCours.set(true);
