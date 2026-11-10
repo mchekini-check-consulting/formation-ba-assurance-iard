@@ -15,6 +15,8 @@ import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
+import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
+import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
 import net.checkconsulting.assuranceiard.api.exception.DevisInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.MandatNonSigneException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
@@ -87,7 +89,7 @@ public class ContratService {
         return new EnvoyerCodeSignatureResponse(emailMasque);
     }
 
-    @Transactional
+    @Transactional(noRollbackFor = {CodeSignatureIncorrectException.class, CodeSignatureEpuiseException.class})
     public ContratResponse signer(String authorization, UUID referenceDevis, SignatureContratRequest demande) {
         DossierSouscription dossier = dossierDuClient(authorization, referenceDevis);
         Contrat contrat = contratRepository.findByDossier(dossier)
