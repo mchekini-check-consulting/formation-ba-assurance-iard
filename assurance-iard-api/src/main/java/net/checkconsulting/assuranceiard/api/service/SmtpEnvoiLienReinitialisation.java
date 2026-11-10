@@ -84,28 +84,30 @@ public class SmtpEnvoiLienReinitialisation implements EnvoiLienReinitialisation 
                 + "L'équipe Assur'Easy";
     }
 
-    static String html(String lien, String validite) {
-        String corps = paragraphe("Bonjour,")
-                + paragraphe("Vous avez demandé à réinitialiser le mot de passe de votre espace Assur'Easy.")
-                + "<p style=\"margin:24px 0;text-align:center;\"><a href=\"" + lien + "\" style=\"display:inline-block;"
-                + "padding:14px 28px;background-color:" + ROUGE + ";color:" + BLANC + ";font-weight:bold;"
-                + "text-decoration:none;border-radius:4px;\">" + BOUTON + "</a></p>"
-                + paragraphe("Ce lien est valable <strong>" + validite + "</strong> et ne peut servir qu'une seule fois.")
-                + paragraphe(MESSAGE_NON_DEMANDE)
-                + paragraphe("L'équipe Assur'Easy");
-        return "<!DOCTYPE html><html lang=\"fr\"><body style=\"margin:0;padding:0;background-color:" + BLANC
-                + ";font-family:Arial,Helvetica,sans-serif;color:#222222;\">"
-                + "<div style=\"max-width:520px;margin:24px auto;border:1px solid " + ROUGE + ";\">"
-                + "<div style=\"background-color:" + ROUGE + ";color:" + BLANC
-                + ";padding:20px 24px;font-size:22px;font-weight:bold;\">Assur'Easy</div>"
-                + "<div style=\"padding:24px;font-size:16px;line-height:1.5;background-color:" + BLANC + ";\">" + corps
-                + "</div>"
-                + "<div style=\"background-color:" + ROUGE + ";color:" + BLANC + ";padding:12px 24px;font-size:12px;\">"
-                + "Ce message est envoyé automatiquement, merci de ne pas y répondre.</div>"
-                + "</div></body></html>";
-    }
+    /** Mise en page rouge et blanc : %1$s rouge, %2$s blanc, %3$s lien, %4$s bouton, %5$s durée, %6$s phrase. */
+    private static final String MODELE_HTML = """
+            <!DOCTYPE html>
+            <html lang="fr">
+            <body style="margin:0;padding:0;background-color:%2$s;font-family:Arial,Helvetica,sans-serif;color:#222222;">
+              <div style="max-width:520px;margin:24px auto;border:1px solid %1$s;">
+                <div style="background-color:%1$s;color:%2$s;padding:20px 24px;font-size:22px;font-weight:bold;">Assur'Easy</div>
+                <div style="padding:24px;font-size:16px;line-height:1.5;background-color:%2$s;">
+                  <p style="margin:0 0 16px;">Bonjour,</p>
+                  <p style="margin:0 0 16px;">Vous avez demandé à réinitialiser le mot de passe de votre espace Assur'Easy.</p>
+                  <p style="margin:24px 0;text-align:center;">
+                    <a href="%3$s" style="display:inline-block;padding:14px 28px;background-color:%1$s;color:%2$s;font-weight:bold;text-decoration:none;border-radius:4px;">%4$s</a>
+                  </p>
+                  <p style="margin:0 0 16px;">Ce lien est valable <strong>%5$s</strong> et ne peut servir qu'une seule fois.</p>
+                  <p style="margin:0 0 16px;">%6$s</p>
+                  <p style="margin:0;">L'équipe Assur'Easy</p>
+                </div>
+                <div style="background-color:%1$s;color:%2$s;padding:12px 24px;font-size:12px;">Ce message est envoyé automatiquement, merci de ne pas y répondre.</div>
+              </div>
+            </body>
+            </html>
+            """;
 
-    private static String paragraphe(String texte) {
-        return "<p style=\"margin:0 0 16px;\">" + texte + "</p>";
+    static String html(String lien, String validite) {
+        return MODELE_HTML.formatted(ROUGE, BLANC, lien, BOUTON, validite, MESSAGE_NON_DEMANDE);
     }
 }

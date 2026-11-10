@@ -2,8 +2,7 @@ package net.checkconsulting.assuranceiard.api.service;
 
 import java.time.Clock;
 import java.util.Locale;
-import java.util.concurrent.Executor;
-import lombok.extern.slf4j.Slf4j;
+import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
 import net.checkconsulting.assuranceiard.api.config.ReinitialisationProperties;
 import net.checkconsulting.assuranceiard.api.exception.LienInvalideException;
@@ -13,19 +12,17 @@ import net.checkconsulting.assuranceiard.api.repository.CodeVerificationReposito
 import net.checkconsulting.assuranceiard.api.repository.CompteRepository;
 import net.checkconsulting.assuranceiard.api.repository.LienReinitialisationRepository;
 import net.checkconsulting.assuranceiard.api.utils.Jetons;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionOperations;
 
 /**
  * Mot de passe oublié (US-07) : RG1, réponse identique que le compte existe ou non ; RG2, lien à usage unique valable
  * 24 heures par défaut (réglage LIEN_REINITIALISATION_VALIDITE). Le jeton n'est stocké que haché et n'est jamais
  * écrit dans les logs.
  */
-@Slf4j
 @Service
+@RequiredArgsConstructor
 public class ReinitialisationService {
 
     private static final String PAGE_REINITIALISATION = "/reinitialisation-mot-de-passe?jeton=";
@@ -39,42 +36,17 @@ public class ReinitialisationService {
     private final ConnexionProperties proprietes;
     private final ReinitialisationProperties reglages;
     private final Clock horloge;
-    private final Executor executeur;
-    private final TransactionOperations transaction;
-
-    @SuppressWarnings("PMD.ExcessiveParameterList")
-    public ReinitialisationService(
-            CompteRepository compteRepository,
-            LienReinitialisationRepository lienRepository,
-            CodeVerificationRepository codeRepository,
-            SessionService sessionService,
-            EnvoiLienReinitialisation envoiLien,
-            PasswordEncoder passwordEncoder,
-            ConnexionProperties proprietes,
-            ReinitialisationProperties reglages,
-            Clock horloge,
-            @Qualifier("applicationTaskExecutor") Executor executeur,
-            TransactionOperations transaction) {
-        this.compteRepository = compteRepository;
-        this.lienRepository = lienRepository;
-        this.codeRepository = codeRepository;
-        this.sessionService = sessionService;
-        this.envoiLien = envoiLien;
-        this.passwordEncoder = passwordEncoder;
-        this.proprietes = proprietes;
-        this.reglages = reglages;
-        this.horloge = horloge;
-        this.executeur = executeur;
-        this.transaction = transaction;
-    }
+    private final TraitementEnArrierePlan arrierePlan;
 
     /**
      * RG1 : la demande est traitée en arrière-plan. La réponse part tout de suite et prend le même temps que le compte
-     * existe ou non. Un nouveau lien annule le précédent : un seul reste valable.
+     * existe ou non. Le lien est enregistré avant l'envoi de l'e-mail ; un nouveau lien annule le précédent.
      */
     public void demander(String email) {
         String adresse = email.trim().toLowerCase(Locale.ROOT);
-        executeur.execute(() -> traiter(adresse));
+        arrierePlan.lancer("demande de réinitialisation",
+                () -> compteRepository.findByEmail(adresse).map(this::creerUnLien),
+                lien -> lien.ifPresent(url -> envoiLien.envoyer(adresse, url)));
     }
 
     @Transactional
@@ -93,22 +65,6 @@ public class ReinitialisationService {
         codeRepository.deleteByCompte(compte);
         sessionService.fermerToutes(compte);
         lienRepository.delete(lien);
-    }
-
-    /** Le lien est enregistré avant l'envoi de l'e-mail : le client ne reçoit jamais un lien encore inconnu. */
-    @SuppressWarnings("PMD.AvoidCatchingGenericException")
-    private void traiter(String adresse) {
-        try {
-            String lien = transaction.execute(etat -> compteRepository.findByEmail(adresse)
-                    .map(this::creerUnLien)
-                    .orElse(null));
-            if (lien != null) {
-                envoiLien.envoyer(adresse, lien);
-            }
-        } catch (RuntimeException exception) {
-            // Le message de l'exception peut contenir l'adresse ou le lien : seul son type est journalisé.
-            log.error("Demande de réinitialisation non traitée ({})", exception.getClass().getSimpleName());
-        }
     }
 
     private String creerUnLien(Compte compte) {

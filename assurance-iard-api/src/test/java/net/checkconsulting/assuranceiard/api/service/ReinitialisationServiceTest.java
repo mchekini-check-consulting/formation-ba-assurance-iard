@@ -76,7 +76,8 @@ class ReinitialisationServiceTest {
         service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
                 envoiLien, passwordEncoder, new ConnexionProperties(true, "http://ecran"),
                 new ReinitialisationProperties(Duration.ofHours(24)),
-                Clock.fixed(MAINTENANT, ZoneOffset.UTC), executeur, TransactionOperations.withoutTransaction());
+                Clock.fixed(MAINTENANT, ZoneOffset.UTC),
+                new TraitementEnArrierePlan(executeur, TransactionOperations.withoutTransaction()));
         compte = new Compte();
         compte.setEmail("marie@exemple.fr");
         lien = new LienReinitialisation();
@@ -110,7 +111,7 @@ class ReinitialisationServiceTest {
         service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
                 envoiLien, passwordEncoder, new ConnexionProperties(false, "https://frontend.qualif"),
                 new ReinitialisationProperties(Duration.ofMinutes(2)), Clock.fixed(MAINTENANT, ZoneOffset.UTC),
-                executeur, TransactionOperations.withoutTransaction());
+                new TraitementEnArrierePlan(executeur, TransactionOperations.withoutTransaction()));
         when(compteRepository.findByEmail("marie@exemple.fr")).thenReturn(Optional.of(compte));
 
         service.demander("marie@exemple.fr");
@@ -128,7 +129,7 @@ class ReinitialisationServiceTest {
         service = new ReinitialisationService(compteRepository, lienRepository, codeRepository, sessionService,
                 envoiLien, passwordEncoder, new ConnexionProperties(false, "http://ecran"),
                 new ReinitialisationProperties(Duration.ofHours(24)), Clock.fixed(MAINTENANT, ZoneOffset.UTC),
-                enAttente::add, TransactionOperations.withoutTransaction());
+                new TraitementEnArrierePlan(enAttente::add, TransactionOperations.withoutTransaction()));
         when(compteRepository.findByEmail("marie@exemple.fr")).thenReturn(Optional.of(compte));
 
         service.demander("marie@exemple.fr");
