@@ -64,6 +64,7 @@ class LogsMetierAspectTest {
     class TarifRepository implements Repository<Tarif, Long> {
 
         @LogMetier(champs = "resultat.taille")
+        @SuppressWarnings("java:S2925")
         public List<Tarif> findByFormule(String formule) throws InterruptedException {
             if ("lente".equals(formule)) {
                 Thread.sleep(LogsMetierAspect.SEUIL_DB_LENT_MS + 10);
@@ -106,6 +107,7 @@ class LogsMetierAspectTest {
         @ExceptionHandler(FormuleInconnueException.class)
         @ResponseStatus(HttpStatus.NOT_FOUND)
         public void formuleInconnue() {
+            // vide par conception : le code 404 est porté par @ResponseStatus
         }
     }
 
