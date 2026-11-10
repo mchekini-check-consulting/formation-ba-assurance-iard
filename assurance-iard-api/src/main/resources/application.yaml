@@ -47,6 +47,7 @@ spring:
 # Une valeur refusée (téléphone, nom...) ne doit jamais finir dans les logs
 logging:
   level:
+    net.checkconsulting.assuranceiard.api: ${LOG_LEVEL:info}
     org.springframework.web.servlet.mvc.support.DefaultHandlerExceptionResolver: ERROR
 
 server:

@@ -5,6 +5,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.DemandeTarif;
 import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.service.TarifDevisService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -19,11 +20,13 @@ public class TarifResource {
     private final TarifDevisService tarifDevisService;
 
     @PostMapping("/devis/tarifs")
+    @LogMetier(champs = {"demande.formule", "demande.franchise"})
     public TarifResponse estimer(@Valid @RequestBody DemandeTarif demande) {
         return tarifDevisService.estimer(demande);
     }
 
     @PostMapping("/devis/{reference}/tarif")
+    @LogMetier(champs = {"demande.formule", "demande.franchise", "reference"})
     public TarifResponse tarifer(@PathVariable UUID reference, @Valid @RequestBody DemandeTarif demande) {
         return tarifDevisService.tarifer(reference, demande);
     }

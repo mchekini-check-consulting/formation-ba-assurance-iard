@@ -25,6 +25,7 @@ import net.checkconsulting.assuranceiard.api.model.DossierSouscription;
 import net.checkconsulting.assuranceiard.api.model.MandatSepa;
 import net.checkconsulting.assuranceiard.api.model.RecommandationDevis;
 import net.checkconsulting.assuranceiard.api.model.TarifDevis;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
@@ -54,6 +55,7 @@ public class ContratService {
     private final Clock horloge;
 
     /** Idempotent : renvoie le contrat existant si déjà généré pour ce dossier. */
+    @LogMetier(champs = {"demande.typeLogement", "demande.surface", "demande.franchise"})
     @Transactional
     public ContratResponse generer(String authorization, GenerationContratRequest demande) {
         DossierSouscription dossier = dossierDuClient(authorization, demande.referenceDevis());
@@ -89,6 +91,7 @@ public class ContratService {
         return new EnvoyerCodeSignatureResponse(emailMasque);
     }
 
+    @LogMetier(champs = {"resultat.statut"})
     @Transactional(noRollbackFor = {CodeSignatureIncorrectException.class, CodeSignatureEpuiseException.class})
     public ContratResponse signer(String authorization, UUID referenceDevis, SignatureContratRequest demande) {
         DossierSouscription dossier = dossierDuClient(authorization, referenceDevis);

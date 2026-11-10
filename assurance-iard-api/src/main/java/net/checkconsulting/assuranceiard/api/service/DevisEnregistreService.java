@@ -13,6 +13,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.DevisEnregistreResponse;
 import net.checkconsulting.assuranceiard.api.dto.DevisRequest;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.dto.DonneesDevisPdf;
 import net.checkconsulting.assuranceiard.api.dto.RepriseDevisResponse;
 import net.checkconsulting.assuranceiard.api.exception.DevisInconnuException;
@@ -46,6 +47,7 @@ public class DevisEnregistreService {
     private final Clock horloge;
 
     /** Réenregistrer le même devis met sa ligne à jour, sans doublon ni validité prolongée. */
+    @LogMetier(champs = {"demande.formule", "demande.franchise"})
     @Transactional
     public DevisEnregistreResponse enregistrer(String authorization, DevisRequest demande) {
         Compte compte = sessionService.compteConnecte(authorization);
@@ -64,12 +66,14 @@ public class DevisEnregistreService {
         return versReponse(repository.save(devis));
     }
 
+    @LogMetier(champs = {"resultat.taille"})
     @Transactional
     public List<DevisEnregistreResponse> lister(String authorization) {
         Compte compte = sessionService.compteConnecte(authorization);
         return repository.findByCompteOrderByDateCreationDesc(compte).stream().map(this::versReponse).toList();
     }
 
+    @LogMetier(champs = {"resultat.formule", "resultat.prixMensuel"})
     @Transactional
     public RepriseDevisResponse reprendre(String authorization, UUID reference) {
         DevisEnregistre devis = duClient(authorization, reference);
@@ -89,6 +93,7 @@ public class DevisEnregistreService {
     }
 
     /** RGPD : le client peut effacer son devis à tout moment. */
+    @LogMetier
     @Transactional
     public void supprimer(String authorization, UUID reference) {
         repository.delete(duClient(authorization, reference));

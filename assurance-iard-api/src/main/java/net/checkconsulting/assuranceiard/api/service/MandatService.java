@@ -10,6 +10,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.MandatPreparationResponse;
 import net.checkconsulting.assuranceiard.api.dto.MandatSignatureRequest;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.dto.MandatSigneResponse;
 import net.checkconsulting.assuranceiard.api.exception.DevisInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.InformationRefuseeException;
@@ -52,6 +53,7 @@ public class MandatService {
         return new MandatPreparationResponse(CREANCIER, ICS, mandatDuDossier(dossier).getRum());
     }
 
+    @LogMetier(champs = {"demande.jourPrelevement"})
     @Transactional
     public MandatSigneResponse signer(String authorization, MandatSignatureRequest demande) {
         DossierSouscription dossier = dossierDuClient(authorization, demande.referenceDevis());

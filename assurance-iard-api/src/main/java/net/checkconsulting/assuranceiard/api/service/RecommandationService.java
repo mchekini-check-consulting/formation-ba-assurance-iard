@@ -4,6 +4,7 @@ import java.time.Clock;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.RecommandationRequest;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.mapper.RecommandationMapper;
 import net.checkconsulting.assuranceiard.api.model.RecommandationDevis;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
@@ -22,6 +23,7 @@ public class RecommandationService {
     private final RecommandationMapper mapper;
     private final Clock horloge;
 
+    @LogMetier(champs = {"demande.formule", "demande.priorite"})
     @Transactional
     public UUID enregistrer(RecommandationRequest demande) {
         RecommandationDevis recommandation = mapper.versEntite(demande);

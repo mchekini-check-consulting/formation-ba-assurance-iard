@@ -2,6 +2,7 @@ package net.checkconsulting.assuranceiard.api.resource;
 
 import net.checkconsulting.assuranceiard.api.dto.CompteResponse;
 import net.checkconsulting.assuranceiard.api.dto.CreationCompteRequest;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.service.CompteService;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -18,6 +19,7 @@ public class CompteResource {
     private final CompteService compteService;
 
     @PostMapping("/comptes")
+    @LogMetier
     public ResponseEntity<CompteResponse> creer(@Valid @RequestBody CreationCompteRequest demande) {
         CompteResponse compte = compteService.creer(demande);
         return ResponseEntity.created(URI.create("/comptes/" + compte.id())).body(compte);

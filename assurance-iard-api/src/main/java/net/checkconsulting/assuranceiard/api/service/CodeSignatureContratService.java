@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.model.CodeSignatureContrat;
 import net.checkconsulting.assuranceiard.api.model.Contrat;
 import net.checkconsulting.assuranceiard.api.repository.CodeSignatureContratRepository;
@@ -38,6 +39,7 @@ public class CodeSignatureContratService {
         return envoyerCodePour(contrat);
     }
 
+    @LogMetier
     @Transactional(noRollbackFor = {CodeSignatureIncorrectException.class, CodeSignatureEpuiseException.class})
     public void verifier(Contrat contrat, String code) {
         CodeSignatureContrat csc = codeRepository.findByContrat(contrat)

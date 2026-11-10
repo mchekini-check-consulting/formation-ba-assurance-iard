@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.DevisEnregistreResponse;
 import net.checkconsulting.assuranceiard.api.dto.DevisRequest;
 import net.checkconsulting.assuranceiard.api.dto.RepriseDevisResponse;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.service.DevisEnregistreService;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -31,6 +32,7 @@ public class DevisEnregistreResource {
     private final DevisEnregistreService service;
 
     @PostMapping("/devis/enregistres")
+    @LogMetier(champs = {"demande.formule", "demande.franchise", "demande.options"})
     public DevisEnregistreResponse enregistrer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @Valid @RequestBody DevisRequest demande) {
@@ -38,12 +40,14 @@ public class DevisEnregistreResource {
     }
 
     @GetMapping("/devis/enregistres")
+    @LogMetier(champs = {"resultat.taille"})
     public List<DevisEnregistreResponse> lister(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         return service.lister(authorization);
     }
 
     @PostMapping("/devis/enregistres/{reference}/reprise")
+    @LogMetier(champs = {"resultat.formule", "resultat.franchise", "resultat.prixMensuel"})
     public RepriseDevisResponse reprendre(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID reference) {
@@ -52,6 +56,7 @@ public class DevisEnregistreResource {
 
     @DeleteMapping("/devis/enregistres/{reference}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
+    @LogMetier
     public void supprimer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID reference) {

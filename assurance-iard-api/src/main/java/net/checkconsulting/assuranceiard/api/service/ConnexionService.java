@@ -7,6 +7,7 @@ import java.util.Locale;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ConnexionRequest;
 import net.checkconsulting.assuranceiard.api.dto.VerificationResponse;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.exception.CompteBloqueException;
 import net.checkconsulting.assuranceiard.api.exception.IdentifiantsIncorrectsException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
@@ -42,6 +43,7 @@ public class ConnexionService {
     }
 
     /** Le compteur d'échecs et le blocage sont conservés malgré l'exception. */
+    @LogMetier
     @Transactional(noRollbackFor = {IdentifiantsIncorrectsException.class, CompteBloqueException.class})
     public VerificationResponse connecter(ConnexionRequest demande) {
         String email = demande.email().trim().toLowerCase(Locale.ROOT);
