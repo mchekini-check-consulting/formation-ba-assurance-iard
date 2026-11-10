@@ -142,7 +142,7 @@ applications:
     type: backend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
     tag:
-      dev: 3bc7451
+      dev: fd30ea3
       qualif: 3bc7451
       preprod: ""
       prod: ""
