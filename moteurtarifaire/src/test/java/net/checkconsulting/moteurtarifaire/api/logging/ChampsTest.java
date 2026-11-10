@@ -59,9 +59,11 @@ class ChampsTest {
         @LogMetier(champs = {"demande.logement.adresse", "authorization", "demande.logement", "demande.options",
             "resultat", "status", "inconnu", "demande.prix", "demande.reference"})
         public void nonConforme(String authorization, Demande demande) {
+            // vide par conception : seule l'annotation est testée, pas le corps
         }
 
         public void sansAnnotation() {
+            // vide par conception : méthode sans @LogMetier pour tester l'absence d'erreur
         }
     }
 
