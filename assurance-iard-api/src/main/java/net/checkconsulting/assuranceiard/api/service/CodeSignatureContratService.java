@@ -3,7 +3,6 @@ package net.checkconsulting.assuranceiard.api.service;
 import java.time.Clock;
 import java.time.Duration;
 import lombok.RequiredArgsConstructor;
-import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
@@ -21,14 +20,12 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class CodeSignatureContratService {
 
-    static final String CODE_BOUCHON = "123456";
     private static final int ESSAIS_MAX = 3;
     private static final Duration VALIDITE_CODE = Duration.ofMinutes(10);
 
     private final CodeSignatureContratRepository codeRepository;
     private final EnvoiEmailContrat envoiEmail;
     private final PasswordEncoder passwordEncoder;
-    private final ConnexionProperties proprietes;
     private final Clock horloge;
 
     @Transactional
@@ -76,7 +73,6 @@ public class CodeSignatureContratService {
     }
 
     private boolean codeValide(String code, CodeSignatureContrat csc) {
-        return proprietes.codeBouchonActif() && CODE_BOUCHON.equals(code)
-                || passwordEncoder.matches(code, csc.getCodeHash());
+        return passwordEncoder.matches(code, csc.getCodeHash());
     }
 }
