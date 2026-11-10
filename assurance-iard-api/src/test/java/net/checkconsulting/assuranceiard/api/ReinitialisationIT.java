@@ -1,10 +1,12 @@
 package net.checkconsulting.assuranceiard.api;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.after;
 import static org.mockito.Mockito.reset;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.timeout;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -72,7 +74,7 @@ class ReinitialisationIT {
         reset(envoiLien);
         poster("/mot-de-passe/oubli", "{\"email\":\"" + email + "\"}").andExpect(status().isNoContent());
         ArgumentCaptor<String> lien = ArgumentCaptor.forClass(String.class);
-        verify(envoiLien).envoyer(eq(email), lien.capture());
+        verify(envoiLien, timeout(5000)).envoyer(eq(email), lien.capture());
         return lien.getValue().substring(lien.getValue().indexOf("jeton=") + "jeton=".length());
     }
 
@@ -99,12 +101,24 @@ class ReinitialisationIT {
     }
 
     @Test
+    void lAdresseEstAccepteeAvecEspacesEtMajusculesEtLeLienPointeVersLEcran() throws Exception {
+        creerCompte("marie+iard@exemple.fr");
+        reset(envoiLien);
+
+        poster("/mot-de-passe/oubli", "{\"email\":\"  Marie+IARD@Exemple.fr \"}").andExpect(status().isNoContent());
+
+        ArgumentCaptor<String> lien = ArgumentCaptor.forClass(String.class);
+        verify(envoiLien, timeout(5000)).envoyer(eq("marie+iard@exemple.fr"), lien.capture());
+        assertThat(lien.getValue()).startsWith("http://localhost:4200/reinitialisation-mot-de-passe?jeton=");
+    }
+
+    @Test
     void repondPareilSansCompteEtNEnvoieRien() throws Exception {
         reset(envoiLien);
 
         poster("/mot-de-passe/oubli", "{\"email\":\"inconnu@exemple.fr\"}").andExpect(status().isNoContent());
 
-        verify(envoiLien, never()).envoyer(anyString(), anyString());
+        verify(envoiLien, after(1000).never()).envoyer(anyString(), anyString());
     }
 
     @Test

@@ -5,6 +5,13 @@ import { ResultatConnexion } from '../../core/model/connexion';
 import { ConnexionService } from '../../core/service/connexion.service';
 import { MotDePasseService } from '../../core/service/mot-de-passe.service';
 
+/** US-07 : longueur maximale d'une adresse e-mail, espaces autour non comptés. */
+const LONGUEUR_MAX_EMAIL = 254;
+
+function adressePourReinitialisation(email: string): boolean {
+  return emailValide(email) && email.trim().length <= LONGUEUR_MAX_EMAIL;
+}
+
 @Component({
   selector: 'iard-connexion',
   imports: [RouterLink],
@@ -80,7 +87,7 @@ export class Connexion {
     this.lienEnvoye.set(false);
     this.identifiantsIncorrects.set(false);
     this.erreurTechnique.set(false);
-    if (!emailValide(this.email())) {
+    if (!adressePourReinitialisation(this.email())) {
       this.adresseRequise.set(true);
       this.champEmail().nativeElement.focus();
       return;

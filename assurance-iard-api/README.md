@@ -41,9 +41,10 @@ docker compose up -d postgres   # depuis la racine, après avoir créé .env (PO
 - Code de signature de contrat : code de test `123456`, activé par
   `CODE_BOUCHON_ACTIF=true` (déjà positionné par `./mvnw spring-boot:run` ; à
   ajouter à la configuration de lancement dans IntelliJ).
-- Lien de réinitialisation du mot de passe : aucun e-mail réel, `CODE_BOUCHON_ACTIF=true`
-  l'écrit dans la console de assurance-iard-api (ligne `Bouchon : lien de réinitialisation`).
-  Sur dev et qualif, il se lit dans les logs du pod assurance-iard-api, via ArgoCD.
+- Lien de réinitialisation du mot de passe (US-07) : envoyé par e-mail, à lire dans
+  Mailpit (http://localhost:8025). Il n'est jamais écrit dans les logs. Valable 24 heures
+  par défaut ; pour essayer un lien expiré, lancer avec `LIEN_REINITIALISATION_VALIDITE=2m`.
+  Sur dev et qualif : https://mailpit.dev.check-consulting.net (filtre `tag:<env>-formation-ba-assurance-iard`).
 
 ## Base de données
 

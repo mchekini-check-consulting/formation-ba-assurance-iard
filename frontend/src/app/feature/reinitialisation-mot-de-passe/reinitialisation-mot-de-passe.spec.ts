@@ -41,6 +41,18 @@ describe('ReinitialisationMotDePasse', () => {
     fixture.detectChanges();
   };
 
+  const confirmer = (valeur: string): void => {
+    const champ = page.querySelector<HTMLInputElement>('#confirmation-mot-de-passe')!;
+    champ.value = valeur;
+    champ.dispatchEvent(new Event('input'));
+    fixture.detectChanges();
+  };
+
+  const saisirDeuxFois = (valeur: string): void => {
+    saisir(valeur);
+    confirmer(valeur);
+  };
+
   const enregistrer = (): void => {
     page.querySelector<HTMLButtonElement>('button[type="submit"]')!.click();
     fixture.detectChanges();
@@ -74,9 +86,37 @@ describe('ReinitialisationMotDePasse', () => {
     expect(document.activeElement).toBe(page.querySelector('#mot-de-passe'));
   });
 
+  it('demande de confirmer le nouveau mot de passe à l’identique, sans rien envoyer sinon', () => {
+    ouvrirLienValable();
+    expect(page.querySelector('label[for="confirmation-mot-de-passe"]')?.textContent).toContain(
+      'Confirmer le mot de passe',
+    );
+
+    saisir('Nouveau123');
+    confirmer('Nouveau124');
+    enregistrer();
+
+    expect(page.querySelector('.erreur')?.textContent).toContain('Les deux mots de passe ne sont pas identiques.');
+    expect(document.activeElement).toBe(page.querySelector('#confirmation-mot-de-passe'));
+    http.expectNone('/api/assurance-iard-api/mot-de-passe/reinitialisation');
+
+    confirmer('Nouveau123');
+    expect(page.querySelector('.erreur')).toBeNull();
+  });
+
+  it('signale d’abord les règles non respectées, avant la confirmation', () => {
+    ouvrirLienValable();
+    saisir('faible');
+    confirmer('autre');
+    enregistrer();
+
+    expect(page.querySelectorAll('.erreur')).toHaveLength(1);
+    expect(page.querySelector('.erreur')?.textContent).toContain('ne respecte pas toutes les règles');
+  });
+
   it('confirme le changement puis propose la connexion (AC4)', () => {
     ouvrirLienValable();
-    saisir('Nouveau123');
+    saisirDeuxFois('Nouveau123');
     enregistrer();
     const requete = http.expectOne('/api/assurance-iard-api/mot-de-passe/reinitialisation');
     expect(requete.request.body).toEqual({ jeton: 'jeton', motDePasse: 'Nouveau123' });
@@ -105,7 +145,7 @@ describe('ReinitialisationMotDePasse', () => {
 
   it('explique que le lien a expiré pendant la saisie (AC5)', () => {
     ouvrirLienValable();
-    saisir('Nouveau123');
+    saisirDeuxFois('Nouveau123');
     enregistrer();
     repondre('/api/assurance-iard-api/mot-de-passe/reinitialisation', 410);
 
@@ -121,7 +161,7 @@ describe('ReinitialisationMotDePasse', () => {
 
   it('garde la saisie si le service est indisponible à l’enregistrement', () => {
     ouvrirLienValable();
-    saisir('Nouveau123');
+    saisirDeuxFois('Nouveau123');
     enregistrer();
     repondre('/api/assurance-iard-api/mot-de-passe/reinitialisation', 500);
 

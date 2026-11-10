@@ -39,10 +39,36 @@ class MotDePasseResourceTest {
         verify(reinitialisationService).demander("marie@exemple.fr");
     }
 
+    @Test
+    void demandeDeLienSansTenirCompteDesEspacesNiDesMajusculesAvecUnPlus() throws Exception {
+        poster("/mot-de-passe/oubli", "{\"email\":\"  Marie+Assurance@Exemple.fr  \"}").andExpect(status().isNoContent());
+
+        verify(reinitialisationService).demander("marie+assurance@exemple.fr");
+    }
+
+    @Test
+    void demandeDeLienAccepteUneAdresseDe254Caracteres() throws Exception {
+        String adresse = "a".repeat(64) + "@" + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(58) + ".fr";
+
+        poster("/mot-de-passe/oubli", "{\"email\":\"" + adresse + "\"}").andExpect(status().isNoContent());
+
+        verify(reinitialisationService).demander(adresse);
+    }
+
     @ParameterizedTest
-    @ValueSource(strings = {"{}", "{\"email\":\"\"}", "{\"email\":\"prenom.nom\"}"})
+    @ValueSource(strings = {"{}", "{\"email\":\"\"}", "{\"email\":\"   \"}", "{\"email\":\"prenom.nom\"}",
+        "{\"email\":\"prenom nom@exemple.fr\"}"})
     void demandeDeLienRefuseUneAdresseInvalide(String corps) throws Exception {
         poster("/mot-de-passe/oubli", corps).andExpect(status().isBadRequest());
+
+        verifyNoInteractions(reinitialisationService);
+    }
+
+    @Test
+    void demandeDeLienRefuseUneAdresseDePlusDe254Caracteres() throws Exception {
+        String adresse = "a".repeat(64) + "@" + "b".repeat(63) + "." + "c".repeat(63) + "." + "d".repeat(59) + ".fr";
+
+        poster("/mot-de-passe/oubli", "{\"email\":\"" + adresse + "\"}").andExpect(status().isBadRequest());
 
         verifyNoInteractions(reinitialisationService);
     }

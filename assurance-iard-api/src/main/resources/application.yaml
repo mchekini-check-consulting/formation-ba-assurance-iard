@@ -55,10 +55,15 @@ server:
 
 assurance:
   connexion:
-    # Bouchons US-07 et signature : code de signature 123456 accepté et lien de réinitialisation écrit dans les logs.
-    # Désactivés par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
+    # Bouchon de la signature de contrat : code de signature 123456 accepté.
+    # Désactivé par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
     code-bouchon-actif: ${CODE_BOUCHON_ACTIF:false}
+    # Adresse de l'écran, propre à chaque environnement (helm.yaml) : base du lien de réinitialisation (US-07).
     url-frontend: ${FRONTEND_URL:http://localhost:4200}
+  # US-07 : lien de réinitialisation envoyé par e-mail, valable 24 heures par défaut (valeur à confirmer par la PO).
+  # Pour essayer un lien expiré en local : LIEN_REINITIALISATION_VALIDITE=2m.
+  reinitialisation:
+    validite-lien: ${LIEN_REINITIALISATION_VALIDITE:24h}
   # US-06 : le code de connexion est envoyé par e-mail. Code de test 123456 éteint partout par défaut
   # (décision PO en attente) ; CODE_TEST_CONNEXION_ACTIF=true le rallume, jamais en preprod ni en prod.
   double-authentification:

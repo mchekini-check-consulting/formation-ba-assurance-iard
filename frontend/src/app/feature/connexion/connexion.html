@@ -29,12 +29,14 @@
 
     @if (adresseRequise()) {
       <div class="alerte" role="alert">
-        Saisissez votre adresse e-mail, puis cliquez à nouveau sur « Mot de passe oublié ».
+        Saisissez une adresse e-mail valide, puis cliquez à nouveau sur « Mot de passe oublié ».
       </div>
     }
 
     @if (lienEnvoye()) {
-      <div class="information" role="status">Si un compte existe, un lien de réinitialisation a été envoyé.</div>
+      <div class="information" role="status">
+        Si un compte existe avec cette adresse, un lien de réinitialisation vous a été envoyé.
+      </div>
     }
 
     <div class="champ">

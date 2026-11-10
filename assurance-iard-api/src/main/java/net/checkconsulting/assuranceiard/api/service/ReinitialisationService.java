@@ -1,10 +1,10 @@
 package net.checkconsulting.assuranceiard.api.service;
 
 import java.time.Clock;
-import java.time.Duration;
 import java.util.Locale;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
+import net.checkconsulting.assuranceiard.api.config.ReinitialisationProperties;
 import net.checkconsulting.assuranceiard.api.exception.LienInvalideException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.LienReinitialisation;
@@ -16,12 +16,15 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Mot de passe oublié (US-07) : RG1, réponse identique que le compte existe ou non ; RG2, lien de 24 heures à usage unique. */
+/**
+ * Mot de passe oublié (US-07) : RG1, réponse identique que le compte existe ou non ; RG2, lien à usage unique valable
+ * 24 heures par défaut (réglage LIEN_REINITIALISATION_VALIDITE). Le jeton n'est stocké que haché et n'est jamais
+ * écrit dans les logs.
+ */
 @Service
 @RequiredArgsConstructor
 public class ReinitialisationService {
 
-    private static final Duration VALIDITE_LIEN = Duration.ofHours(24);
     private static final String PAGE_REINITIALISATION = "/reinitialisation-mot-de-passe?jeton=";
 
     private final CompteRepository compteRepository;
@@ -31,12 +34,19 @@ public class ReinitialisationService {
     private final EnvoiLienReinitialisation envoiLien;
     private final PasswordEncoder passwordEncoder;
     private final ConnexionProperties proprietes;
+    private final ReinitialisationProperties reglages;
     private final Clock horloge;
+    private final TraitementEnArrierePlan arrierePlan;
 
-    /** Un nouveau lien annule le précédent : un seul reste valable. */
-    @Transactional
+    /**
+     * RG1 : la demande est traitée en arrière-plan. La réponse part tout de suite et prend le même temps que le compte
+     * existe ou non. Le lien est enregistré avant l'envoi de l'e-mail ; un nouveau lien annule le précédent.
+     */
     public void demander(String email) {
-        compteRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT)).ifPresent(this::envoyerUnLien);
+        String adresse = email.trim().toLowerCase(Locale.ROOT);
+        arrierePlan.lancer("demande de réinitialisation",
+                () -> compteRepository.findByEmail(adresse).map(this::creerUnLien),
+                lien -> lien.ifPresent(url -> envoiLien.envoyer(adresse, url)));
     }
 
     @Transactional
@@ -57,15 +67,15 @@ public class ReinitialisationService {
         lienRepository.delete(lien);
     }
 
-    private void envoyerUnLien(Compte compte) {
+    private String creerUnLien(Compte compte) {
         lienRepository.deleteByCompte(compte);
         String jeton = Jetons.nouveauJeton();
         LienReinitialisation lien = new LienReinitialisation();
         lien.setCompte(compte);
         lien.setJetonHash(Jetons.empreinte(jeton));
-        lien.setDateExpiration(horloge.instant().plus(VALIDITE_LIEN));
+        lien.setDateExpiration(horloge.instant().plus(reglages.validiteLien()));
         lienRepository.save(lien);
-        envoiLien.envoyer(compte.getEmail(), proprietes.urlFrontend() + PAGE_REINITIALISATION + jeton);
+        return proprietes.urlFrontend() + PAGE_REINITIALISATION + jeton;
     }
 
     private LienReinitialisation trouverLienValable(String jeton) {
