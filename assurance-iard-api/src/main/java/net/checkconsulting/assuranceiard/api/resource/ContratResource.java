@@ -7,6 +7,7 @@ import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -23,6 +24,7 @@ public class ContratResource {
     private final ContratService contratService;
 
     @PostMapping("/devis/contrat")
+    @LogMetier(champs = {"demande.typeLogement", "demande.surface", "demande.franchise"})
     public ContratResponse generer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @Valid @RequestBody GenerationContratRequest demande) {
@@ -30,6 +32,7 @@ public class ContratResource {
     }
 
     @GetMapping("/devis/contrat/{referenceDevis}")
+    @LogMetier(champs = {"resultat.statut"})
     public ContratResponse obtenir(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID referenceDevis) {
@@ -37,6 +40,7 @@ public class ContratResource {
     }
 
     @PostMapping("/devis/contrat/{referenceDevis}/signature/code")
+    @LogMetier
     public EnvoyerCodeSignatureResponse envoyerCode(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID referenceDevis) {
@@ -44,6 +48,7 @@ public class ContratResource {
     }
 
     @PostMapping("/devis/contrat/{referenceDevis}/signature/code/renvoyer")
+    @LogMetier
     public EnvoyerCodeSignatureResponse renvoyerCode(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID referenceDevis) {
@@ -51,6 +56,7 @@ public class ContratResource {
     }
 
     @PostMapping("/devis/contrat/{referenceDevis}/signature")
+    @LogMetier(champs = {"resultat.statut"})
     public ContratResponse signer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
             @PathVariable UUID referenceDevis,

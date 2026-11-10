@@ -3,6 +3,7 @@ package net.checkconsulting.assuranceiard.api.service;
 import net.checkconsulting.assuranceiard.api.dto.CompteResponse;
 import net.checkconsulting.assuranceiard.api.dto.CreationCompteRequest;
 import net.checkconsulting.assuranceiard.api.exception.EmailDejaUtiliseException;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.mapper.CompteMapper;
 import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.repository.CompteRepository;
@@ -20,6 +21,7 @@ public class CompteService {
     private final PasswordEncoder passwordEncoder;
     private final CompteMapper compteMapper;
 
+    @LogMetier
     public CompteResponse creer(CreationCompteRequest demande) {
         String email = demande.email().trim().toLowerCase(Locale.ROOT);
         if (compteRepository.existsByEmail(email)) {

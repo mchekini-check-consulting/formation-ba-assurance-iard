@@ -13,6 +13,10 @@ spring:
       ddl-auto: validate
     open-in-view: false
 
+logging:
+  level:
+    net.checkconsulting.moteurtarifaire.api: ${LOG_LEVEL:info}
+
 server:
   port: 8081
   forward-headers-strategy: framework

@@ -4,6 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.RecommandationRequest;
 import net.checkconsulting.assuranceiard.api.dto.RecommandationResponse;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.service.RecommandationService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -19,6 +20,7 @@ public class RecommandationResource {
 
     @PostMapping("/devis/recommandations")
     @ResponseStatus(HttpStatus.CREATED)
+    @LogMetier(champs = {"demande.formule", "demande.options", "resultat.reference"})
     public RecommandationResponse enregistrer(@Valid @RequestBody RecommandationRequest demande) {
         return new RecommandationResponse(recommandationService.enregistrer(demande));
     }

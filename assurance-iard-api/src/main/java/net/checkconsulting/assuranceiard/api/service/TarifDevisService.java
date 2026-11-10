@@ -9,6 +9,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.BesoinsDevis;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.dto.DemandeTarif;
 import net.checkconsulting.assuranceiard.api.dto.ErreurChampMoteur;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
@@ -42,6 +43,7 @@ public class TarifDevisService {
     private final DevisEnregistreMapper devisMapper;
     private final Clock horloge;
 
+    @LogMetier(champs = {"demande.formule", "demande.franchise"})
     public TarifResponse estimer(DemandeTarif demande) {
         log.info("Estimation de tarif demandée au moteur");
         TarifRequest requete = traduction.versMoteur(
@@ -49,6 +51,7 @@ public class TarifDevisService {
         return traduction.versEcran(moteur.calculer(requete));
     }
 
+    @LogMetier(champs = {"demande.formule", "demande.franchise"})
     public TarifResponse tarifer(UUID referenceDevis, DemandeTarif demande) {
         RecommandationDevis recommandation = recommandations.findByReference(referenceDevis)
                 .orElseThrow(DevisInconnuException::new);

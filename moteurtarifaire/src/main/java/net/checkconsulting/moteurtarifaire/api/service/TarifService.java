@@ -16,6 +16,7 @@ import net.checkconsulting.moteurtarifaire.api.exception.GrilleIndisponibleExcep
 import net.checkconsulting.moteurtarifaire.api.exception.TarifExpireException;
 import net.checkconsulting.moteurtarifaire.api.exception.TarifInconnuException;
 import net.checkconsulting.moteurtarifaire.api.mapper.TarifMapper;
+import net.checkconsulting.moteurtarifaire.api.logging.LogMetier;
 import net.checkconsulting.moteurtarifaire.api.dto.Besoins;
 import net.checkconsulting.moteurtarifaire.api.dto.FormuleConseillee;
 import net.checkconsulting.moteurtarifaire.api.dto.ProfilRisque;
@@ -41,6 +42,7 @@ public class TarifService {
     private final TarifMapper mapper;
     private final Clock horloge;
 
+    @LogMetier(champs = {"demande.formule", "demande.typeLogement", "resultat.tarifable"})
     public TarifHabitationResponse calculer(TarifHabitationRequest demande) {
         Instant maintenant = horloge.instant();
         LocalDate aujourdhui = LocalDate.ofInstant(maintenant, horloge.getZone());
@@ -62,6 +64,7 @@ public class TarifService {
         return resultat;
     }
 
+    @LogMetier
     public TarifHabitationResponse reprendre(UUID idTarif) {
         log.info("Reprise d'un tarif demandée : idTarif={}", idTarif);
         TarifHabitationResponse resultat = trace.relire(idTarif).orElseThrow(() -> new TarifInconnuException(idTarif));

@@ -9,6 +9,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.moteurtarifaire.api.dto.TarifHabitationRequest;
 import net.checkconsulting.moteurtarifaire.api.dto.TarifHabitationResponse;
+import net.checkconsulting.moteurtarifaire.api.logging.LogMetier;
 import net.checkconsulting.moteurtarifaire.api.service.TarifService;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -30,6 +31,7 @@ public class TarifHabitationResource {
     @ApiResponse(responseCode = "200", description = "Tarif calculé, ou orientation vers un conseiller (tarifable: false)")
     @ApiResponse(responseCode = "400", description = "Champ absent ou invalide : voir la liste \"erreurs\"")
     @PostMapping
+    @LogMetier(champs = {"demande.formule", "demande.typeLogement", "demande.statut"})
     public TarifHabitationResponse calculer(@Valid @RequestBody TarifHabitationRequest demande) {
         log.info("Demande de tarif reçue");
         return tarifService.calculer(demande);
@@ -40,6 +42,7 @@ public class TarifHabitationResource {
     @ApiResponse(responseCode = "404", description = "Identifiant inconnu")
     @ApiResponse(responseCode = "410", description = "Tarif expiré : un nouveau calcul est nécessaire")
     @GetMapping("/{idTarif}")
+    @LogMetier
     public TarifHabitationResponse reprendre(@PathVariable UUID idTarif) {
         log.info("Demande de reprise d'un tarif : idTarif={}", idTarif);
         return tarifService.reprendre(idTarif);

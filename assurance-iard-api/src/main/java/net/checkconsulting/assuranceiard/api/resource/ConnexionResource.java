@@ -2,6 +2,7 @@ package net.checkconsulting.assuranceiard.api.resource;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.dto.ConnexionRequest;
 import net.checkconsulting.assuranceiard.api.dto.RenvoiCodeRequest;
 import net.checkconsulting.assuranceiard.api.dto.SessionCouranteResponse;
@@ -30,11 +31,13 @@ public class ConnexionResource {
     private final SessionService sessionService;
 
     @PostMapping("/connexion")
+    @LogMetier
     public VerificationResponse connecter(@Valid @RequestBody ConnexionRequest demande) {
         return connexionService.connecter(demande);
     }
 
     @PostMapping("/connexion/verification")
+    @LogMetier
     public SessionResponse verifier(@Valid @RequestBody VerificationCodeRequest demande) {
         return codeVerificationService.verifier(demande.verification(), demande.code());
     }
