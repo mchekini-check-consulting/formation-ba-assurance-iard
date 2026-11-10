@@ -29,6 +29,10 @@ spring:
     properties:
       mail:
         smtp:
+          # true : le login (SMTP_USER) est envoyé au serveur. Sans cela JavaMail ne
+          # s'authentifie pas, même avec username/password renseignés (Mailpit : le
+          # login sert de tag au mail). false par défaut : docker-compose local sans login.
+          auth: ${SMTP_AUTH:false}
           starttls:
             enable: ${SMTP_TLS:false}
             required: ${SMTP_TLS:false}
