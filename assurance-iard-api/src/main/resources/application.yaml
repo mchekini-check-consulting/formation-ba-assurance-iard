@@ -55,10 +55,14 @@ server:
 
 assurance:
   connexion:
-    # Bouchons : code 123456 accepté et lien de réinitialisation écrit dans les logs.
+    # Bouchons US-07 et signature : code de signature 123456 accepté et lien de réinitialisation écrit dans les logs.
     # Désactivés par défaut (voir helm.yaml, docker-compose.yaml et pom.xml).
     code-bouchon-actif: ${CODE_BOUCHON_ACTIF:false}
     url-frontend: ${FRONTEND_URL:http://localhost:4200}
+  # US-06 : le code de connexion est envoyé par e-mail. Code de test 123456 éteint partout par défaut
+  # (décision PO en attente) ; CODE_TEST_CONNEXION_ACTIF=true le rallume, jamais en preprod ni en prod.
+  double-authentification:
+    code-test-actif: ${CODE_TEST_CONNEXION_ACTIF:false}
   justificatifs:
     # Dossier local exclu de Git ; en ligne, dossier temporaire (voir helm.yaml).
     dossier: ${JUSTIFICATIFS_DOSSIER:justificatifs}

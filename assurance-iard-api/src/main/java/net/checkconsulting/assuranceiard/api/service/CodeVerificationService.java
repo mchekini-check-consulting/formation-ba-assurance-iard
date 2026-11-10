@@ -4,7 +4,7 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import lombok.RequiredArgsConstructor;
-import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
+import net.checkconsulting.assuranceiard.api.config.DoubleAuthentificationProperties;
 import net.checkconsulting.assuranceiard.api.dto.SessionResponse;
 import net.checkconsulting.assuranceiard.api.dto.VerificationResponse;
 import net.checkconsulting.assuranceiard.api.exception.CodeIncorrectException;
@@ -19,12 +19,16 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** RG1 et RG2 : code à 6 chiffres, valable 10 minutes, 3 essais maximum, renvoi possible. */
+/**
+ * RG1 et RG2 : code à 6 chiffres tiré au hasard, envoyé par e-mail, valable 10 minutes, 3 essais maximum, renvoi
+ * possible (le nouveau code remplace l'ancien). Seule l'empreinte du code est stockée ; il n'est jamais écrit
+ * dans les logs.
+ */
 @Service
 @RequiredArgsConstructor
 public class CodeVerificationService {
 
-    static final String CODE_BOUCHON = "123456";
+    static final String CODE_TEST = "123456";
     private static final int ESSAIS_MAX = 3;
     private static final Duration VALIDITE_CODE = Duration.ofMinutes(10);
 
@@ -32,7 +36,7 @@ public class CodeVerificationService {
     private final SessionService sessionService;
     private final EnvoiCode envoiCode;
     private final PasswordEncoder passwordEncoder;
-    private final ConnexionProperties proprietes;
+    private final DoubleAuthentificationProperties proprietes;
     private final Clock horloge;
 
     /** Remplace la vérification en cours du compte : un seul code valable à la fois. */
@@ -91,7 +95,7 @@ public class CodeVerificationService {
     }
 
     private boolean codeValide(String code, CodeVerification verification) {
-        return proprietes.codeBouchonActif() && CODE_BOUCHON.equals(code)
+        return proprietes.codeTestActif() && CODE_TEST.equals(code)
                 || passwordEncoder.matches(code, verification.getCodeHash());
     }
 }

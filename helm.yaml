@@ -36,7 +36,8 @@ applications:
     envList:
       - key: LOG_LEVEL
         value: {dev: debug, qualif: info, preprod: info, prod: warn}
-      # US-06, RG4 : code de test 123456 accepté. Jamais en preprod ni en prod.
+      # Bouchons US-07 et signature de contrat (code 123456 de signature, lien dans les logs). Jamais en preprod ni en prod.
+      # Le code de connexion US-06 est envoyé par e-mail (Mailpit) : pas de code de test (CODE_TEST_CONNEXION_ACTIF éteint).
       - key: CODE_BOUCHON_ACTIF
         value: {dev: "true", qualif: "true", preprod: "false", prod: "false"}
       # US-07 : adresse de l'écran, pour construire le lien de réinitialisation du mot de passe.
