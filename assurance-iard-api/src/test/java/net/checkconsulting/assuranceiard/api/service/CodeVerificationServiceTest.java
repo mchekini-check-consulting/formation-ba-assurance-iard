@@ -14,7 +14,7 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
+import net.checkconsulting.assuranceiard.api.config.DoubleAuthentificationProperties;
 import net.checkconsulting.assuranceiard.api.dto.SessionResponse;
 import net.checkconsulting.assuranceiard.api.dto.VerificationResponse;
 import net.checkconsulting.assuranceiard.api.exception.CodeIncorrectException;
@@ -70,9 +70,9 @@ class CodeVerificationServiceTest {
         when(sessionService.ouvrir(compte)).thenReturn(SESSION);
     }
 
-    private CodeVerificationService service(boolean bouchon) {
+    private CodeVerificationService service(boolean codeTest) {
         return new CodeVerificationService(codeRepository, sessionService, envoiCode, passwordEncoder,
-                new ConnexionProperties(bouchon, "http://ecran"), Clock.fixed(MAINTENANT, ZoneOffset.UTC));
+                new DoubleAuthentificationProperties(codeTest), Clock.fixed(MAINTENANT, ZoneOffset.UTC));
     }
 
     @Test
@@ -100,12 +100,12 @@ class CodeVerificationServiceTest {
     }
 
     @Test
-    void accepteLeCodeBouchonQuandIlEstActif() {
+    void accepteLeCodeDeTestQuandIlEstActif() {
         assertThat(service(true).verifier(JETON, "123456")).isEqualTo(SESSION);
     }
 
     @Test
-    void refuseLeCodeBouchonQuandIlEstInactif() {
+    void refuseLeCodeDeTestQuandIlEstInactif() {
         assertThatThrownBy(() -> service(false).verifier(JETON, "123456")).isInstanceOf(CodeIncorrectException.class);
     }
 
@@ -130,7 +130,7 @@ class CodeVerificationServiceTest {
     }
 
     @Test
-    void refuseMemeLeCodeBouchonApresTroisErreurs() {
+    void refuseMemeLeCodeDeTestApresTroisErreurs() {
         verification.setErreurs(3);
 
         assertThatThrownBy(() -> service(true).verifier(JETON, "123456")).isInstanceOf(NouveauCodeRequisException.class);
@@ -138,7 +138,7 @@ class CodeVerificationServiceTest {
     }
 
     @Test
-    void refuseMemeLeCodeBouchonApresDixMinutes() {
+    void refuseMemeLeCodeDeTestApresDixMinutes() {
         verification.setDateExpiration(MAINTENANT);
 
         assertThatThrownBy(() -> service(true).verifier(JETON, "123456"))
@@ -160,6 +160,30 @@ class CodeVerificationServiceTest {
         assertThat(verification.getCodeHash()).isEqualTo("nouvelle-empreinte");
         assertThat(verification.getDateExpiration()).isEqualTo(MAINTENANT.plus(Duration.ofMinutes(10)));
         verify(envoiCode).envoyer(eq("marie@exemple.fr"), anyString());
+    }
+
+    @Test
+    void leCodeEnvoyeParEmailEstCeluiDontSeuleLEmpreinteEstStockee() {
+        when(passwordEncoder.encode(anyString())).thenAnswer(appel -> "empreinte-de-" + appel.getArgument(0));
+
+        service(false).demarrer(compte);
+
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(envoiCode).envoyer(eq("marie@exemple.fr"), code.capture());
+        ArgumentCaptor<CodeVerification> enregistre = ArgumentCaptor.forClass(CodeVerification.class);
+        verify(codeRepository).save(enregistre.capture());
+        assertThat(enregistre.getValue().getCodeHash()).isEqualTo("empreinte-de-" + code.getValue());
+    }
+
+    @Test
+    void leRenvoiRemplaceLEmpreinteParCelleDuNouveauCodeEnvoye() {
+        when(passwordEncoder.encode(anyString())).thenAnswer(appel -> "empreinte-de-" + appel.getArgument(0));
+
+        service(false).renvoyer(JETON);
+
+        ArgumentCaptor<String> code = ArgumentCaptor.forClass(String.class);
+        verify(envoiCode).envoyer(eq("marie@exemple.fr"), code.capture());
+        assertThat(verification.getCodeHash()).isEqualTo("empreinte-de-" + code.getValue());
     }
 
     @Test

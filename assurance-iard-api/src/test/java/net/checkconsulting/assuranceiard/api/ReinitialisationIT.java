@@ -13,6 +13,7 @@ import com.jayway.jsonpath.JsonPath;
 import java.time.Instant;
 import net.checkconsulting.assuranceiard.api.model.LienReinitialisation;
 import net.checkconsulting.assuranceiard.api.repository.LienReinitialisationRepository;
+import net.checkconsulting.assuranceiard.api.service.EnvoiCode;
 import net.checkconsulting.assuranceiard.api.service.EnvoiLienReinitialisation;
 import net.checkconsulting.assuranceiard.api.utils.Jetons;
 import org.junit.jupiter.api.Test;
@@ -29,7 +30,10 @@ import org.springframework.test.web.servlet.ResultActions;
 
 /** Parcours complets sur une vraie base. Le faux envoi donne un contexte, donc une base, distinct des autres IT. */
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest(properties = "assurance.connexion.code-bouchon-actif=true")
+@SpringBootTest(properties = {
+    "assurance.connexion.code-bouchon-actif=true",
+    // US-06 : la connexion qui suit la réinitialisation utilise le code de test, sans envoi d'e-mail.
+    "assurance.double-authentification.code-test-actif=true"})
 @AutoConfigureMockMvc
 class ReinitialisationIT {
 
@@ -44,6 +48,9 @@ class ReinitialisationIT {
 
     @MockitoBean
     private EnvoiLienReinitialisation envoiLien;
+
+    @MockitoBean
+    private EnvoiCode envoiCode;
 
     private ResultActions poster(String chemin, String corps) throws Exception {
         return mockMvc.perform(post(chemin).contentType(MediaType.APPLICATION_JSON).content(corps));

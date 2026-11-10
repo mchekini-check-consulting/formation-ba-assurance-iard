@@ -138,7 +138,7 @@
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>
 				<configuration>
-					<!-- Lancement local (./mvnw spring-boot:run) : RG4, code de test 123456 -->
+					<!-- Lancement local (./mvnw spring-boot:run) : bouchons US-07 et signature (code de connexion US-06 : vrai e-mail) -->
 					<environmentVariables>
 						<CODE_BOUCHON_ACTIF>true</CODE_BOUCHON_ACTIF>
 					</environmentVariables>
