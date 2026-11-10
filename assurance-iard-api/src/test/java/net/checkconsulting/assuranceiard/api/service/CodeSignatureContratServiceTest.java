@@ -14,7 +14,6 @@ import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.Optional;
-import net.checkconsulting.assuranceiard.api.config.ConnexionProperties;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
@@ -70,16 +69,16 @@ class CodeSignatureContratServiceTest {
         when(passwordEncoder.matches("654321", "empreinte-code")).thenReturn(true);
     }
 
-    private CodeSignatureContratService service(boolean bouchon) {
+    private CodeSignatureContratService service() {
         return new CodeSignatureContratService(codeRepository, envoiEmail, passwordEncoder,
-                new ConnexionProperties(bouchon, "http://ecran"), Clock.fixed(MAINTENANT, ZoneOffset.UTC));
+                Clock.fixed(MAINTENANT, ZoneOffset.UTC));
     }
 
     @Test
     void envoyerSupprimeAncienCodeSauvegardeLeNouveauEtRetourneLEmailMasque() {
         when(passwordEncoder.encode(anyString())).thenReturn("nouvelle-empreinte");
 
-        String emailMasque = service(false).envoyer(contrat);
+        String emailMasque = service().envoyer(contrat);
 
         assertThat(emailMasque).isEqualTo("j***@example.com");
         verify(codeRepository).deleteByContrat(contrat);
@@ -97,7 +96,7 @@ class CodeSignatureContratServiceTest {
     void renvoyerSeComporteCommeEnvoyer() {
         when(passwordEncoder.encode(anyString())).thenReturn("nouvelle-empreinte");
 
-        String emailMasque = service(false).renvoyer(contrat);
+        String emailMasque = service().renvoyer(contrat);
 
         assertThat(emailMasque).isEqualTo("j***@example.com");
         verify(codeRepository).deleteByContrat(contrat);
@@ -107,30 +106,16 @@ class CodeSignatureContratServiceTest {
 
     @Test
     void verifierAccepteLeCodeCorrectEtSupprimeEnregistrement() {
-        service(false).verifier(contrat, "654321");
+        service().verifier(contrat, "654321");
 
         verify(codeRepository).deleteByContrat(contrat);
-    }
-
-    @Test
-    void verifierAccepteLeCodeBouchonQuandIlEstActif() {
-        service(true).verifier(contrat, "123456");
-
-        verify(codeRepository).deleteByContrat(contrat);
-    }
-
-    @Test
-    void verifierRefuseLeCodeBouchonQuandIlEstInactif() {
-        assertThatThrownBy(() -> service(false).verifier(contrat, "123456"))
-                .isInstanceOf(CodeSignatureIncorrectException.class);
-        verify(codeRepository, never()).deleteByContrat(contrat);
     }
 
     @Test
     void verifierIndiqueEssaisRestantsApresUnCodeErrone() {
         codeSignature.setEssais(1);
 
-        assertThatThrownBy(() -> service(true).verifier(contrat, "000000"))
+        assertThatThrownBy(() -> service().verifier(contrat, "000000"))
                 .isInstanceOfSatisfying(CodeSignatureIncorrectException.class,
                         e -> assertThat(e.getEssaisRestants()).isEqualTo(1))
                 .hasMessage("Code incorrect. Il vous reste 1 essai(s).");
@@ -141,7 +126,7 @@ class CodeSignatureContratServiceTest {
     void verifierLanceEpuiseLorsQueLeTroisièmeEssaiEchoue() {
         codeSignature.setEssais(2);
 
-        assertThatThrownBy(() -> service(true).verifier(contrat, "000000"))
+        assertThatThrownBy(() -> service().verifier(contrat, "000000"))
                 .isInstanceOf(CodeSignatureEpuiseException.class);
         assertThat(codeSignature.getEssais()).isEqualTo(3);
     }
@@ -150,7 +135,7 @@ class CodeSignatureContratServiceTest {
     void verifierLanceEpuiseSiEssaisDejaMaximum() {
         codeSignature.setEssais(3);
 
-        assertThatThrownBy(() -> service(true).verifier(contrat, "123456"))
+        assertThatThrownBy(() -> service().verifier(contrat, "000000"))
                 .isInstanceOf(CodeSignatureEpuiseException.class);
         verify(codeRepository, never()).deleteByContrat(contrat);
     }
@@ -159,7 +144,7 @@ class CodeSignatureContratServiceTest {
     void verifierLanceExpireSiCodeDepasse() {
         codeSignature.setDateExpiration(MAINTENANT);
 
-        assertThatThrownBy(() -> service(true).verifier(contrat, "123456"))
+        assertThatThrownBy(() -> service().verifier(contrat, "000000"))
                 .isInstanceOf(CodeSignatureExpireException.class);
         verify(codeRepository, never()).deleteByContrat(contrat);
     }
@@ -168,7 +153,7 @@ class CodeSignatureContratServiceTest {
     void verifierLanceEpuiseSiAucunEnregistrement() {
         when(codeRepository.findByContrat(contrat)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service(true).verifier(contrat, "123456"))
+        assertThatThrownBy(() -> service().verifier(contrat, "000000"))
                 .isInstanceOf(CodeSignatureEpuiseException.class);
     }
 }

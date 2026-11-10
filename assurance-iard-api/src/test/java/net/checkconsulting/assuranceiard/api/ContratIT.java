@@ -1,6 +1,9 @@
 package net.checkconsulting.assuranceiard.api;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -25,6 +28,7 @@ import net.checkconsulting.assuranceiard.api.service.EnvoiEmailContrat;
 import net.checkconsulting.assuranceiard.api.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
@@ -38,9 +42,9 @@ import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
 import net.checkconsulting.assuranceiard.api.model.TarifDevis;
 import net.checkconsulting.assuranceiard.api.repository.TarifDevisRepository;
 
-/** US-16 sur une vraie base : envoi du code, signature avec le bouchon, rejet d'un mauvais code. */
+/** US-16 sur une vraie base : envoi du code, signature avec le vrai code, compteur d'essais. */
 @Import(TestcontainersConfiguration.class)
-@SpringBootTest(properties = "assurance.connexion.code-bouchon-actif=true")
+@SpringBootTest
 @AutoConfigureMockMvc
 class ContratIT {
 
@@ -129,7 +133,7 @@ class ContratIT {
             """;
 
     @Test
-    void genereLeContratEnvoieLeCodeEtLeSigneAvecLeBouchon() throws Exception {
+    void genereLeContratEnvoieLeCodeEtLeSigne() throws Exception {
         retenirUnTarif(300);
 
         mockMvc.perform(post("/devis/contrat")
@@ -140,15 +144,19 @@ class ContratIT {
                 .andExpect(jsonPath("$.statut").value("EN_ATTENTE_DE_SIGNATURE"))
                 .andExpect(jsonPath("$.numero").value(org.hamcrest.Matchers.startsWith("AE-")));
 
+        ArgumentCaptor<String> codeCaptor = ArgumentCaptor.forClass(String.class);
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
                         .header(HttpHeaders.AUTHORIZATION, jeton))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.emailMasque").exists());
 
+        verify(envoiEmail).envoyer(anyString(), codeCaptor.capture());
+
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header(HttpHeaders.AUTHORIZATION, jeton)
-                        .content("{\"code\":\"123456\"}"))
+                        .content("{\"code\":\"" + codeCaptor.getValue() + "\"}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.statut").value("ACTIF"));
 
@@ -183,8 +191,114 @@ class ContratIT {
     void signatureSansSessionEst401() throws Exception {
         mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content("{\"code\":\"123456\"}"))
+                        .content("{\"code\":\"000000\"}"))
                 .andExpect(status().isUnauthorized());
+    }
+
+    // ── Tests du compteur d'essais (Bug 2) ──────────────────────────────────
+
+    @Test
+    void deuxièmeMauvaisCodeIndique1EssaiRestant() throws Exception {
+        genererContrat();
+        envoyerCode();
+
+        soumettreCode("000000").andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(2));
+
+        soumettreCode("000000").andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(1));
+    }
+
+    @Test
+    void troisièmeMauvaisCodeBloqueLaSignature() throws Exception {
+        genererContrat();
+        envoyerCode();
+
+        soumettreCode("000000").andExpect(status().isUnprocessableEntity());
+        soumettreCode("000000").andExpect(status().isUnprocessableEntity());
+        soumettreCode("000000").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.motif").value("essais-epuises"));
+    }
+
+    @Test
+    void quatrièmeTentativeEstImmédiatementBloquée() throws Exception {
+        genererContrat();
+        envoyerCode();
+
+        soumettreCode("000000");
+        soumettreCode("000000");
+        soumettreCode("000000");
+        soumettreCode("000000").andExpect(status().isConflict())
+                .andExpect(jsonPath("$.motif").value("essais-epuises"));
+    }
+
+    @Test
+    void renvoyerCodeRéinitialiseLeCompteur() throws Exception {
+        genererContrat();
+        envoyerCode();
+
+        soumettreCode("000000");
+        soumettreCode("000000");
+
+        renvoyerCode();
+
+        soumettreCode("000000").andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.essaisRestants").value(2));
+    }
+
+    @Test
+    void renvoyerCodeAprèsEpuisementPermetDeSignerAvecLeNouveauCode() throws Exception {
+        genererContrat();
+        envoyerCode();
+
+        soumettreCode("000000");
+        soumettreCode("000000");
+        soumettreCode("000000");
+
+        String nouveauCode = renvoyerCodeEtCapturerValeur();
+
+        soumettreCode(nouveauCode).andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("ACTIF"));
+    }
+
+    // ── Méthodes utilitaires ─────────────────────────────────────────────────
+
+    private void genererContrat() throws Exception {
+        retenirUnTarif(300);
+        mockMvc.perform(post("/devis/contrat")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .header(HttpHeaders.AUTHORIZATION, jeton)
+                        .content(CORPS_GENERATION.formatted(reference)))
+                .andExpect(status().isOk());
+    }
+
+    private void envoyerCode() throws Exception {
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk());
+    }
+
+    private void renvoyerCode() throws Exception {
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code/renvoyer", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk());
+    }
+
+    private String renvoyerCodeEtCapturerValeur() throws Exception {
+        clearInvocations(envoiEmail);
+        ArgumentCaptor<String> captor = ArgumentCaptor.forClass(String.class);
+        mockMvc.perform(post("/devis/contrat/{ref}/signature/code/renvoyer", reference)
+                        .header(HttpHeaders.AUTHORIZATION, jeton))
+                .andExpect(status().isOk());
+        verify(envoiEmail).envoyer(anyString(), captor.capture());
+        return captor.getValue();
+    }
+
+    private org.springframework.test.web.servlet.ResultActions soumettreCode(String code) throws Exception {
+        return mockMvc.perform(post("/devis/contrat/{ref}/signature", reference)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, jeton)
+                .content("{\"code\":\"" + code + "\"}"));
     }
 
     private void retenirUnTarif(int franchise) {
