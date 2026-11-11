@@ -67,7 +67,7 @@ class SessionServiceTest {
         SessionClient session = sessionExpirantA(MAINTENANT.plusSeconds(1));
         when(sessionRepository.findByJetonHash(Jetons.empreinte("jeton"))).thenReturn(Optional.of(session));
 
-        assertThat(sessionService.lire("Bearer jeton")).isEqualTo(new SessionCouranteResponse("marie@exemple.fr"));
+        assertThat(sessionService.lire("Bearer jeton")).isEqualTo(new SessionCouranteResponse("marie@exemple.fr", "PROSPECT"));
         assertThat(session.getDateExpiration()).isEqualTo(MAINTENANT.plus(Duration.ofMinutes(30)));
     }
 

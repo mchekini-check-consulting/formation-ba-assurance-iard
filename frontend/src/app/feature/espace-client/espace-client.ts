@@ -16,6 +16,7 @@ export class EspaceClient {
   private readonly router = inject(Router);
 
   protected readonly email = this.connexionService.emailClient;
+  protected readonly profil = this.connexionService.profilClient;
 
   protected seDeconnecter(): void {
     this.connexionService.deconnecter().subscribe(() => {

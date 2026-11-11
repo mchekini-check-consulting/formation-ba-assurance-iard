@@ -65,11 +65,12 @@ describe('ConnexionService', () => {
     const resultat = verifier();
     const requete = http.expectOne('/api/assurance-iard-api/connexion/verification');
     expect(requete.request.body).toEqual({ verification: 'v1', code: '123456' });
-    requete.flush({ jeton: 'session', email: 'marie@exemple.fr' });
+    requete.flush({ jeton: 'session', email: 'marie@exemple.fr', profil: 'ASSURE' });
 
     expect(resultat()).toEqual({ statut: 'connecte' });
     expect(service.jeton()).toBe('session');
     expect(service.emailClient()).toBe('marie@exemple.fr');
+    expect(service.profilClient()).toBe('ASSURE');
     expect(service.verification()).toBeNull();
   });
 
@@ -109,10 +110,11 @@ describe('ConnexionService', () => {
     it('confirme une session valable et retrouve son e-mail', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       const resultat = valide();
-      repondre('/api/assurance-iard-api/session', { email: 'marie@exemple.fr' }, 200);
+      repondre('/api/assurance-iard-api/session', { email: 'marie@exemple.fr', profil: 'GESTIONNAIRE' }, 200);
 
       expect(resultat()).toBe(true);
       expect(service.emailClient()).toBe('marie@exemple.fr');
+      expect(service.profilClient()).toBe('GESTIONNAIRE');
     });
 
     it('oublie une session refusée par le backend', () => {
@@ -143,6 +145,7 @@ describe('ConnexionService', () => {
 
       expect(service.jeton()).toBeNull();
       expect(service.emailClient()).toBeNull();
+      expect(service.profilClient()).toBeNull();
     });
   });
 });

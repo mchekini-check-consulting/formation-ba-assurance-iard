@@ -1,0 +1,137 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <div class="contenu">
+    <h1 class="serif titre">Gestion des profils</h1>
+
+    @if (chargement()) {
+      <p class="message-info">Chargement en cours…</p>
+    } @else if (erreur() && !profils()) {
+      <p class="message-erreur" role="alert">{{ erreur() }}</p>
+    } @else if (profils()) {
+      <div class="grille">
+        <!-- Colonne profils -->
+        <nav class="liste-profils" aria-label="Profils">
+          @for (profil of profils()!; track profil.nom) {
+            <button
+              type="button"
+              class="profil-btn"
+              [class.profil-btn--actif]="profilActif() === profil.nom"
+              (click)="selectionnerProfil(profil.nom)"
+            >
+              <span class="profil-btn__nom">{{ profil.nom | titlecase }}</span>
+              <span class="profil-btn__nb">{{ profil.nombreUtilisateurs }} utilisateur{{ profil.nombreUtilisateurs > 1 ? 's' : '' }}</span>
+            </button>
+          }
+        </nav>
+
+        <!-- Colonne droits -->
+        <section class="panneau" aria-label="Droits du profil sélectionné">
+          @if (profilCourant(); as courant) {
+            <div class="panneau__entete">
+              <div>
+                <h2 class="panneau__titre serif">{{ courant.nom | titlecase }}</h2>
+                <p class="panneau__description">{{ courant.description }}</p>
+              </div>
+              <button type="button" class="btn btn--contour btn--petit" (click)="afficherOuMasquerHistorique()">
+                {{ afficherHistorique() ? 'Masquer l\'historique' : 'Voir l\'historique' }}
+              </button>
+            </div>
+
+            @if (erreur()) {
+              <p class="message-erreur" role="alert">{{ erreur() }}</p>
+            }
+
+            @if (afficherHistorique()) {
+              <div class="historique">
+                <h3 class="historique__titre">Historique des modifications</h3>
+                @if (historique()?.length === 0) {
+                  <p class="historique__vide">Aucune modification enregistrée.</p>
+                }
+                @for (entree of historique(); track entree.modifieLe) {
+                  <div class="historique__ligne">
+                    <span class="historique__date">{{ formaterDate(entree.modifieLe) }}</span>
+                    <span>
+                      {{ LABELS_RUBRIQUES[entree.rubrique] }} – {{ LABELS_DROITS[entree.droit] }} :
+                      <span [class]="entree.nouvelleValeur ? 'badge badge--actif' : 'badge badge--inactif'">
+                        {{ entree.ancienneValeur ? 'Oui' : 'Non' }} → {{ entree.nouvelleValeur ? 'Oui' : 'Non' }}
+                      </span>
+                    </span>
+                  </div>
+                }
+              </div>
+            }
+
+            <div class="matrice-conteneur" role="region" aria-label="Matrice des droits">
+              <table class="matrice">
+                <thead>
+                  <tr>
+                    <th scope="col" class="matrice__entete-rubrique">Rubrique</th>
+                    @for (droit of ORDRE_DROITS; track droit) {
+                      <th scope="col" class="matrice__entete-droit">{{ LABELS_DROITS[droit] }}</th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (rubrique of ORDRE_RUBRIQUES; track rubrique) {
+                    <tr class="matrice__ligne" [class.matrice__ligne--verrouillee]="estVerrouille(rubrique)">
+                      <td class="matrice__rubrique">{{ LABELS_RUBRIQUES[rubrique] }}</td>
+                      @for (droit of ORDRE_DROITS; track droit) {
+                        <td class="matrice__case">
+                          <label class="case-a-cocher" [class.case-a-cocher--verrouillee]="estVerrouille(rubrique)">
+                            <input
+                              type="checkbox"
+                              [checked]="valeurPermission(rubrique, droit)"
+                              [disabled]="estVerrouille(rubrique)"
+                              (change)="basculerPermission(rubrique, droit)"
+                              [attr.aria-label]="LABELS_RUBRIQUES[rubrique] + ' – ' + LABELS_DROITS[droit]"
+                            />
+                          </label>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+
+            @if (!confirmation()) {
+              <div class="actions">
+                <button
+                  type="button"
+                  class="btn"
+                  [disabled]="!aDesModifications() || enregistrement()"
+                  (click)="demanderConfirmation()"
+                >
+                  Enregistrer les modifications
+                </button>
+              </div>
+            } @else {
+              <div class="confirmation-zone">
+                <p class="confirmation-zone__message">
+                  Confirmez-vous l'enregistrement des nouveaux droits pour le profil <strong>{{ courant.nom | titlecase }}</strong> ?
+                </p>
+                <div class="confirmation-zone__boutons">
+                  <button type="button" class="btn" [disabled]="enregistrement()" (click)="confirmerEnregistrement()">
+                    {{ enregistrement() ? 'Enregistrement…' : 'Confirmer' }}
+                  </button>
+                  <button type="button" class="btn btn--contour" [disabled]="enregistrement()" (click)="annulerConfirmation()">
+                    Annuler
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </section>
+      </div>
+    }
+  </div>
+</main>

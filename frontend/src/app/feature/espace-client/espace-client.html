@@ -15,5 +15,8 @@
       Vous êtes connecté avec <strong>{{ email() }}</strong>.
     </p>
     <a class="btn" routerLink="/espace-client/devis">Mes devis</a>
+    @if (profil() === 'ADMINISTRATEUR') {
+      <a class="btn btn--contour" routerLink="/admin/profils">Gérer les profils</a>
+    }
   </section>
 </main>

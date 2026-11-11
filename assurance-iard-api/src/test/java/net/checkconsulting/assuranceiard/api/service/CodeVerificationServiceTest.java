@@ -40,7 +40,7 @@ class CodeVerificationServiceTest {
 
     private static final Instant MAINTENANT = Instant.parse("2026-11-04T10:00:00Z");
     private static final String JETON = "jeton";
-    private static final SessionResponse SESSION = new SessionResponse("session", "marie@exemple.fr");
+    private static final SessionResponse SESSION = new SessionResponse("session", "marie@exemple.fr", "PROSPECT");
 
     @Mock
     private CodeVerificationRepository codeRepository;
