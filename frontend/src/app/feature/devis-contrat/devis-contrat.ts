@@ -2,6 +2,7 @@ import { TitleCasePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { Contrat, DemandeContrat } from '../../core/model/contrat';
+import { ibanMasqueDepuisFin } from '../../core/model/iban';
 import { FORMULES, LIBELLES_OPTIONS, Formule, OptionConseillee, formaterPrix } from '../../core/model/recommandation';
 import { DevisService } from '../../core/service/devis.service';
 import { ContratService } from '../../core/service/contrat.service';
@@ -172,8 +173,9 @@ export class DevisContrat {
     return masquerTelephone(telephone);
   }
 
-  protected afficherIban(ibanDebut: string | null | undefined, ibanFin: string | null | undefined): string {
-    return afficherIban(ibanDebut, ibanFin);
+  /** US-04, RG4 : seuls les 4 derniers caractères de l'IBAN sont visibles. */
+  protected afficherIban(ibanFin: string | null | undefined): string {
+    return ibanMasqueDepuisFin(ibanFin);
   }
 
   protected formaterDate(iso: string): string {
@@ -239,12 +241,6 @@ function masquerTelephone(telephone: string | null | undefined): string {
   const t = telephone.replace(/\s/g, '');
   if (t.length !== 10) return telephone;
   return `${t.slice(0, 2)} •• •• •• ${t.slice(8)}`;
-}
-
-function afficherIban(ibanDebut: string | null | undefined, ibanFin: string | null | undefined): string {
-  const debut = ibanDebut ?? '••••';
-  const fin = ibanFin ?? '••••';
-  return `${debut} •••• •••• •••• •••• •••• ${fin}`;
 }
 
 function formaterDate(iso: string): string {

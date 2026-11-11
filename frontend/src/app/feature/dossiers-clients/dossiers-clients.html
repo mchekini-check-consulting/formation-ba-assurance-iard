@@ -1,0 +1,38 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="clients-titre">
+    <h1 id="clients-titre" class="serif">Dossiers clients</h1>
+
+    @if (chargement()) {
+      <p>Chargement des clients…</p>
+    } @else if (liste() === null) {
+      <p class="mes-devis__erreur" role="alert">La liste des clients n'a pas pu être chargée. Réessayez dans quelques instants.</p>
+    } @else if (liste()?.length === 0) {
+      <p>Aucun client pour le moment.</p>
+    }
+
+    <ul class="mes-devis__liste">
+      @for (client of liste(); track client.id) {
+        <li class="devis-ligne">
+          <div class="devis-ligne__entete">
+            <h2 class="serif">{{ nomComplet(client) }}</h2>
+            <span class="badge">{{ client.profil === 'ASSURE' ? 'Assuré' : 'Prospect' }}</span>
+          </div>
+          <p>{{ client.email }}</p>
+          <div class="devis-ligne__actions">
+            <a class="btn" [routerLink]="['/back-office/clients', client.id]">Ouvrir le dossier</a>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+</main>

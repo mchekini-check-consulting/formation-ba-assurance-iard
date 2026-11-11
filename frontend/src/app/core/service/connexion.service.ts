@@ -2,6 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject, signal } from '@angular/core';
 import { Observable, catchError, finalize, map, of, tap } from 'rxjs';
 import { apiBase } from '../config/api';
+import { Droit, PROFILS_INTERNES, Rubrique, SessionCourante } from '../model/droits';
 import {
   MotifNouveauCode,
   ResultatCode,
@@ -26,6 +27,8 @@ export class ConnexionService {
   readonly verification = signal<VerificationEnCours | null>(null);
   readonly emailClient = signal<string | null>(null);
   readonly profilClient = signal<string | null>(null);
+  /** US-04 : droits du profil (« RUBRIQUE:DROIT »), relus auprès du serveur à chaque changement de page. */
+  readonly droitsClient = signal<readonly string[]>([]);
 
   /** Jeton de session, oublié à la fermeture de l'onglet (RG1). */
   jeton(): string | null {
@@ -69,10 +72,11 @@ export class ConnexionService {
     if (!this.jeton()) {
       return of(false);
     }
-    return this.http.get<{ email: string; profil: string }>(`${this.url}/session`).pipe(
+    return this.http.get<SessionCourante>(`${this.url}/session`).pipe(
       tap((session) => {
         this.emailClient.set(session.email);
         this.profilClient.set(session.profil);
+        this.droitsClient.set(session.droits ?? []);
       }),
       map(() => true),
       catchError((erreur: unknown) => {
@@ -95,6 +99,17 @@ export class ConnexionService {
     sessionStorage.removeItem(CLE_JETON);
     this.emailClient.set(null);
     this.profilClient.set(null);
+    this.droitsClient.set([]);
+  }
+
+  /** US-04, AC3 : le profil a-t-il ce droit (tableau de l'US-02) ? */
+  aLeDroit(rubrique: Rubrique, droit: Droit): boolean {
+    return this.droitsClient().includes(`${rubrique}:${droit}`);
+  }
+
+  /** US-04 : profils du back-office (Gestionnaire, Administrateur). */
+  estInterne(): boolean {
+    return PROFILS_INTERNES.includes(this.profilClient() ?? '');
   }
 
   private resultatConnexionRefusee(erreur: unknown): ResultatConnexion {

@@ -7,6 +7,10 @@ import net.checkconsulting.assuranceiard.api.dto.MandatPreparationResponse;
 import net.checkconsulting.assuranceiard.api.dto.MandatSignatureRequest;
 import net.checkconsulting.assuranceiard.api.dto.MandatSigneResponse;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
+import net.checkconsulting.assuranceiard.api.model.Droit;
+import net.checkconsulting.assuranceiard.api.model.Rubrique;
+import net.checkconsulting.assuranceiard.api.securite.Acces;
+import net.checkconsulting.assuranceiard.api.securite.TypeRessource;
 import net.checkconsulting.assuranceiard.api.service.MandatService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -21,6 +25,8 @@ public class MandatResource {
     private final MandatService mandatService;
 
     @PostMapping("/devis/mandats")
+    @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CREER,
+            ressource = TypeRessource.SOUSCRIPTION, identifiant = "demande.referenceDevis")
     @LogMetier
     public MandatPreparationResponse preparer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
@@ -29,6 +35,8 @@ public class MandatResource {
     }
 
     @PostMapping("/devis/mandats/signature")
+    @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CREER,
+            ressource = TypeRessource.SOUSCRIPTION, identifiant = "demande.referenceDevis")
     @LogMetier
     public MandatSigneResponse signer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,

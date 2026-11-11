@@ -37,5 +37,10 @@ export function erreurIban(texte: string): string | null {
 
 // AC1 : seuls les 4 derniers caractères restent visibles
 export function ibanMasque(texte: string): string {
-  return `•••• •••• •••• ${normaliserIban(texte).slice(-TAILLE_GROUPE)}`;
+  return ibanMasqueDepuisFin(normaliserIban(texte).slice(-TAILLE_GROUPE));
+}
+
+/** US-04, RG4 : même masquage pour tous les profils, à partir des 4 derniers caractères envoyés par le serveur. */
+export function ibanMasqueDepuisFin(fin: string | null | undefined): string {
+  return `•••• •••• •••• ${fin ?? '••••'}`;
 }

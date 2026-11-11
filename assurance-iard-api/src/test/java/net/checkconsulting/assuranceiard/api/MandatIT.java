@@ -143,13 +143,14 @@ class MandatIT {
                 .andExpect(status().isUnauthorized());
     }
 
+    /** US-04, AC2 : le dossier d'un autre client est refusé (« Accès non autorisé »). */
     @Test
-    void leDossierDUnAutreClientEstIntrouvable() throws Exception {
+    void leDossierDUnAutreClientEstRefuse() throws Exception {
         Compte autre = new Compte();
         autre.setEmail(UUID.randomUUID() + "@exemple.fr");
         autre.setMotDePasseHash("hash");
         jeton = "Bearer " + sessionService.ouvrir(comptes.save(autre)).jeton();
 
-        preparerMandat().andExpect(status().isNotFound());
+        preparerMandat().andExpect(status().isForbidden());
     }
 }

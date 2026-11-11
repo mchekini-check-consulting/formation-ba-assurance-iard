@@ -1,6 +1,8 @@
 package net.checkconsulting.assuranceiard.api.repository;
 
 import jakarta.persistence.LockModeType;
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.Profil;
@@ -16,4 +18,7 @@ public interface CompteRepository extends JpaRepository<Compte, Long> {
     Optional<Compte> findByEmail(String email);
 
     long countByProfil(Profil profil);
+
+    /** US-04 : clients du back-office (Prospects et Assurés). */
+    List<Compte> findByProfilInOrderByNomAscPrenomAscEmailAsc(Collection<Profil> profils);
 }

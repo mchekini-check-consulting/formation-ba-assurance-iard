@@ -9,12 +9,18 @@ import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.dto.SessionCouranteResponse;
 import net.checkconsulting.assuranceiard.api.dto.SessionResponse;
 import net.checkconsulting.assuranceiard.api.exception.SessionInvalideException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
+import net.checkconsulting.assuranceiard.api.model.Droit;
+import net.checkconsulting.assuranceiard.api.model.Permission;
+import net.checkconsulting.assuranceiard.api.model.Profil;
+import net.checkconsulting.assuranceiard.api.model.Rubrique;
 import net.checkconsulting.assuranceiard.api.model.SessionClient;
+import net.checkconsulting.assuranceiard.api.repository.PermissionRepository;
 import net.checkconsulting.assuranceiard.api.repository.SessionClientRepository;
 import net.checkconsulting.assuranceiard.api.utils.Jetons;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,14 +38,25 @@ class SessionServiceTest {
     @Mock
     private SessionClientRepository sessionRepository;
 
+    @Mock
+    private PermissionRepository permissionRepository;
+
     private SessionService sessionService;
     private Compte compte;
 
     @BeforeEach
     void preparer() {
-        sessionService = new SessionService(sessionRepository, Clock.fixed(MAINTENANT, ZoneOffset.UTC));
+        sessionService = new SessionService(sessionRepository, permissionRepository, Clock.fixed(MAINTENANT, ZoneOffset.UTC));
         compte = new Compte();
         compte.setEmail("marie@exemple.fr");
+    }
+
+    private static Permission permission(Rubrique rubrique, Droit droit, boolean valeur) {
+        Permission permission = new Permission();
+        permission.setRubrique(rubrique);
+        permission.setDroit(droit);
+        permission.setValeur(valeur);
+        return permission;
     }
 
     private SessionClient sessionExpirantA(Instant date) {
@@ -65,9 +82,13 @@ class SessionServiceTest {
     @Test
     void litLaSessionEnCoursEtLaProlongeDeTrenteMinutes() {
         SessionClient session = sessionExpirantA(MAINTENANT.plusSeconds(1));
+        when(permissionRepository.findByProfil(Profil.PROSPECT)).thenReturn(List.of(
+                permission(Rubrique.DEVIS, Droit.CREER, true), permission(Rubrique.CONTRATS, Droit.CONSULTER, false),
+                permission(Rubrique.DEVIS, Droit.CONSULTER, true)));
         when(sessionRepository.findByJetonHash(Jetons.empreinte("jeton"))).thenReturn(Optional.of(session));
 
-        assertThat(sessionService.lire("Bearer jeton")).isEqualTo(new SessionCouranteResponse("marie@exemple.fr", "PROSPECT"));
+        assertThat(sessionService.lire("Bearer jeton")).isEqualTo(
+                new SessionCouranteResponse("marie@exemple.fr", "PROSPECT", List.of("DEVIS:CONSULTER", "DEVIS:CREER")));
         assertThat(session.getDateExpiration()).isEqualTo(MAINTENANT.plus(Duration.ofMinutes(30)));
     }
 

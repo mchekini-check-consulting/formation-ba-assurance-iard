@@ -14,6 +14,7 @@ import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
@@ -163,7 +164,7 @@ class ContratResourceTest {
                 "12 rue des Lilas", "75001", "Paris", "appartement", 45,
                 "confort", List.of("assistance-depannage"), 300,
                 new BigDecimal("18.50"), new BigDecimal("222.00"), 10,
-                "7890", "FR76", "AE-2026-ABCDEF12",
+                "7890", "AE-2026-ABCDEF12",
                 LocalDate.of(2026, 12, 10), LocalDate.of(2026, 12, 1),
                 false, LocalDate.of(2026, 11, 5));
         when(contratService.signer(eq(JETON), eq(REFERENCE), any())).thenReturn(signee);
@@ -203,6 +204,16 @@ class ContratResourceTest {
                 .andExpect(jsonPath("$.motif").value("essais-epuises"));
     }
 
+    @Test
+    void us04ListeMesContrats() throws Exception {
+        when(contratService.lister(JETON)).thenReturn(List.of(new ContratResumeResponse(REFERENCE, "AE-2026-000001",
+                "ACTIF", "12 rue des Lilas", "75001", "Paris", new BigDecimal("18.50"), LocalDate.of(2026, 12, 1))));
+
+        mockMvc.perform(get("/contrats").header(HttpHeaders.AUTHORIZATION, JETON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].numero").value("AE-2026-000001"));
+    }
+
     private ContratResponse uneReponse() {
         return new ContratResponse(
                 "AE-2026-000001",
@@ -223,7 +234,6 @@ class ContratResourceTest {
                 new BigDecimal("222.00"),
                 10,
                 "7890",
-                "FR76",
                 "AE-2026-ABCDEF12",
                 LocalDate.of(2026, 12, 10),
                 LocalDate.of(2026, 12, 1),

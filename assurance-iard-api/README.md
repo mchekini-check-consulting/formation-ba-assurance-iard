@@ -15,6 +15,7 @@ src/main/java/net/checkconsulting/assuranceiard/api/
   mapper/        # conversions entité <-> DTO (MapStruct)
   exception/     # erreurs métier et gestion globale des erreurs
   config/        # configuration Spring
+  securite/      # contrôle des accès selon le profil (US-04)
   utils/         # outils communs
 src/main/resources/
   application.yaml   # configuration (base locale par défaut)
@@ -45,6 +46,31 @@ docker compose up -d postgres   # depuis la racine, après avoir créé .env (PO
   Mailpit (http://localhost:8025). Il n'est jamais écrit dans les logs. Valable 24 heures
   par défaut ; pour essayer un lien expiré, lancer avec `LIEN_REINITIALISATION_VALIDITE=2m`.
   Sur dev et qualif : https://mailpit.dev.check-consulting.net (filtre `tag:<env>-formation-ba-assurance-iard`).
+- Comptes de recette (US-04), créés au démarrage si `DONNEES_TEST_ACTIVES=true` (déjà positionné par
+  `./mvnw spring-boot:run`, docker compose, dev et qualif ; jamais en preprod ni en prod). Mot de passe commun
+  `Recette2026` (`DONNEES_TEST_MOT_DE_PASSE`), code de connexion dans Mailpit :
+  `recette.assure1@assureasy.fr` et `recette.assure2@assureasy.fr` (assurés, chacun un devis, un contrat et un
+  document), `recette.gestionnaire@assureasy.fr`, `recette.admin@assureasy.fr`.
+
+## Contrôle des accès (US-04)
+
+Chaque route déclare ce qu'elle demande, contrôlé avant l'appel par `securite/ControleAccesAspect` :
+
+```java
+@Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER,
+        ressource = TypeRessource.CONTRAT, identifiant = "referenceDevis")
+```
+
+- Le droit est relu dans le tableau de l'US-02 (table `permission`) à chaque requête : un droit
+  retiré par l'administrateur est refusé dès la requête suivante.
+- Un client (Prospect, Assuré) n'accède qu'à ses ressources ; le back-office (`backOffice = true`)
+  est réservé aux profils Gestionnaire et Administrateur.
+- Une route sans `@Acces` ni `@AccesPublic` est refusée (`RoutesDeclareesTest` le vérifie).
+- Chaque refus répond « Accès non autorisé » (403) et est enregistré dans la table `acces_refuse`
+  (écran administrateur « Journal des accès refusés », route `GET /admin/acces-refuses`).
+- Nouvelle ressource (ex. les sinistres) : ajouter sa valeur à `TypeRessource`, une classe
+  `RessourceProtegee` qui retrouve son propriétaire (modèle : `ProprietairesContrat`), puis annoter ses routes.
+- IBAN : seuls ses 4 derniers caractères sortent du serveur (`ibanFin`), pour tous les profils.
 
 ## Base de données
 
