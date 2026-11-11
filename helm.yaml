@@ -13,7 +13,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: 47efe4a
-      qualif: 0bfce90
+      qualif: 47efe4a
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -103,7 +103,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: d74a343
-      qualif: 0bfce90
+      qualif: d74a343
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -143,7 +143,7 @@ applications:
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
     tag:
       dev: fd30ea3
-      qualif: 3bc7451
+      qualif: fd30ea3
       preprod: ""
       prod: ""
     containerPort: 8080
