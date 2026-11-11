@@ -69,6 +69,11 @@ assurance:
   # (décision PO en attente) ; CODE_TEST_CONNEXION_ACTIF=true le rallume, jamais en preprod ni en prod.
   double-authentification:
     code-test-actif: ${CODE_TEST_CONNEXION_ACTIF:false}
+  # US-04 : comptes de recette (2 assurés, un gestionnaire, un administrateur) créés au démarrage.
+  # Allumé en local (pom.xml, docker-compose.yaml), dev et qualif (helm.yaml) ; jamais en preprod ni en prod.
+  donnees-test:
+    actif: ${DONNEES_TEST_ACTIVES:false}
+    mot-de-passe: ${DONNEES_TEST_MOT_DE_PASSE:Recette2026}
   justificatifs:
     # Dossier local exclu de Git ; en ligne, dossier temporaire (voir helm.yaml).
     dossier: ${JUSTIFICATIFS_DOSSIER:justificatifs}

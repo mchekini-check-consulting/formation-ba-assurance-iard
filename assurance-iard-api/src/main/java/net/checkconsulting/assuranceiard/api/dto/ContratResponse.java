@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
+/** US-04, RG4 : l'IBAN n'est jamais renvoyé, seulement ses 4 derniers caractères (ibanFin). */
 public record ContratResponse(
         String numero,
         String statut,
@@ -23,7 +24,6 @@ public record ContratResponse(
         BigDecimal cotisationAnnuelle,
         Integer jourPrelevement,
         String ibanFin,
-        String ibanDebut,
         String rum,
         LocalDate datePremierPrelevement,
         LocalDate dateEffet,

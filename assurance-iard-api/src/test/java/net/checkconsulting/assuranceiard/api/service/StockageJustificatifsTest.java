@@ -50,6 +50,16 @@ class StockageJustificatifsTest {
     }
 
     @Test
+    void us04RelitUnFichierEtSignaleUnFichierEfface() {
+        StockageJustificatifs stockage = stockage(dossier);
+        String cle = stockage.stocker(new byte[] {4, 5}, "pdf");
+
+        assertThat(stockage.lire(cle)).hasValueSatisfying(contenu -> assertThat(contenu).containsExactly(4, 5));
+        stockage.supprimer(cle);
+        assertThat(stockage.lire(cle)).isEmpty();
+    }
+
+    @Test
     void signaleUneSuppressionImpossible() throws IOException {
         Path sousDossier = Files.createDirectory(dossier.resolve("occupe"));
         Files.createFile(sousDossier.resolve("contenu"));

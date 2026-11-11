@@ -18,6 +18,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
@@ -28,6 +29,7 @@ import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.Contrat;
 import net.checkconsulting.assuranceiard.api.model.DossierSouscription;
 import net.checkconsulting.assuranceiard.api.model.MandatSepa;
+import net.checkconsulting.assuranceiard.api.model.Profil;
 import net.checkconsulting.assuranceiard.api.model.RecommandationDevis;
 import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
@@ -126,7 +128,6 @@ class ContratServiceTest {
         assertThat(reponse.telephone()).isEqualTo("0612345678");
         assertThat(reponse.formule()).isEqualTo("confort");
         assertThat(reponse.ibanFin()).isEqualTo("7890");
-        assertThat(reponse.ibanDebut()).isEqualTo("FR76");
         assertThat(reponse.rum()).isEqualTo("AE-2026-ABCDEF12");
     }
 
@@ -197,6 +198,7 @@ class ContratServiceTest {
 
         assertThat(reponse.statut()).isEqualTo("ACTIF");
         verify(codeSignatureService).verifier(existant, "123456");
+        assertThat(dossier.getCompte().getProfil()).as("US-04 : le prospect devient assuré").isEqualTo(Profil.ASSURE);
     }
 
     @Test
@@ -227,6 +229,25 @@ class ContratServiceTest {
         return new GenerationContratRequest(
                 REFERENCE, "12 rue des Lilas", "75001", "Paris",
                 "appartement", 45, 300, false);
+    }
+
+    @Test
+    void us04ListeLesContratsDuClientConnecte() {
+        when(contrats.findByDossierCompteOrderByDateCreationDesc(compte)).thenReturn(List.of(unContratExistant()));
+
+        assertThat(service.lister(JETON)).containsExactly(new ContratResumeResponse(REFERENCE, "AE-2026-000001",
+                "EN_ATTENTE_DE_SIGNATURE", "12 rue des Lilas", "75001", "Paris", new BigDecimal("18.50"),
+                LocalDate.of(2026, 12, 1)));
+    }
+
+    @Test
+    void us04UnAssureQuiSigneResteAssureEtUnGestionnaireGardeSonProfil() {
+        when(contrats.findByDossier(dossier)).thenReturn(Optional.of(unContratExistant()));
+        compte.setProfil(Profil.GESTIONNAIRE);
+
+        service.signer(JETON, REFERENCE, new SignatureContratRequest("123456"));
+
+        assertThat(compte.getProfil()).isEqualTo(Profil.GESTIONNAIRE);
     }
 
     private Contrat unContratExistant() {
