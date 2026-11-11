@@ -13,7 +13,7 @@ applications:
     # remplace tout jusqu'à la fin de la ligne.
     tag:
       dev: "3679231"
-      qualif: 47efe4a
+      qualif: "3679231"
       preprod: ""
       prod: ""
     containerPort: 8080
