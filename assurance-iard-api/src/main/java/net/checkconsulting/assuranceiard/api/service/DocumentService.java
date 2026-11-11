@@ -1,6 +1,8 @@
 package net.checkconsulting.assuranceiard.api.service;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.DocumentResponse;
 import net.checkconsulting.assuranceiard.api.exception.DocumentInconnuException;
@@ -22,8 +24,24 @@ public class DocumentService {
     private final JustificatifRepository justificatifRepository;
     private final StockageJustificatifs stockage;
 
-    /** Le contenu d'un document à renvoyer au navigateur. */
+    /** Le contenu d'un document à renvoyer au navigateur (comparé par contenu, jamais affiché en entier). */
     public record Fichier(String nom, String type, byte[] contenu) {
+
+        @Override
+        public boolean equals(Object autre) {
+            return autre instanceof Fichier fichier && Objects.equals(nom, fichier.nom)
+                    && Objects.equals(type, fichier.type) && Arrays.equals(contenu, fichier.contenu);
+        }
+
+        @Override
+        public int hashCode() {
+            return Objects.hash(nom, type, Arrays.hashCode(contenu));
+        }
+
+        @Override
+        public String toString() {
+            return "Fichier[type=" + type + ", taille=" + contenu.length + "]";
+        }
     }
 
     @Transactional

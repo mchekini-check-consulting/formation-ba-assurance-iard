@@ -49,6 +49,11 @@ public class DonneesRecette implements ApplicationRunner {
     static final String GESTIONNAIRE = "recette.gestionnaire@assureasy.fr";
     static final String ADMINISTRATEUR = "recette.admin@assureasy.fr";
 
+    private static final String TYPE_PDF = "pdf";
+    private static final String FORMULE = "confort";
+    private static final String TYPE_LOGEMENT = "appartement";
+    private static final BigDecimal COTISATION = new BigDecimal("18.50");
+    private static final String RUE = " rue de la Recette";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
     private static final byte[] PDF = "%PDF-1.4\n% Document de recette Assur'Easy\n%%EOF\n"
             .getBytes(StandardCharsets.US_ASCII);
@@ -123,7 +128,7 @@ public class DonneesRecette implements ApplicationRunner {
         recommandation.setValeurContenu(20_000);
         recommandation.setRemboursement("neuf");
         recommandation.setPriorite("prix");
-        recommandation.setFormule("confort");
+        recommandation.setFormule(FORMULE);
         recommandation.setRaisons(List.of("Données de recette"));
         recommandation.setOptions(List.of());
         recommandation.setDateCreation(horloge.instant());
@@ -135,15 +140,15 @@ public class DonneesRecette implements ApplicationRunner {
         DevisEnregistre enregistre = new DevisEnregistre();
         enregistre.setCompte(compte);
         enregistre.setReference(recommandation.getReference());
-        enregistre.setTypeLogement("appartement");
-        enregistre.setAdresse(assure.rang() + " rue de la Recette");
+        enregistre.setTypeLogement(TYPE_LOGEMENT);
+        enregistre.setAdresse(assure.rang() + RUE);
         enregistre.setCodePostal(assure.codePostal());
         enregistre.setVille(assure.ville());
         enregistre.setSurface(40 + assure.rang() * 10);
-        enregistre.setFormule("confort");
+        enregistre.setFormule(FORMULE);
         enregistre.setOptions(List.of());
         enregistre.setFranchise("300");
-        enregistre.setPrixMensuel(new BigDecimal("18.50"));
+        enregistre.setPrixMensuel(COTISATION);
         enregistre.setDateCreation(maintenant);
         enregistre.setDateFinValidite(LocalDate.ofInstant(maintenant, FRANCE).plusDays(30));
         enregistre.setDateDernierContact(maintenant);
@@ -165,9 +170,9 @@ public class DonneesRecette implements ApplicationRunner {
         justificatif.setCategorie("identite");
         justificatif.setTypeDocument("carte-identite");
         justificatif.setNomFichier("piece-identite-recette.pdf");
-        justificatif.setTypeFichier("pdf");
+        justificatif.setTypeFichier(TYPE_PDF);
         justificatif.setTaille(PDF.length);
-        justificatif.setCleStockage(stockage.stocker(PDF, "pdf"));
+        justificatif.setCleStockage(stockage.stocker(PDF, TYPE_PDF));
         return justificatif;
     }
 
@@ -192,13 +197,13 @@ public class DonneesRecette implements ApplicationRunner {
         contrat.setDossier(dossier);
         contrat.setNumero("AE-RECETTE-" + assure.rang());
         contrat.setStatut("ACTIF");
-        contrat.setAdresseLogement(assure.rang() + " rue de la Recette");
+        contrat.setAdresseLogement(assure.rang() + RUE);
         contrat.setCodePostal(assure.codePostal());
         contrat.setVille(assure.ville());
-        contrat.setTypeLogement("appartement");
+        contrat.setTypeLogement(TYPE_LOGEMENT);
         contrat.setSurface(40 + assure.rang() * 10);
         contrat.setFranchise(300);
-        contrat.setCotisationMensuelle(new BigDecimal("18.50"));
+        contrat.setCotisationMensuelle(COTISATION);
         contrat.setCotisationAnnuelle(new BigDecimal("222.00"));
         contrat.setResiliationHamon(false);
         contrat.setDateEffet(mandat.getDateDebut());
@@ -211,7 +216,7 @@ public class DonneesRecette implements ApplicationRunner {
             comptes.findByEmail(email).ifPresent(compte ->
                     justificatifs.findByDossierCompteOrderByIdDesc(compte).stream()
                             .filter(justificatif -> stockage.lire(justificatif.getCleStockage()).isEmpty())
-                            .forEach(justificatif -> justificatif.setCleStockage(stockage.stocker(PDF, "pdf"))));
+                            .forEach(justificatif -> justificatif.setCleStockage(stockage.stocker(PDF, TYPE_PDF))));
         }
     }
 }

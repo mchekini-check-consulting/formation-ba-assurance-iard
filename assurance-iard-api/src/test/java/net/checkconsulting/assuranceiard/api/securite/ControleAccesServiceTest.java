@@ -51,15 +51,18 @@ class ControleAccesServiceTest {
     @Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER, ressource = TypeRessource.CONTRAT,
             identifiant = "reference")
     void contrat() {
+        // Route-modèle : seule son annotation @Acces est lue.
     }
 
     @Acces(rubrique = Rubrique.PROFILS, droit = Droit.CONSULTER, backOffice = true)
     void backOffice() {
+        // Route-modèle : seule son annotation @Acces est lue.
     }
 
     @Acces(rubrique = Rubrique.SINISTRES, droit = Droit.CONSULTER, ressource = TypeRessource.DOCUMENT,
             identifiant = "id")
     void ressourceSansControle() {
+        // Route-modèle : seule son annotation @Acces est lue.
     }
 
     private static Acces acces(String methode) throws NoSuchMethodException {
@@ -84,7 +87,9 @@ class ControleAccesServiceTest {
         droitAccorde(Profil.ASSURE, Rubrique.CONTRATS, Droit.CONSULTER, true);
         when(contrats.proprietaires(REFERENCE)).thenReturn(Set.of(1L));
 
-        assertThatCode(() -> controle.verifier(compte(1, Profil.ASSURE), acces("contrat"), REFERENCE, REQUETE))
+        Compte compte = compte(1, Profil.ASSURE);
+        Acces acces = acces("contrat");
+        assertThatCode(() -> controle.verifier(compte, acces, REFERENCE, REQUETE))
                 .doesNotThrowAnyException();
         verifyNoInteractions(journal);
     }
@@ -107,7 +112,9 @@ class ControleAccesServiceTest {
         droitAccorde(Profil.ASSURE, Rubrique.CONTRATS, Droit.CONSULTER, true);
         when(contrats.proprietaires(REFERENCE)).thenReturn(Set.of());
 
-        assertThatCode(() -> controle.verifier(compte(1, Profil.ASSURE), acces("contrat"), REFERENCE, REQUETE))
+        Compte compte = compte(1, Profil.ASSURE);
+        Acces acces = acces("contrat");
+        assertThatCode(() -> controle.verifier(compte, acces, REFERENCE, REQUETE))
                 .doesNotThrowAnyException();
     }
 
@@ -138,7 +145,9 @@ class ControleAccesServiceTest {
     void leGestionnaireConsulteLesContratsDeTousLesClients() throws Exception {
         droitAccorde(Profil.GESTIONNAIRE, Rubrique.CONTRATS, Droit.CONSULTER, true);
 
-        assertThatCode(() -> controle.verifier(compte(9, Profil.GESTIONNAIRE), acces("contrat"), REFERENCE, REQUETE))
+        Compte compte = compte(9, Profil.GESTIONNAIRE);
+        Acces acces = acces("contrat");
+        assertThatCode(() -> controle.verifier(compte, acces, REFERENCE, REQUETE))
                 .doesNotThrowAnyException();
         verify(contrats, never()).proprietaires(any());
     }
@@ -147,7 +156,9 @@ class ControleAccesServiceTest {
     void lAdministrateurEntreDansLeBackOfficeAvecLeDroit() throws Exception {
         droitAccorde(Profil.ADMINISTRATEUR, Rubrique.PROFILS, Droit.CONSULTER, true);
 
-        assertThatCode(() -> controle.verifier(compte(9, Profil.ADMINISTRATEUR), acces("backOffice"), null, REQUETE))
+        Compte compte = compte(9, Profil.ADMINISTRATEUR);
+        Acces acces = acces("backOffice");
+        assertThatCode(() -> controle.verifier(compte, acces, null, REQUETE))
                 .doesNotThrowAnyException();
     }
 

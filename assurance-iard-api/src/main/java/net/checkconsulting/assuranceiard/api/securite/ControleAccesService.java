@@ -1,6 +1,5 @@
 package net.checkconsulting.assuranceiard.api.securite;
 
-import java.util.EnumSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -26,7 +25,7 @@ import org.springframework.stereotype.Service;
 public class ControleAccesService {
 
     /** Profils du back-office : ils voient les ressources de tous les clients, selon leurs droits. */
-    public static final Set<Profil> PROFILS_INTERNES = EnumSet.of(Profil.GESTIONNAIRE, Profil.ADMINISTRATEUR);
+    public static final Set<Profil> PROFILS_INTERNES = Set.of(Profil.GESTIONNAIRE, Profil.ADMINISTRATEUR);
 
     private final PermissionRepository permissions;
     private final JournalAccesRefuses journal;

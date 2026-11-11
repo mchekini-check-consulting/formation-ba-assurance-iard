@@ -1,6 +1,7 @@
 package net.checkconsulting.assuranceiard.api.securite;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.mock;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Parameter;
@@ -8,6 +9,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import net.checkconsulting.assuranceiard.api.AssuranceIardApplication;
+import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
+import net.checkconsulting.assuranceiard.api.repository.DevisEnregistreRepository;
+import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
+import net.checkconsulting.assuranceiard.api.repository.JustificatifRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -72,8 +77,10 @@ class RoutesDeclareesTest {
                 .filter(type -> type != TypeRessource.AUCUNE)
                 .toList();
         List<TypeRessource> controlees = List.of(
-                new ProprietairesDevis(null).type(), new ProprietairesSouscription(null).type(),
-                new ProprietairesContrat(null).type(), new ProprietairesDocument(null).type());
+                new ProprietairesDevis(mock(DevisEnregistreRepository.class)).type(),
+                new ProprietairesSouscription(mock(DossierSouscriptionRepository.class)).type(),
+                new ProprietairesContrat(mock(ContratRepository.class)).type(),
+                new ProprietairesDocument(mock(JustificatifRepository.class)).type());
 
         assertThat(controlees).containsExactlyInAnyOrderElementsOf(attendues);
     }

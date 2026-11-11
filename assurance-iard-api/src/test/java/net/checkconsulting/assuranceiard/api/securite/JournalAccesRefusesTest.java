@@ -31,6 +31,7 @@ class JournalAccesRefusesTest {
     @Acces(rubrique = Rubrique.DOCUMENTS, droit = Droit.CONSULTER, ressource = TypeRessource.DOCUMENT,
             identifiant = "id")
     void document() {
+        // Route-modèle : seule son annotation @Acces est lue.
     }
 
     @Test
