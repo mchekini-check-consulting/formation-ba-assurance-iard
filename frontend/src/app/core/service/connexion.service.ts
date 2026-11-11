@@ -25,6 +25,7 @@ export class ConnexionService {
   /** Étape « double authentification » en cours, gardée en mémoire : un rechargement renvoie à la connexion. */
   readonly verification = signal<VerificationEnCours | null>(null);
   readonly emailClient = signal<string | null>(null);
+  readonly profilClient = signal<string | null>(null);
 
   /** Jeton de session, oublié à la fermeture de l'onglet (RG1). */
   jeton(): string | null {
@@ -45,6 +46,7 @@ export class ConnexionService {
       tap((session) => {
         sessionStorage.setItem(CLE_JETON, session.jeton);
         this.emailClient.set(session.email);
+        this.profilClient.set(session.profil);
         this.verification.set(null);
       }),
       map((): ResultatCode => ({ statut: 'connecte' })),
@@ -67,8 +69,11 @@ export class ConnexionService {
     if (!this.jeton()) {
       return of(false);
     }
-    return this.http.get<{ email: string }>(`${this.url}/session`).pipe(
-      tap((session) => this.emailClient.set(session.email)),
+    return this.http.get<{ email: string; profil: string }>(`${this.url}/session`).pipe(
+      tap((session) => {
+        this.emailClient.set(session.email);
+        this.profilClient.set(session.profil);
+      }),
       map(() => true),
       catchError((erreur: unknown) => {
         if (statutDe(erreur) === 401) {
@@ -89,6 +94,7 @@ export class ConnexionService {
   private oublierSession(): void {
     sessionStorage.removeItem(CLE_JETON);
     this.emailClient.set(null);
+    this.profilClient.set(null);
   }
 
   private resultatConnexionRefusee(erreur: unknown): ResultatConnexion {

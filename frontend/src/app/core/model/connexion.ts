@@ -6,6 +6,7 @@ export interface VerificationEnCours {
 export interface SessionOuverte {
   jeton: string;
   email: string;
+  profil: string;
 }
 
 export type MotifNouveauCode = 'essais-epuises' | 'code-expire';

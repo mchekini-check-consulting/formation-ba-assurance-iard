@@ -144,4 +144,9 @@ public class GestionErreurs {
         log.warn("Contrat ou devis refusé : aucun tarif valable");
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
+
+    @ExceptionHandler(AccesNonAutoriseException.class)
+    public ProblemDetail accesNonAutorise(AccesNonAutoriseException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
+    }
 }

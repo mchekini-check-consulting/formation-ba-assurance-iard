@@ -95,7 +95,7 @@ class ConnexionResourceTest {
     @Test
     void verificationOuvreLaSession() throws Exception {
         when(codeVerificationService.verifier("jeton", "123456"))
-                .thenReturn(new SessionResponse("session", "marie@exemple.fr"));
+                .thenReturn(new SessionResponse("session", "marie@exemple.fr", "PROSPECT"));
 
         poster("/connexion/verification", CORPS_CODE)
                 .andExpect(status().isOk())
@@ -147,7 +147,7 @@ class ConnexionResourceTest {
 
     @Test
     void lectureDeLaSession() throws Exception {
-        when(sessionService.lire("Bearer session")).thenReturn(new SessionCouranteResponse("marie@exemple.fr"));
+        when(sessionService.lire("Bearer session")).thenReturn(new SessionCouranteResponse("marie@exemple.fr", "PROSPECT"));
 
         mockMvc.perform(get("/session").header(HttpHeaders.AUTHORIZATION, "Bearer session"))
                 .andExpect(status().isOk())

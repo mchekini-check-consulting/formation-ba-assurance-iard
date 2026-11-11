@@ -1,4 +1,5 @@
 import { Routes } from '@angular/router';
+import { adminGuard } from './core/guards/admin.guard';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import {
   formuleChoisieGuard,
@@ -20,6 +21,7 @@ import { DoubleAuthentification } from './feature/double-authentification/double
 import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
+import { GestionProfils } from './feature/gestion-profils/gestion-profils';
 import { MesDevis } from './feature/mes-devis/mes-devis';
 import { PageSimple } from './feature/page-simple/page-simple';
 import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
@@ -103,6 +105,12 @@ export const routes: Routes = [
     component: DevisContrat,
     canActivate: [mandatSigneGuard, sessionGuard],
     title: "Mon contrat – Assur'Easy",
+  },
+  {
+    path: 'admin/profils',
+    component: GestionProfils,
+    canActivate: [adminGuard],
+    title: "Gestion des profils – Assur'Easy",
   },
   { path: '**', redirectTo: '' },
 ];

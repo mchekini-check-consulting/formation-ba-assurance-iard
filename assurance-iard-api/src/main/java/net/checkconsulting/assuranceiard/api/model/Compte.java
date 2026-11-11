@@ -2,6 +2,8 @@ package net.checkconsulting.assuranceiard.api.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -54,4 +56,8 @@ public class Compte {
 
     @Column(length = 10)
     private String telephone;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false, length = 30)
+    private Profil profil = Profil.PROSPECT;
 }

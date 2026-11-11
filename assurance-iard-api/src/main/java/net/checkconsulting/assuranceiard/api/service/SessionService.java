@@ -35,13 +35,14 @@ public class SessionService {
         session.setJetonHash(Jetons.empreinte(jeton));
         session.setDateExpiration(maintenant.plus(DUREE_INACTIVITE));
         sessionRepository.save(session);
-        return new SessionResponse(jeton, compte.getEmail());
+        return new SessionResponse(jeton, compte.getEmail(), compte.getProfil().name());
     }
 
     /** Toute lecture d'une session valable compte comme une activité et la prolonge de 30 minutes. */
     @Transactional
     public SessionCouranteResponse lire(String authorization) {
-        return new SessionCouranteResponse(compteConnecte(authorization).getEmail());
+        Compte compte = compteConnecte(authorization);
+        return new SessionCouranteResponse(compte.getEmail(), compte.getProfil().name());
     }
 
     /** Renvoie le compte de la session, en la prolongeant ; refuse une session absente ou expirée. */
@@ -52,7 +53,9 @@ public class SessionService {
                 .filter(trouvee -> maintenant.isBefore(trouvee.getDateExpiration()))
                 .orElseThrow(SessionInvalideException::new);
         session.setDateExpiration(maintenant.plus(DUREE_INACTIVITE));
-        return session.getCompte();
+        Compte compte = session.getCompte();
+        compte.getEmail(); // force l'initialisation du proxy JPA avant la fin de la transaction
+        return compte;
     }
 
     @Transactional
