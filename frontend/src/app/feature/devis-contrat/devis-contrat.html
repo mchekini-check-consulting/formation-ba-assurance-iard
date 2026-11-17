@@ -111,7 +111,11 @@
           <dl class="lignes">
             <div class="ligne">
               <dt class="ligne__libelle">Formule</dt>
-              <dd class="ligne__valeur">{{ nomFormule() }}{{ plafondFormule() ? ' · contenu assuré jusqu\'à ' + plafondFormule() : '' }}</dd>
+              <dd class="ligne__valeur avec-picto">
+                @if (pictoFormule()) {
+                  <img class="picto-formule picto-formule--petit" [src]="pictoFormule()" alt="" width="22" height="22" />
+                }
+                {{ nomFormule() }}{{ plafondFormule() ? ' · contenu assuré jusqu\'à ' + plafondFormule() : '' }}</dd>
             </div>
             <div class="ligne">
               <dt class="ligne__libelle">Options</dt>

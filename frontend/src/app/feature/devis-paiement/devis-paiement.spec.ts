@@ -352,6 +352,11 @@ describe('DevisPaiement', () => {
       expect(document.activeElement).toBe(champ('date-debut'));
     });
 
+    it('affiche le picto de la formule choisie dans le récapitulatif', () => {
+      creerEcran();
+      expect(page.querySelector('.bloc__ligne img.picto-formule')?.getAttribute('src')).toBe('picto-confort.png');
+    });
+
     it('reprend la cotisation de la formule choisie', () => {
       creerEcran();
       expect(lignesPaiement()['Montant']).toContain('€/mois');

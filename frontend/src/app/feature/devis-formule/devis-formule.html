@@ -33,7 +33,10 @@
           @if (carte.conseillee) {
             <p class="formule__badge">Conseillée</p>
           }
-          <h2 class="formule__nom serif">{{ carte.nom }}</h2>
+          <h2 class="formule__nom serif avec-picto">
+            <img class="picto-formule" [src]="carte.picto" alt="" width="40" height="40" />
+            {{ carte.nom }}
+          </h2>
           <p class="formule__description">{{ carte.description }}</p>
           <p class="formule__plafond">Capital mobilier : <strong>{{ carte.plafond }}</strong></p>
           <ul class="formule__garanties">

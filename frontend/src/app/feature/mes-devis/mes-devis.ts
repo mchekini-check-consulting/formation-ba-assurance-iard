@@ -41,6 +41,10 @@ export class MesDevis {
     return FORMULES[ligne.formule].nom;
   }
 
+  protected pictoFormule(ligne: DevisEnregistre): string {
+    return FORMULES[ligne.formule].picto;
+  }
+
   protected reprendre(reference: string): void {
     this.erreur.set(null);
     this.service.reprendre(reference).subscribe((reprise) => {

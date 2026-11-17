@@ -49,6 +49,12 @@ export class DevisContrat {
     return FORMULES[c.formule as Formule]?.plafond ?? '';
   });
 
+  protected readonly pictoFormule = computed(() => {
+    const c = this.contrat();
+    if (!c) return '';
+    return FORMULES[c.formule as Formule]?.picto ?? '';
+  });
+
   protected readonly libellesOptions = computed(() => {
     const c = this.contrat();
     if (!c || !c.options.length) return 'Aucune';
