@@ -127,6 +127,30 @@
   &--beige {
     background: var(--beige);
   }
+
+  // Image principale en fond du haut de page, sous un voile foncé : le texte d'accroche passe en blanc.
+  &--image {
+    background:
+      linear-gradient(90deg, rgb(15 15 20 / 82%) 0%, rgb(15 15 20 / 68%) 45%, rgb(15 15 20 / 40%) 100%),
+      url('/landing-pic.jpg') center 55% / cover no-repeat,
+      var(--texte);
+
+    .accroche__texte {
+      color: #fff;
+    }
+
+    .accroche__intro {
+      color: rgb(255 255 255 / 88%);
+    }
+
+    .surtitre {
+      color: #fff;
+    }
+
+    .avantages li::before {
+      border-color: #fff;
+    }
+  }
 }
 
 .titre-section {
