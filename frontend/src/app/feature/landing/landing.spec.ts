@@ -65,12 +65,20 @@ describe('Landing', () => {
 
   it("présente uniquement l'offre habitation, à partir de 7,90 €/mois TTC", () => {
     expect(page.querySelector('.prix')?.textContent).toContain('7,90 €/mois TTC');
-    expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent)).toEqual([
+    expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent?.trim())).toEqual([
       'Essentielle',
       'Confort',
       'Sérénité',
     ]);
     expect(page.textContent).not.toMatch(/auto(mobile)?\b/i);
+  });
+
+  it('affiche le picto de chaque formule à côté de son nom', () => {
+    expect(Array.from(page.querySelectorAll('.carte h3 img.carte__picto')).map((i) => i.getAttribute('src'))).toEqual([
+      'picto-essentielle.png',
+      'picto-confort.png',
+      'picto-serenite.png',
+    ]);
   });
 
   it("affiche l'en-tête avec le logo et les 3 boutons d'accès", () => {

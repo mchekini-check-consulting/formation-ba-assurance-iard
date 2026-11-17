@@ -133,7 +133,10 @@
       <div class="grille">
         @for (formule of formules; track formule.nom) {
           <article class="carte" [class.carte--avant]="formule.miseEnAvant">
-            <h3 class="serif">{{ formule.nom }}</h3>
+            <h3 class="serif carte__titre">
+              <img class="carte__picto" [src]="formule.picto" alt="" width="40" height="40" />
+              {{ formule.nom }}
+            </h3>
             <p class="carte__texte">{{ formule.description }}</p>
             <p>Contenu assuré jusqu'à <strong>{{ formule.plafond }}</strong></p>
           </article>

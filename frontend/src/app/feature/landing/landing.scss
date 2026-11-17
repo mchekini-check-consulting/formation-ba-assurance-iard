@@ -331,6 +331,18 @@
     font-size: 15px;
     line-height: 1.5;
   }
+
+  &__titre {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  &__picto {
+    flex: none;
+    width: 40px;
+    height: 40px;
+  }
 }
 
 .etapes {
