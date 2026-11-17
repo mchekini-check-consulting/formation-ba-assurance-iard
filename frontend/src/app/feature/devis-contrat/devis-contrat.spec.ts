@@ -89,6 +89,12 @@ describe('DevisContrat', () => {
     expect(page.textContent).toContain('AE-2026-000001');
   });
 
+  it('affiche le picto de la formule dans les garanties', () => {
+    genererContrat(fixture, http);
+    fixture.detectChanges();
+    expect(page.querySelector('img.picto-formule')?.getAttribute('src')).toBe('picto-confort.png');
+  });
+
   it('affiche le nom du souscripteur en titlecase', () => {
     genererContrat(fixture, http);
     expect(page.textContent).toContain('Dupont');

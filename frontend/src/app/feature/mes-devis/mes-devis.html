@@ -27,7 +27,10 @@
       @for (ligne of liste(); track ligne.reference) {
         <li class="devis-ligne">
           <div class="devis-ligne__entete">
-            <h2 class="serif">Formule {{ nomFormule(ligne) }}</h2>
+            <h2 class="serif avec-picto">
+              <img class="picto-formule" [src]="pictoFormule(ligne)" alt="" width="40" height="40" />
+              Formule {{ nomFormule(ligne) }}
+            </h2>
             <span class="badge" [class.badge--expire]="ligne.expire">{{ ligne.expire ? 'Expiré' : 'Valide' }}</span>
           </div>
           <p>{{ ligne.adresse }}, {{ ligne.codePostal }} {{ ligne.ville }}</p>

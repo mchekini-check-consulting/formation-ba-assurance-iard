@@ -111,7 +111,16 @@
               @for (ligne of bloc.lignes; track ligne.libelle) {
                 <div class="bloc__ligne">
                   <dt>{{ ligne.libelle }}</dt>
-                  <dd>{{ ligne.valeur }}</dd>
+                  <dd>
+                    @if (ligne.picto) {
+                      <span class="avec-picto">
+                        <img class="picto-formule picto-formule--petit" [src]="ligne.picto" alt="" width="22" height="22" />
+                        {{ ligne.valeur }}
+                      </span>
+                    } @else {
+                      {{ ligne.valeur }}
+                    }
+                  </dd>
                 </div>
               }
             </dl>

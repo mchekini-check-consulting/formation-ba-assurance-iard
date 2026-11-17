@@ -11,6 +11,8 @@ import { FORMULES, Formule, Franchise, LIBELLES_OPTIONS, OptionConseillee, Repon
 export interface LigneRecapitulatif {
   libelle: string;
   valeur: string;
+  /** Picto affiché devant la valeur (ligne « Formule »). */
+  picto?: string;
 }
 
 export interface BlocRecapitulatif {
@@ -86,7 +88,9 @@ function blocFormule(d: DonneesRecapitulatif): BlocRecapitulatif {
     titre: 'Ma formule',
     etape: '/devis/formule',
     lignes: [
-      { libelle: 'Formule', valeur: d.formule ? FORMULES[d.formule].nom : '' },
+      d.formule
+        ? { libelle: 'Formule', valeur: FORMULES[d.formule].nom, picto: FORMULES[d.formule].picto }
+        : { libelle: 'Formule', valeur: '' },
       { libelle: 'Options', valeur: d.options.map((o) => LIBELLES_OPTIONS[o]).join(', ') || 'Aucune' },
       { libelle: 'Franchise', valeur: d.franchise ? `${d.franchise} €` : '' },
       { libelle: 'Cotisation', valeur: montantMensuel(d.prixMensuel) },

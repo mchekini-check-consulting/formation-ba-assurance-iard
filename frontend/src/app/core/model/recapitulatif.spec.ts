@@ -114,6 +114,14 @@ describe('blocsRecapitulatif', () => {
     });
   });
 
+  it('ajoute le picto de la formule, et aucun si la formule manque', () => {
+    const ligneFormule = (formule: 'confort' | null) =>
+      blocsRecapitulatif(donnees({ formule }))[2].lignes.find((l) => l.libelle === 'Formule');
+
+    expect(ligneFormule('confort')?.picto).toBe('picto-confort.png');
+    expect(ligneFormule(null)?.picto).toBeUndefined();
+  });
+
   it('indique l’absence d’option et les valeurs manquantes', () => {
     const bloc = valeurs(
       blocsRecapitulatif(donnees({ formule: null, options: [], franchise: null, prixMensuel: null }))[2],

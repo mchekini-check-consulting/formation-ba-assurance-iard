@@ -28,7 +28,7 @@ describe('DevisFormule', () => {
     fixture.detectChanges();
   };
 
-  const carteChoisie = (): string => page.querySelector('.formule--choisie .formule__nom')?.textContent ?? '';
+  const carteChoisie = (): string => page.querySelector('.formule--choisie .formule__nom')?.textContent?.trim() ?? '';
 
   const cliquer = (texte: string): void => {
     const bouton = Array.from(page.querySelectorAll('button')).find((b) => b.textContent?.trim() === texte);
@@ -94,6 +94,14 @@ describe('DevisFormule', () => {
     expect(formules[1]).toContain('12,22');
     expect(formules[2]).toContain('Sérénité');
     expect(formules[2]).toContain('15,04');
+  });
+
+  it('affiche le picto de chaque formule à côté de son nom', () => {
+    expect(Array.from(page.querySelectorAll('.formule__nom img.picto-formule')).map((i) => i.getAttribute('src'))).toEqual([
+      'picto-essentielle.png',
+      'picto-confort.png',
+      'picto-serenite.png',
+    ]);
   });
 
   it('affiche la liste des garanties dans chaque carte', () => {
