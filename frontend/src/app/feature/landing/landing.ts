@@ -16,6 +16,7 @@ interface Formule {
   description: string;
   plafond: string;
   miseEnAvant: boolean;
+  picto: string;
 }
 
 interface Etape {
@@ -78,18 +79,21 @@ export class Landing {
       description: 'Les garanties indispensables : dégâts des eaux, incendie, vol et responsabilité civile.',
       plafond: '10 000 €',
       miseEnAvant: false,
+      picto: 'picto-essentielle.png',
     },
     {
       nom: 'Confort',
       description: "L'équilibre entre protection et budget, pour la plupart des logements.",
       plafond: '20 000 €',
       miseEnAvant: true,
+      picto: 'picto-confort.png',
     },
     {
       nom: 'Sérénité',
       description: 'La protection la plus large, avec remboursement à neuf.',
       plafond: '35 000 €',
       miseEnAvant: false,
+      picto: 'picto-serenite.png',
     },
   ];
 
