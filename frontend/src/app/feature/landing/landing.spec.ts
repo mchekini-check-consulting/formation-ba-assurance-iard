@@ -56,6 +56,13 @@ describe('Landing', () => {
     expect(page.querySelectorAll('.faq')).toHaveLength(4);
   });
 
+  it("affiche l'image principale en fond du haut de page, autour de l'accroche et du formulaire", () => {
+    const hautDePage = page.querySelector('main section.bloc--image')!;
+    expect(hautDePage).toBeTruthy();
+    expect(hautDePage.querySelector('h1')).toBeTruthy();
+    expect(hautDePage.querySelector('form.tarif')).toBeTruthy();
+  });
+
   it("présente uniquement l'offre habitation, à partir de 7,90 €/mois TTC", () => {
     expect(page.querySelector('.prix')?.textContent).toContain('7,90 €/mois TTC');
     expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent)).toEqual([
