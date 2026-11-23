@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.lenient;
 import static org.mockito.Mockito.when;
 
@@ -44,6 +45,7 @@ class GrilleTarifaireServiceTest {
 
     private VersionGrille version(String nom, LocalDate debut, LocalDate fin) {
         VersionGrille version = new VersionGrille();
+        version.setProduit("HABITATION");
         version.setVersion(nom);
         version.setDateDebut(debut);
         version.setDateFin(fin);
@@ -52,21 +54,22 @@ class GrilleTarifaireServiceTest {
 
     @Test
     void renvoieLaGrilleEnVigueur() {
-        when(versions.findApplicablesAu(DATE)).thenReturn(List.of(version("a", DATE, null)));
+        when(versions.findApplicablesAu(DATE, "HABITATION")).thenReturn(List.of(version("a", DATE, null)));
 
         assertThat(service.applicableAu(DATE)).map(GrilleTarifaire::version).contains("a");
     }
 
     @Test
     void sansGrilleEnVigueurLeResultatEstVide() {
-        when(versions.findApplicablesAu(DATE)).thenReturn(List.of());
+        when(versions.findApplicablesAu(DATE, "HABITATION")).thenReturn(List.of());
 
         assertThat(service.applicableAu(DATE)).isEmpty();
     }
 
     @Test
     void deuxGrillesEnVigueurLeMemeJourSontUneErreur() {
-        when(versions.findApplicablesAu(DATE)).thenReturn(List.of(version("a", DATE, null), version("b", DATE, null)));
+        when(versions.findApplicablesAu(DATE, "HABITATION"))
+                .thenReturn(List.of(version("a", DATE, null), version("b", DATE, null)));
 
         assertThatThrownBy(() -> service.applicableAu(DATE))
                 .isInstanceOf(GrilleInvalideException.class)
@@ -75,7 +78,7 @@ class GrilleTarifaireServiceTest {
 
     @Test
     void desPeriodesQuiSeSuiventSontAcceptees() {
-        when(versions.findAllByOrderByDateDebutAsc()).thenReturn(List.of(
+        when(versions.findByProduitOrderByDateDebutAsc(eq("HABITATION"))).thenReturn(List.of(
                 version("a", DATE, DATE.plusDays(9)),
                 version("b", DATE.plusDays(10), null)));
 
@@ -84,7 +87,7 @@ class GrilleTarifaireServiceTest {
 
     @Test
     void uneVersionQuiCommenceLeDernierJourDeLaPrecedenteEstRefusee() {
-        when(versions.findAllByOrderByDateDebutAsc()).thenReturn(List.of(
+        when(versions.findByProduitOrderByDateDebutAsc(eq("HABITATION"))).thenReturn(List.of(
                 version("a", DATE, DATE.plusDays(9)),
                 version("b", DATE.plusDays(9), null)));
 
@@ -95,7 +98,7 @@ class GrilleTarifaireServiceTest {
 
     @Test
     void uneVersionSansFinSuivieDUneAutreEstRefusee() {
-        when(versions.findAllByOrderByDateDebutAsc()).thenReturn(List.of(
+        when(versions.findByProduitOrderByDateDebutAsc(eq("HABITATION"))).thenReturn(List.of(
                 version("a", DATE, null),
                 version("b", DATE.plusDays(10), null)));
 
@@ -104,7 +107,7 @@ class GrilleTarifaireServiceTest {
 
     @Test
     void sansAucuneGrilleLeControleEchoue() {
-        when(versions.findAllByOrderByDateDebutAsc()).thenReturn(List.of());
+        when(versions.findByProduitOrderByDateDebutAsc(eq("HABITATION"))).thenReturn(List.of());
 
         assertThatThrownBy(service::verifierToutes).isInstanceOf(GrilleInvalideException.class);
     }

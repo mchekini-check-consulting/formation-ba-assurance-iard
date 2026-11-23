@@ -20,7 +20,10 @@ public class VersionGrille {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(nullable = false, unique = true)
+    @Column(nullable = false, length = 20)
+    private String produit;
+
+    @Column(nullable = false)
     private String version;
 
     @Column(name = "date_debut", nullable = false)

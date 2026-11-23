@@ -8,6 +8,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.List;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -40,6 +43,20 @@ public class RefFormule {
 
     @Column(nullable = false)
     private Integer ordre;
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "garanties_incluses", nullable = false, columnDefinition = "text[]")
+    private List<String> garantiesIncluses = List.of();
+
+    @JdbcTypeCode(SqlTypes.ARRAY)
+    @Column(name = "non_couvert", nullable = false, columnDefinition = "text[]")
+    private List<String> nonCouvert = List.of();
+
+    @Column(name = "part_rc", precision = 5, scale = 4)
+    private BigDecimal partRc;
+
+    @Column(name = "soumis_bonus_malus", nullable = false)
+    private Boolean soumisBonus = false;
 
     /** Horodatages renseignés par la base (référentiel chargé par script, T-04). */
     @Column(name = "date_creation", insertable = false, updatable = false)

@@ -13,9 +13,11 @@ public interface VersionGrilleRepository extends JpaRepository<VersionGrille, Lo
     @LogMetier
     @Query("""
             select v from VersionGrille v
-            where v.dateDebut <= :date and (v.dateFin is null or v.dateFin >= :date)
+            where v.produit = :produit
+              and v.dateDebut <= :date
+              and (v.dateFin is null or v.dateFin >= :date)
             """)
-    List<VersionGrille> findApplicablesAu(@Param("date") LocalDate date);
+    List<VersionGrille> findApplicablesAu(@Param("date") LocalDate date, @Param("produit") String produit);
 
-    List<VersionGrille> findAllByOrderByDateDebutAsc();
+    List<VersionGrille> findByProduitOrderByDateDebutAsc(String produit);
 }

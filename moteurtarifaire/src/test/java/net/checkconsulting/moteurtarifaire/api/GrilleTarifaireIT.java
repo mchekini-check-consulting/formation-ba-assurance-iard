@@ -10,6 +10,9 @@ import net.checkconsulting.moteurtarifaire.api.model.VersionGrille;
 import net.checkconsulting.moteurtarifaire.api.dto.GrilleTarifaire;
 import net.checkconsulting.moteurtarifaire.api.service.GrilleTarifaireService;
 import net.checkconsulting.moteurtarifaire.api.repository.ParametreTarifaireRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefFormuleRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefOptionRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefTarifRepository;
 import net.checkconsulting.moteurtarifaire.api.repository.VersionGrilleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,15 +39,25 @@ class GrilleTarifaireIT {
     @Autowired
     private ParametreTarifaireRepository parametres;
 
+    @Autowired
+    private RefFormuleRepository refFormules;
+
+    @Autowired
+    private RefOptionRepository refOptions;
+
+    @Autowired
+    private RefTarifRepository refTarifs;
+
     @BeforeEach
     void installerLaGrille() {
-        JeuxDeDonnees.installerGrilleDeReference(versions, parametres);
+        JeuxDeDonnees.installerGrilleDeReference(versions, parametres, refFormules, refOptions, refTarifs);
     }
 
     private void changerDeGrilleApres(LocalDate dernierJour) {
         VersionGrille reference = versions.findAll().getFirst();
         reference.setDateFin(dernierJour);
         VersionGrille nouvelle = new VersionGrille();
+        nouvelle.setProduit("HABITATION");
         nouvelle.setVersion(NOUVELLE_VERSION);
         nouvelle.setDateDebut(dernierJour.plusDays(1));
         Long idNouvelle = versions.save(nouvelle).getId();
@@ -88,6 +101,7 @@ class GrilleTarifaireIT {
     @Test
     void laBaseRefuseUneDateDeFinAvantLaDateDeDebut() {
         VersionGrille version = new VersionGrille();
+        version.setProduit("HABITATION");
         version.setVersion(NOUVELLE_VERSION);
         version.setDateDebut(DERNIER_JOUR);
         version.setDateFin(DERNIER_JOUR.minusDays(1));

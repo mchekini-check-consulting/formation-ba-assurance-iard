@@ -5,4 +5,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 /** T-05 : accès à la table de {@link RefPlaqueTest} (requêtes ajoutées avec les fonctionnalités du sprint 2). */
 public interface RefPlaqueTestRepository extends JpaRepository<RefPlaqueTest, Long> {
+
+    java.util.Optional<RefPlaqueTest> findByImmatriculation(String immatriculation);
 }
