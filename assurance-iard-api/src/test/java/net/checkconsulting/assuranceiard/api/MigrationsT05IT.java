@@ -29,6 +29,9 @@ class MigrationsT05IT {
 
     private static final String DERNIERE_VERSION = "27";
     private static final String VERSION_SPRINT_1 = "18";
+    /** Scripts db/annulation dans l'ordre inverse des migrations (V22.1 se place entre V22 et V23). */
+    private static final List<String> ORDRE_ANNULATION =
+            List.of("27", "26", "25", "24", "23", "22_1", "22", "21", "20", "19");
     private static final List<String> NOUVELLES_TABLES = List.of("ref_vehicule", "ref_plaque_test", "vehicule",
             "conducteur", "devis_auto", "devis_option", "contrat_option", "historique_statut_contrat", "document",
             "echeance", "facture", "avenant", "avenant_ligne", "preuve_signature", "declaration_fva",
@@ -248,11 +251,11 @@ class MigrationsT05IT {
                 "SELECT numero, statut, franchise, ville FROM contrat ORDER BY numero");
         flyway(base, DERNIERE_VERSION).migrate();
 
-        for (int version = 27; version >= 19; version--) {
+        for (String version : ORDRE_ANNULATION) {
             executerAnnulation(jdbc, version);
         }
 
-        assertThat(jdbc.queryForObject("SELECT MAX(version::INTEGER) FROM flyway_schema_history", Integer.class))
+        assertThat(jdbc.queryForObject("SELECT MAX(version::NUMERIC) FROM flyway_schema_history", Integer.class))
                 .isEqualTo(18);
         assertThat(tablesPresentes(jdbc)).doesNotContainAnyElementsOf(NOUVELLES_TABLES);
         assertThat(jdbc.queryForObject("""
@@ -263,7 +266,7 @@ class MigrationsT05IT {
 
         MigrateResult rejeu = flyway(base, DERNIERE_VERSION).migrate();
         assertThat(rejeu.success).isTrue();
-        assertThat(rejeu.migrationsExecuted).isEqualTo(9);
+        assertThat(rejeu.migrationsExecuted).isEqualTo(ORDRE_ANNULATION.size());
     }
 
     @Test
@@ -283,13 +286,61 @@ class MigrationsT05IT {
                                      cotisation_annuelle, date_effet, vehicule_id, conducteur_principal_id)
                 VALUES ('AE-2026-000009', 'AUTO', ?, 'ACTIF', 'TIERS', 0, 30, 360, CURRENT_DATE, ?, ?)""",
                 compte, vehicule, conducteur);
-        for (int version = 27; version >= 24; version--) {
+        for (String version : ORDRE_ANNULATION.subList(0, ORDRE_ANNULATION.indexOf("23"))) {
             executerAnnulation(jdbc, version);
         }
 
-        assertThatThrownBy(() -> executerAnnulation(jdbc, 23)).hasMessageContaining("Annulation V23 impossible");
+        assertThatThrownBy(() -> executerAnnulation(jdbc, "23")).hasMessageContaining("Annulation V23 impossible");
         assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM contrat WHERE produit = 'AUTO'", Integer.class))
                 .isEqualTo(1);
+    }
+
+    @Test
+    void unContratSigneEstRemisEnConformiteSelonSaDateDEffet() {
+        String base = nouvelleBase("statut_signe");
+        flyway(base, "22").migrate();
+        JdbcTemplate jdbc = jdbc(base);
+        long compte = remplirSprint1(jdbc).compte();
+        insererContratSigne(jdbc, compte, "AE-2026-000010", "CURRENT_DATE - 30");
+        insererContratSigne(jdbc, compte, "AE-2026-000011", "CURRENT_DATE");
+        insererContratSigne(jdbc, compte, "AE-2026-000012", "CURRENT_DATE + 15");
+
+        MigrateResult resultat = flyway(base, DERNIERE_VERSION).migrate();
+
+        assertThat(resultat.success).isTrue();
+        assertThat(contrat(jdbc, "AE-2026-000010")).containsEntry("statut", "ACTIF");
+        assertThat(contrat(jdbc, "AE-2026-000011")).containsEntry("statut", "ACTIF");
+        assertThat(contrat(jdbc, "AE-2026-000012")).containsEntry("statut", "EN_ATTENTE_EFFET");
+        // Les statuts valides ne sont pas touchés.
+        assertThat(contrat(jdbc, "AE-2026-000002")).containsEntry("statut", "EN_ATTENTE_DE_SIGNATURE");
+        assertThat(jdbc.queryForObject("SELECT COUNT(*) FROM contrat WHERE statut = 'SIGNE'", Integer.class)).isZero();
+    }
+
+    @Test
+    void unStatutInconnuArreteLaMigrationEnListantLesValeurs() {
+        String base = nouvelleBase("statut_inconnu");
+        flyway(base, "22").migrate();
+        JdbcTemplate jdbc = jdbc(base);
+        long compte = remplirSprint1(jdbc).compte();
+        insererContratSigne(jdbc, compte, "AE-2026-000020", "CURRENT_DATE");
+        jdbc.update("UPDATE contrat SET statut = 'BROUILLON' WHERE numero = 'AE-2026-000001'");
+        jdbc.update("UPDATE contrat SET statut = 'ANNULE' WHERE numero = 'AE-2026-000002'");
+
+        assertThatThrownBy(() -> flyway(base, DERNIERE_VERSION).migrate())
+                .hasStackTraceContaining("V22.1 : statuts de contrat inconnus à traiter avant V23 : ANNULE, BROUILLON");
+        // La migration est annulée en bloc : la base reste en V22, le contrat SIGNE n'est pas modifié.
+        assertThat(jdbc.queryForObject(
+                "SELECT MAX(version::NUMERIC) FROM flyway_schema_history WHERE success", Integer.class)).isEqualTo(22);
+        assertThat(contrat(jdbc, "AE-2026-000020")).containsEntry("statut", "SIGNE");
+    }
+
+    private static void insererContratSigne(JdbcTemplate jdbc, long compte, String numero, String dateEffet) {
+        long dossier = dossier(jdbc, compte, recommandation(jdbc, "confort"));
+        jdbc.update("""
+                INSERT INTO contrat (numero, dossier_id, statut, adresse_logement, code_postal, ville, type_logement,
+                                     surface, franchise, cotisation_mensuelle, cotisation_annuelle, date_effet)
+                VALUES (?, ?, 'SIGNE', '1 rue du Test', '75001', 'Paris', 'appartement', 40, 300, 18.50, 222.00,
+                        """ + dateEffet + ")", numero, dossier);
     }
 
     private record Sprint1(long compte) {
@@ -370,7 +421,7 @@ class MigrationsT05IT {
                 .isInstanceOf(DataIntegrityViolationException.class);
     }
 
-    private static void executerAnnulation(JdbcTemplate jdbc, int version) throws IOException {
+    private static void executerAnnulation(JdbcTemplate jdbc, String version) throws IOException {
         try (var fichiers = Files.list(Path.of("db", "annulation"))) {
             Path script = fichiers.filter(f -> f.getFileName().toString().startsWith("U" + version + "__"))
                     .findFirst().orElseThrow();
