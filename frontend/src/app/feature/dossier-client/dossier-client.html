@@ -1,0 +1,66 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="dossier-titre">
+    <a routerLink="/back-office/clients">← Dossiers clients</a>
+    @if (dossier(); as d) {
+      <h1 id="dossier-titre" class="serif">{{ nomComplet(d) }}</h1>
+      <div class="devis-ligne">
+        <h2 class="serif">Coordonnées</h2>
+        <p>{{ d.email }}</p>
+        @if (d.telephone) {
+          <p>{{ d.telephone }}</p>
+        }
+        <p>Profil : {{ d.profil === 'ASSURE' ? 'Assuré' : 'Prospect' }}</p>
+      </div>
+
+      <h2 class="serif">Contrats et paiement</h2>
+      @if (d.contrats.length === 0) {
+        <p>Aucun contrat.</p>
+      }
+      <ul class="mes-devis__liste">
+        @for (contrat of d.contrats; track contrat.numero) {
+          <li class="devis-ligne">
+            <div class="devis-ligne__entete">
+              <h3 class="serif">Contrat {{ contrat.numero }}</h3>
+              <span class="badge">{{ contrat.statut }}</span>
+            </div>
+            <p>{{ contrat.adresseLogement }}, {{ contrat.codePostal }} {{ contrat.ville }}</p>
+            <p>{{ formaterPrix(contrat.cotisationMensuelle) }}&#160;€/mois, effet le {{ formaterDate(contrat.dateEffet) }}</p>
+            @if (contrat.titulaire) {
+              <p>Titulaire du compte : {{ contrat.titulaire }}</p>
+              <p>IBAN : <span class="iban">{{ iban(contrat.ibanFin) }}</span></p>
+              <p>Prélèvement le {{ contrat.jourPrelevement }} de chaque mois, RUM {{ contrat.rum }}</p>
+            }
+          </li>
+        }
+      </ul>
+
+      <h2 class="serif">Documents</h2>
+      @if (d.documents.length === 0) {
+        <p>Aucun document.</p>
+      }
+      <ul class="mes-devis__liste">
+        @for (document of d.documents; track document.id) {
+          <li class="devis-ligne">
+            <p>{{ libelleCategorie(document.categorie) }} : {{ document.nomFichier }}</p>
+          </li>
+        }
+      </ul>
+    } @else if (erreur()) {
+      <h1 id="dossier-titre" class="serif">Dossier client</h1>
+      <p class="mes-devis__erreur" role="alert">Ce dossier n'a pas pu être chargé. Réessayez dans quelques instants.</p>
+    } @else {
+      <h1 id="dossier-titre" class="serif">Dossier client</h1>
+      <p>Chargement du dossier…</p>
+    }
+  </section>
+</main>

@@ -145,6 +145,8 @@
 					<!-- Lancement local (./mvnw spring-boot:run) : bouchon de la signature (code de connexion US-06 et lien US-07 : vrais e-mails) -->
 					<environmentVariables>
 						<CODE_BOUCHON_ACTIF>true</CODE_BOUCHON_ACTIF>
+						<!-- US-04 : comptes de recette (jamais en preprod ni en prod) -->
+						<DONNEES_TEST_ACTIVES>true</DONNEES_TEST_ACTIVES>
 					</environmentVariables>
 				</configuration>
 			</plugin>

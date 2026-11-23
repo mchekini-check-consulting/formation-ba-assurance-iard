@@ -194,6 +194,7 @@ class DevisEnregistreIT {
                 .andExpect(jsonPath("$[0].expire").value(false));
     }
 
+    /** US-04, AC2 : le devis d'un autre est refusé (« Accès non autorisé »), plus seulement introuvable. */
     @Test
     void unClientNeVoitNiNeTouchePasAuxDevisDUnAutre() throws Exception {
         enregistrer();
@@ -202,9 +203,9 @@ class DevisEnregistreIT {
         mockMvc.perform(get("/devis/enregistres").header(HttpHeaders.AUTHORIZATION, autre))
                 .andExpect(jsonPath("$.length()").value(0));
         mockMvc.perform(post(CHEMIN_REPRISE, reference).header(HttpHeaders.AUTHORIZATION, autre))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
         mockMvc.perform(delete("/devis/enregistres/{ref}", reference).header(HttpHeaders.AUTHORIZATION, autre))
-                .andExpect(status().isNotFound());
+                .andExpect(status().isForbidden());
 
         assertThat(devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(reference)).isPresent();
     }

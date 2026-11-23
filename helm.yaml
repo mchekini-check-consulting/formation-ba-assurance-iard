@@ -12,8 +12,8 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: "3679231"
-      qualif: "3679231"
+      dev: "54e8762"
+      qualif: "54e8762"
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -39,6 +39,9 @@ applications:
       # Bouchon de la signature de contrat (code de signature 123456). Jamais en preprod ni en prod.
       # Le code de connexion US-06 est envoyé par e-mail (Mailpit) : pas de code de test (CODE_TEST_CONNEXION_ACTIF éteint).
       - key: CODE_BOUCHON_ACTIF
+        value: {dev: "true", qualif: "true", preprod: "false", prod: "false"}
+      # US-04 : comptes de recette (2 assurés, un gestionnaire, un administrateur). Jamais en preprod ni en prod.
+      - key: DONNEES_TEST_ACTIVES
         value: {dev: "true", qualif: "true", preprod: "false", prod: "false"}
       # US-07 : adresse de l'écran de chaque environnement, base du lien de réinitialisation envoyé par e-mail.
       # Durée du lien : 24 heures par défaut (LIEN_REINITIALISATION_VALIDITE, non renseignée ici).
@@ -102,8 +105,8 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: dd0e524
-      qualif: dd0e524
+      dev: "54e8762"
+      qualif: "54e8762"
       preprod: ""
       prod: ""
     containerPort: 8080

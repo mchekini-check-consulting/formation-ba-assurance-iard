@@ -14,9 +14,26 @@
     <p>
       Vous êtes connecté avec <strong>{{ email() }}</strong>.
     </p>
-    <a class="btn" routerLink="/espace-client/devis">Mes devis</a>
-    @if (profil() === 'ADMINISTRATEUR') {
-      <a class="btn btn--contour" routerLink="/admin/profils">Gérer les profils</a>
+    <!-- US-04, AC3 : seulement les rubriques autorisées par le profil (droits de l'US-02 fournis par le serveur) -->
+    @if (peut('DEVIS', 'CONSULTER')) {
+      <a class="btn confirmation__action" routerLink="/espace-client/devis">Mes devis</a>
+    }
+    @if (peut('CONTRATS', 'CONSULTER')) {
+      <a class="btn confirmation__action" routerLink="/espace-client/contrats">Mes contrats</a>
+    }
+    @if (peut('DOCUMENTS', 'CONSULTER')) {
+      <a class="btn confirmation__action" routerLink="/espace-client/documents">Mes documents</a>
+    }
+    @if (estInterne()) {
+      @if (peut('COMPTES_UTILISATEURS', 'CONSULTER')) {
+        <a class="btn btn--contour confirmation__action" routerLink="/back-office/clients">Dossiers clients</a>
+      }
+      @if (profil() === 'ADMINISTRATEUR') {
+        <a class="btn btn--contour confirmation__action" routerLink="/admin/profils">Gérer les profils</a>
+      }
+      @if (peut('PROFILS', 'CONSULTER')) {
+        <a class="btn btn--contour confirmation__action" routerLink="/admin/acces-refuses">Journal des accès refusés</a>
+      }
     }
   </section>
 </main>

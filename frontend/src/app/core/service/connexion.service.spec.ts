@@ -117,6 +117,35 @@ describe('ConnexionService', () => {
       expect(service.profilClient()).toBe('GESTIONNAIRE');
     });
 
+    it('US-04 : retient les droits du profil fournis par le serveur, et les oublie avec la session', () => {
+      sessionStorage.setItem('assureasy.session', 'session');
+      const resultat = valide();
+      repondre(
+        '/api/assurance-iard-api/session',
+        { email: 'gina@exemple.fr', profil: 'GESTIONNAIRE', droits: ['CONTRATS:CONSULTER'] },
+        200,
+      );
+
+      expect(resultat()).toBe(true);
+      expect(service.aLeDroit('CONTRATS', 'CONSULTER')).toBe(true);
+      expect(service.aLeDroit('PROFILS', 'CONSULTER')).toBe(false);
+      expect(service.estInterne()).toBe(true);
+
+      valide();
+      repondre('/api/assurance-iard-api/session', {}, 401);
+      expect(service.aLeDroit('CONTRATS', 'CONSULTER')).toBe(false);
+      expect(service.estInterne()).toBe(false);
+    });
+
+    it('US-04 : une session sans liste de droits ne donne aucun droit (refus par défaut)', () => {
+      sessionStorage.setItem('assureasy.session', 'session');
+      valide();
+      repondre('/api/assurance-iard-api/session', { email: 'marie@exemple.fr', profil: 'ASSURE' }, 200);
+
+      expect(service.aLeDroit('DEVIS', 'CONSULTER')).toBe(false);
+      expect(service.estInterne()).toBe(false);
+    });
+
     it('oublie une session refusée par le backend', () => {
       sessionStorage.setItem('assureasy.session', 'session');
       const resultat = valide();

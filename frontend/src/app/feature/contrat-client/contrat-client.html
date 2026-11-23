@@ -1,0 +1,36 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="contrat-titre">
+    <a routerLink="/espace-client/contrats">← Mes contrats</a>
+    @if (contrat(); as c) {
+      <h1 id="contrat-titre" class="serif">Contrat {{ c.numero }}</h1>
+      <div class="devis-ligne">
+        <div class="devis-ligne__entete">
+          <h2 class="serif">Habitation</h2>
+          <span class="badge">{{ LIBELLES_STATUT[c.statut] }}</span>
+        </div>
+        <p>{{ c.adresseLogement }}, {{ c.codePostal }} {{ c.ville }}</p>
+        <p><strong>{{ formaterPrix(c.cotisationMensuelle) }}&#160;€/mois</strong> ({{ formaterPrix(c.cotisationAnnuelle) }}&#160;€/an)</p>
+        <p>Date d'effet : {{ formaterDate(c.dateEffet) }}</p>
+        <p>Prélèvement le {{ c.jourPrelevement }} de chaque mois</p>
+        <p>IBAN : <span class="iban">{{ iban(c.ibanFin) }}</span></p>
+        <p>Référence mandat (RUM) : {{ c.rum }}</p>
+      </div>
+    } @else if (erreur()) {
+      <h1 id="contrat-titre" class="serif">Contrat</h1>
+      <p class="mes-devis__erreur" role="alert">{{ erreur() }}</p>
+    } @else {
+      <h1 id="contrat-titre" class="serif">Contrat</h1>
+      <p>Chargement du contrat…</p>
+    }
+  </section>
+</main>

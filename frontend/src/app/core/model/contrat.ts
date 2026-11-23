@@ -30,10 +30,28 @@ export interface Contrat {
   cotisationAnnuelle: number;
   jourPrelevement: number;
   ibanFin: string;
-  ibanDebut: string | null;
   rum: string;
   datePremierPrelevement: string;
   dateEffet: string;
   resiliationHamon: boolean;
   dateCreation: string;
 }
+
+/** US-04 : un contrat dans « Mes contrats ». */
+export interface ContratResume {
+  referenceDevis: string;
+  numero: string;
+  statut: StatutContrat;
+  adresseLogement: string;
+  codePostal: string;
+  ville: string;
+  cotisationMensuelle: number;
+  dateEffet: string;
+}
+
+export const LIBELLES_STATUT: Record<StatutContrat, string> = {
+  EN_ATTENTE_DE_SIGNATURE: 'En attente de signature',
+  SIGNE: 'Signé',
+  ACTIF: 'Actif',
+  ANNULE: 'Annulé',
+};

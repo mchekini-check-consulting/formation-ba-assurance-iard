@@ -1,0 +1,40 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="mes-contrats-titre">
+    <h1 id="mes-contrats-titre" class="serif">Mes contrats</h1>
+
+    @if (chargement()) {
+      <p>Chargement de vos contrats…</p>
+    } @else if (liste() === null) {
+      <p class="mes-devis__erreur" role="alert">Vos contrats n'ont pas pu être chargés. Réessayez dans quelques instants.</p>
+    } @else if (liste()?.length === 0) {
+      <p>Vous n'avez pas encore de contrat.</p>
+    }
+
+    <ul class="mes-devis__liste">
+      @for (contrat of liste(); track contrat.numero) {
+        <li class="devis-ligne">
+          <div class="devis-ligne__entete">
+            <h2 class="serif">Contrat {{ contrat.numero }}</h2>
+            <span class="badge">{{ LIBELLES_STATUT[contrat.statut] }}</span>
+          </div>
+          <p>{{ contrat.adresseLogement }}, {{ contrat.codePostal }} {{ contrat.ville }}</p>
+          <p><strong>{{ formaterPrix(contrat.cotisationMensuelle) }}&#160;€/mois</strong></p>
+          <p>Date d'effet : {{ formaterDate(contrat.dateEffet) }}</p>
+          <div class="devis-ligne__actions">
+            <a class="btn" [routerLink]="['/espace-client/contrats', contrat.referenceDevis]">Voir le contrat</a>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+</main>

@@ -4,6 +4,10 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.IdentiteResponse;
 import net.checkconsulting.assuranceiard.api.dto.InformationsRequest;
+import net.checkconsulting.assuranceiard.api.model.Droit;
+import net.checkconsulting.assuranceiard.api.model.Rubrique;
+import net.checkconsulting.assuranceiard.api.securite.Acces;
+import net.checkconsulting.assuranceiard.api.securite.TypeRessource;
 import net.checkconsulting.assuranceiard.api.service.InformationsService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -23,12 +27,15 @@ public class InformationsResource {
     private final InformationsService informationsService;
 
     @GetMapping("/devis/informations")
+    @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CONSULTER)
     public IdentiteResponse lire(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         return informationsService.lire(authorization);
     }
 
     @PostMapping(path = "/devis/informations", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CREER,
+            ressource = TypeRessource.SOUSCRIPTION, identifiant = "demande.referenceDevis")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void enregistrer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,

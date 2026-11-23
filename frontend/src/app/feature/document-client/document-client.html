@@ -1,0 +1,26 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="document-titre">
+    <a routerLink="/espace-client/documents">← Mes documents</a>
+    <h1 id="document-titre" class="serif">Document</h1>
+    @if (adresse(); as lien) {
+      <p>Votre document est prêt.</p>
+      <div class="devis-ligne__actions">
+        <a class="btn" [href]="lien" target="_blank" rel="noopener">Ouvrir le document</a>
+      </div>
+    } @else if (erreur()) {
+      <p class="mes-devis__erreur" role="alert">Ce document n'a pas pu être ouvert. Réessayez dans quelques instants.</p>
+    } @else {
+      <p>Chargement du document…</p>
+    }
+  </section>
+</main>

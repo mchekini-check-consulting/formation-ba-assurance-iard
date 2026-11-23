@@ -35,6 +35,43 @@ describe('EspaceClient', () => {
     expect(page.querySelector('strong')?.textContent).toBe('marie@exemple.fr');
   });
 
+  describe('US-04, AC3 : rubriques selon les droits du profil', () => {
+    const liens = (): string[] =>
+      Array.from(page.querySelectorAll('main a')).map((lien) => lien.textContent?.trim() ?? '');
+
+    const afficherAvec = (profil: string, droits: string[]): void => {
+      connexionService.profilClient.set(profil);
+      connexionService.droitsClient.set(droits);
+      const fixture = TestBed.createComponent(EspaceClient);
+      fixture.detectChanges();
+      page = fixture.nativeElement as HTMLElement;
+    };
+
+    it("un assuré voit ses rubriques autorisées et jamais le back-office, même avec le droit « Comptes »", () => {
+      afficherAvec('ASSURE', ['DEVIS:CONSULTER', 'CONTRATS:CONSULTER', 'COMPTES_UTILISATEURS:CONSULTER']);
+
+      expect(liens()).toEqual(['Mes devis', 'Mes contrats']);
+    });
+
+    it('une rubrique dont le droit est retiré disparaît (AC5)', () => {
+      afficherAvec('ASSURE', ['DEVIS:CONSULTER']);
+
+      expect(liens()).toEqual(['Mes devis']);
+    });
+
+    it("l'administrateur voit le back-office, la gestion des profils et le journal", () => {
+      afficherAvec('ADMINISTRATEUR', ['COMPTES_UTILISATEURS:CONSULTER', 'PROFILS:CONSULTER', 'DOCUMENTS:CONSULTER']);
+
+      expect(liens()).toEqual(['Mes documents', 'Dossiers clients', 'Gérer les profils', 'Journal des accès refusés']);
+    });
+
+    it('le gestionnaire voit les dossiers clients mais pas la gestion des profils', () => {
+      afficherAvec('GESTIONNAIRE', ['COMPTES_UTILISATEURS:CONSULTER']);
+
+      expect(liens()).toEqual(['Dossiers clients']);
+    });
+  });
+
   it("propose « Se déconnecter » dans l'en-tête (US-07, AC3)", () => {
     expect(page.querySelector('header button')?.textContent).toContain('Se déconnecter');
   });
