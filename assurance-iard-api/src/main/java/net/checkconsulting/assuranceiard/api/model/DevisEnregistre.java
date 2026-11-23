@@ -18,15 +18,23 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
-/** US-12 : devis enregistré par un client, avec son prix garanti et sa date de fin de validité. */
+/**
+ * US-12 : devis enregistré par un client, avec son prix garanti et sa date de fin de validité.
+ * T-05 : la table accueille aussi les devis auto (colonnes logement vides). Le code du sprint 1 ne connaît que
+ * l'habitation : les devis auto lui restent invisibles jusqu'aux fonctionnalités auto du sprint 2.
+ */
 @Entity
 @Table(name = "devis_enregistre")
+@SQLRestriction("produit = 'HABITATION'")
 @Getter
 @Setter
 @NoArgsConstructor
 public class DevisEnregistre {
+
+    public static final String PRODUIT_HABITATION = "HABITATION";
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -108,4 +116,26 @@ public class DevisEnregistre {
 
     @Column(name = "date_dernier_contact", nullable = false)
     private Instant dateDernierContact;
+
+    /** T-05 : HABITATION ou AUTO. */
+    @Column(nullable = false, length = 12)
+    private String produit = PRODUIT_HABITATION;
+
+    /** T-05 : étape du devis (la colonne statut existante décrit l'occupant du logement). */
+    @Column(name = "statut_devis", nullable = false, length = 20)
+    private String statutDevis = "EN_COURS";
+
+    @Column(name = "formule_conseillee", length = 20)
+    private String formuleConseillee;
+
+    @Column(name = "choix_different_conseil")
+    private Boolean choixDifferentConseil;
+
+    /** T-05 : réponses aux questions de besoins (devis auto) ; l'habitation garde recommandation_devis. */
+    @JdbcTypeCode(SqlTypes.JSON)
+    @Column(name = "reponses_besoins")
+    private String reponsesBesoins;
+
+    @Column(name = "date_modification")
+    private Instant dateModification;
 }
