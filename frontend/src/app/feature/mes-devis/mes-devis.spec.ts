@@ -102,6 +102,13 @@ describe('MesDevis', () => {
     expect(router.navigate).toHaveBeenCalledWith(['/devis/formule']);
   });
 
+  it('affiche le picto de la formule à côté de son nom', () => {
+    afficher([valide]);
+    const titre = page.querySelector('.devis-ligne h2')!;
+    expect(titre.textContent?.trim()).toBe('Formule Confort');
+    expect(titre.querySelector('img.picto-formule')?.getAttribute('src')).toBe('picto-confort.png');
+  });
+
   it('signale un devis impossible à reprendre', () => {
     afficher([valide]);
     cliquer('Reprendre');

@@ -56,14 +56,29 @@ describe('Landing', () => {
     expect(page.querySelectorAll('.faq')).toHaveLength(4);
   });
 
+  it("affiche l'image principale en fond du haut de page, autour de l'accroche et du formulaire", () => {
+    const hautDePage = page.querySelector('main section.bloc--image')!;
+    expect(hautDePage).toBeTruthy();
+    expect(hautDePage.querySelector('h1')).toBeTruthy();
+    expect(hautDePage.querySelector('form.tarif')).toBeTruthy();
+  });
+
   it("présente uniquement l'offre habitation, à partir de 7,90 €/mois TTC", () => {
     expect(page.querySelector('.prix')?.textContent).toContain('7,90 €/mois TTC');
-    expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent)).toEqual([
+    expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent?.trim())).toEqual([
       'Essentielle',
       'Confort',
       'Sérénité',
     ]);
     expect(page.textContent).not.toMatch(/auto(mobile)?\b/i);
+  });
+
+  it('affiche le picto de chaque formule à côté de son nom', () => {
+    expect(Array.from(page.querySelectorAll('.carte h3 img.carte__picto')).map((i) => i.getAttribute('src'))).toEqual([
+      'picto-essentielle.png',
+      'picto-confort.png',
+      'picto-serenite.png',
+    ]);
   });
 
   it("affiche l'en-tête avec le logo et les 3 boutons d'accès", () => {

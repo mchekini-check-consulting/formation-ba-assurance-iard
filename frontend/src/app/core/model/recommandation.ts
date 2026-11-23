@@ -28,6 +28,8 @@ export interface DetailFormule {
   plafond: string;
   plafondValeur: number;
   garanties: string[];
+  /** Picto de la formule (dossier public du frontend). */
+  picto: string;
 }
 
 export const PLAFOND_SERENITE = 35_000;
@@ -38,6 +40,7 @@ export const FORMULES: Record<Formule, DetailFormule> = {
     description: 'Les garanties indispensables : dégâts des eaux, incendie, vol et responsabilité civile.',
     plafond: '10 000 €',
     plafondValeur: 10_000,
+    picto: 'picto-essentielle.png',
     garanties: ['Dégâts des eaux', 'Incendie & explosion', 'Vol & vandalisme', 'Responsabilité civile'],
   },
   confort: {
@@ -45,6 +48,7 @@ export const FORMULES: Record<Formule, DetailFormule> = {
     description: "L'équilibre entre protection et budget, pour la plupart des logements.",
     plafond: '20 000 €',
     plafondValeur: 20_000,
+    picto: 'picto-confort.png',
     garanties: [
       'Dégâts des eaux',
       'Incendie & explosion',
@@ -60,6 +64,7 @@ export const FORMULES: Record<Formule, DetailFormule> = {
     description: 'La protection la plus large, avec remboursement à neuf.',
     plafond: '35 000 €',
     plafondValeur: 35_000,
+    picto: 'picto-serenite.png',
     garanties: [
       'Dégâts des eaux',
       'Incendie & explosion',

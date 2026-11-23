@@ -201,3 +201,21 @@ a {
   font-size: 13px;
 }
 
+
+/* Picto d'une formule (Essentielle, Confort, Sérénité) à côté de son nom. */
+.avec-picto {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.picto-formule {
+  flex: none;
+  width: 40px;
+  height: 40px;
+
+  &--petit {
+    width: 22px;
+    height: 22px;
+  }
+}
