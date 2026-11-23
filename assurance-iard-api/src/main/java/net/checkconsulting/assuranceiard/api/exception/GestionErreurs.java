@@ -145,6 +145,11 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
+    @ExceptionHandler({DocumentInconnuException.class, ClientInconnuException.class})
+    public ProblemDetail introuvable(RuntimeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
     @ExceptionHandler(AccesNonAutoriseException.class)
     public ProblemDetail accesNonAutorise(AccesNonAutoriseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());

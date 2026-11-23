@@ -25,7 +25,6 @@ const UN_CONTRAT = {
   cotisationAnnuelle: 222.0,
   jourPrelevement: 10,
   ibanFin: '7890',
-  ibanDebut: 'FR76',
   rum: 'AE-2026-ABCDEF12',
   datePremierPrelevement: '2026-12-10',
   dateEffet: '2026-12-01',

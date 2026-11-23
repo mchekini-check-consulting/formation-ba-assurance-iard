@@ -11,6 +11,7 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
+import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
@@ -23,6 +24,7 @@ import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.Contrat;
 import net.checkconsulting.assuranceiard.api.model.DossierSouscription;
 import net.checkconsulting.assuranceiard.api.model.MandatSepa;
+import net.checkconsulting.assuranceiard.api.model.Profil;
 import net.checkconsulting.assuranceiard.api.model.RecommandationDevis;
 import net.checkconsulting.assuranceiard.api.model.TarifDevis;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
@@ -100,7 +102,28 @@ public class ContratService {
         codeSignatureService.verifier(contrat, demande.code());
         contrat.setStatut(STATUT_ACTIF);
         contrat = contratRepository.save(contrat);
+        devenirAssure(dossier.getCompte());
         return construireReponse(contrat, dossier);
+    }
+
+    /** US-04, AC1 : contrats du client connecté uniquement. */
+    @Transactional
+    public List<ContratResumeResponse> lister(String authorization) {
+        Compte compte = sessionService.compteConnecte(authorization);
+        return contratRepository.findByDossierCompteOrderByDateCreationDesc(compte).stream()
+                .map(contrat -> new ContratResumeResponse(contrat.getDossier().getReferenceDevis(),
+                        contrat.getNumero(), contrat.getStatut(), contrat.getAdresseLogement(),
+                        contrat.getCodePostal(), contrat.getVille(), contrat.getCotisationMensuelle(),
+                        contrat.getDateEffet()))
+                .toList();
+    }
+
+    /** US-04 : un prospect qui signe son contrat devient assuré (les droits de l'US-02 suivent son nouveau profil). */
+    private void devenirAssure(Compte compte) {
+        if (compte.getProfil() == Profil.PROSPECT) {
+            compte.setProfil(Profil.ASSURE);
+            log.info("Profil mis à jour après signature : profil={}", Profil.ASSURE);
+        }
     }
 
     private ContratResponse creerEtRepondre(DossierSouscription dossier, GenerationContratRequest demande) {
@@ -163,7 +186,6 @@ public class ContratService {
                 contrat.getCotisationAnnuelle(),
                 mandat.getJourPrelevement(),
                 mandat.getIbanFin(),
-                mandat.getIbanDebut(),
                 mandat.getRum(),
                 mandat.getDatePremierPrelevement(),
                 contrat.getDateEffet(),

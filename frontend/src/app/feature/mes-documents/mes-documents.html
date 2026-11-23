@@ -1,0 +1,35 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis" aria-labelledby="mes-documents-titre">
+    <h1 id="mes-documents-titre" class="serif">Mes documents</h1>
+
+    @if (chargement()) {
+      <p>Chargement de vos documents…</p>
+    } @else if (liste() === null) {
+      <p class="mes-devis__erreur" role="alert">Vos documents n'ont pas pu être chargés. Réessayez dans quelques instants.</p>
+    } @else if (liste()?.length === 0) {
+      <p>Vous n'avez pas encore déposé de document.</p>
+    }
+
+    <ul class="mes-devis__liste">
+      @for (document of liste(); track document.id) {
+        <li class="devis-ligne">
+          <h2 class="serif">{{ libelleCategorie(document.categorie) }}</h2>
+          <p>{{ document.nomFichier }}</p>
+          <div class="devis-ligne__actions">
+            <a class="btn" [routerLink]="['/espace-client/documents', document.id]">Ouvrir</a>
+          </div>
+        </li>
+      }
+    </ul>
+  </section>
+</main>

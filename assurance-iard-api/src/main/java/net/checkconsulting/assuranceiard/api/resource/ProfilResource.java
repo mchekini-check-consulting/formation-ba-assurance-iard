@@ -7,7 +7,10 @@ import net.checkconsulting.assuranceiard.api.dto.MiseAJourPermissionsRequest;
 import net.checkconsulting.assuranceiard.api.dto.ProfilInfoDto;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.model.Compte;
+import net.checkconsulting.assuranceiard.api.model.Droit;
 import net.checkconsulting.assuranceiard.api.model.Profil;
+import net.checkconsulting.assuranceiard.api.model.Rubrique;
+import net.checkconsulting.assuranceiard.api.securite.Acces;
 import net.checkconsulting.assuranceiard.api.service.ProfilService;
 import net.checkconsulting.assuranceiard.api.service.SessionService;
 import org.springframework.http.HttpHeaders;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+/** US-02. US-04 : back-office, droits « Profils » contrôlés avant l'appel ; la gestion reste réservée à l'administrateur. */
 @RestController
 @RequestMapping("/admin/profils")
 @RequiredArgsConstructor
@@ -30,6 +34,7 @@ public class ProfilResource {
     private final SessionService sessionService;
 
     @GetMapping
+    @Acces(rubrique = Rubrique.PROFILS, droit = Droit.CONSULTER, backOffice = true)
     @LogMetier(champs = {"resultat.taille"})
     public List<ProfilInfoDto> lister(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
@@ -39,6 +44,7 @@ public class ProfilResource {
     }
 
     @PutMapping("/{profil}/permissions")
+    @Acces(rubrique = Rubrique.PROFILS, droit = Droit.MODIFIER, backOffice = true)
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @LogMetier(champs = {"profil"})
     public void mettreAJourPermissions(
@@ -51,6 +57,7 @@ public class ProfilResource {
     }
 
     @GetMapping("/{profil}/historique")
+    @Acces(rubrique = Rubrique.PROFILS, droit = Droit.CONSULTER, backOffice = true)
     @LogMetier(champs = {"profil", "resultat.taille"})
     public List<HistoriqueEntreeDto> lireHistorique(
             @PathVariable String profil,

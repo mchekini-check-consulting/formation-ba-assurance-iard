@@ -1,6 +1,7 @@
 import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
+import { droitGuard } from './core/guards/droit.guard';
 import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
@@ -62,18 +63,59 @@ export const routes: Routes = [
     canActivate: [sessionGuard],
     title: "Mon espace – Assur'Easy",
   },
+  // US-04 : chaque page vérifie le droit du profil, relu auprès du serveur (le serveur refait le contrôle).
   {
     path: 'espace-client/documents',
-    component: PageSimple,
-    canActivate: [sessionGuard],
+    loadComponent: () => import('./feature/mes-documents/mes-documents').then((m) => m.MesDocuments),
+    canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
     title: "Mes documents – Assur'Easy",
-    data: { titre: 'Mes documents' },
+  },
+  {
+    path: 'espace-client/documents/:id',
+    loadComponent: () => import('./feature/document-client/document-client').then((m) => m.DocumentClientPage),
+    canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
+    title: "Document – Assur'Easy",
   },
   {
     path: 'espace-client/devis',
     component: MesDevis,
-    canActivate: [sessionGuard],
+    canActivate: [droitGuard('DEVIS', 'CONSULTER')],
     title: "Mes devis – Assur'Easy",
+  },
+  {
+    path: 'espace-client/contrats',
+    loadComponent: () => import('./feature/mes-contrats/mes-contrats').then((m) => m.MesContrats),
+    canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+    title: "Mes contrats – Assur'Easy",
+  },
+  {
+    path: 'espace-client/contrats/:reference',
+    loadComponent: () => import('./feature/contrat-client/contrat-client').then((m) => m.ContratClient),
+    canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+    title: "Mon contrat – Assur'Easy",
+  },
+  {
+    path: 'back-office/clients',
+    loadComponent: () => import('./feature/dossiers-clients/dossiers-clients').then((m) => m.DossiersClients),
+    canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
+    title: "Dossiers clients – Assur'Easy",
+  },
+  {
+    path: 'back-office/clients/:id',
+    loadComponent: () => import('./feature/dossier-client/dossier-client').then((m) => m.DossierClient),
+    canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
+    title: "Dossier client – Assur'Easy",
+  },
+  {
+    path: 'admin/acces-refuses',
+    loadComponent: () => import('./feature/journal-acces/journal-acces').then((m) => m.JournalAcces),
+    canActivate: [droitGuard('PROFILS', 'CONSULTER', true)],
+    title: "Journal des accès refusés – Assur'Easy",
+  },
+  {
+    path: 'acces-non-autorise',
+    loadComponent: () => import('./feature/acces-non-autorise/acces-non-autorise').then((m) => m.AccesNonAutorise),
+    title: "Accès non autorisé – Assur'Easy",
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {

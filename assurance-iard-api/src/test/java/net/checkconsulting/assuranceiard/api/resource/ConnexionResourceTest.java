@@ -11,6 +11,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.time.Instant;
+import java.util.List;
 import net.checkconsulting.assuranceiard.api.dto.SessionCouranteResponse;
 import net.checkconsulting.assuranceiard.api.dto.SessionResponse;
 import net.checkconsulting.assuranceiard.api.dto.VerificationResponse;
@@ -147,11 +148,12 @@ class ConnexionResourceTest {
 
     @Test
     void lectureDeLaSession() throws Exception {
-        when(sessionService.lire("Bearer session")).thenReturn(new SessionCouranteResponse("marie@exemple.fr", "PROSPECT"));
+        when(sessionService.lire("Bearer session")).thenReturn(new SessionCouranteResponse("marie@exemple.fr", "PROSPECT", List.of("DEVIS:CONSULTER")));
 
         mockMvc.perform(get("/session").header(HttpHeaders.AUTHORIZATION, "Bearer session"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.email").value("marie@exemple.fr"));
+                .andExpect(jsonPath("$.email").value("marie@exemple.fr"))
+                .andExpect(jsonPath("$.droits[0]").value("DEVIS:CONSULTER"));
     }
 
     @Test

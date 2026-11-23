@@ -2,7 +2,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { apiBase } from '../config/api';
-import { Contrat, DemandeContrat } from '../model/contrat';
+import { Contrat, ContratResume, DemandeContrat } from '../model/contrat';
 
 export type ResultatGeneration =
   | { statut: 'genere'; contrat: Contrat }
@@ -34,6 +34,11 @@ export type ResultatSignature =
 export class ContratService {
   private readonly http = inject(HttpClient);
   private readonly url = `${apiBase('assurance-iard-api')}/devis/contrat`;
+
+  /** US-04, AC1 : les contrats du client connecté ; null s'ils n'ont pas pu être chargés. */
+  lister(): Observable<ContratResume[] | null> {
+    return this.http.get<ContratResume[]>(`${apiBase('assurance-iard-api')}/contrats`).pipe(catchError(() => of(null)));
+  }
 
   generer(demande: DemandeContrat): Observable<ResultatGeneration> {
     return this.http.post<Contrat>(this.url, demande).pipe(

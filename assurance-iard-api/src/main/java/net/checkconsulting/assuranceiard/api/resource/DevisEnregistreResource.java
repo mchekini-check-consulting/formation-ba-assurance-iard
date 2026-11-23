@@ -8,6 +8,11 @@ import net.checkconsulting.assuranceiard.api.dto.DevisEnregistreResponse;
 import net.checkconsulting.assuranceiard.api.dto.DevisRequest;
 import net.checkconsulting.assuranceiard.api.dto.RepriseDevisResponse;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
+import net.checkconsulting.assuranceiard.api.model.Droit;
+import net.checkconsulting.assuranceiard.api.model.Rubrique;
+import net.checkconsulting.assuranceiard.api.securite.Acces;
+import net.checkconsulting.assuranceiard.api.securite.AccesPublic;
+import net.checkconsulting.assuranceiard.api.securite.TypeRessource;
 import net.checkconsulting.assuranceiard.api.service.DevisEnregistreService;
 import org.springframework.http.ContentDisposition;
 import org.springframework.http.HttpHeaders;
@@ -32,6 +37,7 @@ public class DevisEnregistreResource {
     private final DevisEnregistreService service;
 
     @PostMapping("/devis/enregistres")
+    @Acces(rubrique = Rubrique.DEVIS, droit = Droit.CREER)
     @LogMetier(champs = {"demande.formule", "demande.franchise", "demande.options"})
     public DevisEnregistreResponse enregistrer(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
@@ -40,6 +46,7 @@ public class DevisEnregistreResource {
     }
 
     @GetMapping("/devis/enregistres")
+    @Acces(rubrique = Rubrique.DEVIS, droit = Droit.CONSULTER)
     @LogMetier(champs = {"resultat.taille"})
     public List<DevisEnregistreResponse> lister(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
@@ -47,6 +54,7 @@ public class DevisEnregistreResource {
     }
 
     @PostMapping("/devis/enregistres/{reference}/reprise")
+    @Acces(rubrique = Rubrique.DEVIS, droit = Droit.MODIFIER, ressource = TypeRessource.DEVIS, identifiant = "reference")
     @LogMetier(champs = {"resultat.formule", "resultat.franchise", "resultat.prixMensuel"})
     public RepriseDevisResponse reprendre(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization,
@@ -54,7 +62,9 @@ public class DevisEnregistreResource {
         return service.reprendre(authorization, reference);
     }
 
+    /** RGPD : supprimer son devis relève de « Modifier » (le droit « Désactiver » n'est pas donné aux clients). */
     @DeleteMapping("/devis/enregistres/{reference}")
+    @Acces(rubrique = Rubrique.DEVIS, droit = Droit.MODIFIER, ressource = TypeRessource.DEVIS, identifiant = "reference")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @LogMetier
     public void supprimer(
@@ -63,7 +73,9 @@ public class DevisEnregistreResource {
         service.supprimer(authorization, reference);
     }
 
+    /** Devis sans compte (RG2 de l'US-12). */
     @PostMapping("/devis/pdf")
+    @AccesPublic
     public ResponseEntity<byte[]> telecharger(@Valid @RequestBody DevisRequest demande) {
         return ResponseEntity.ok()
                 .contentType(MediaType.APPLICATION_PDF)

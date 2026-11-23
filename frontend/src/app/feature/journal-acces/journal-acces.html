@@ -1,0 +1,49 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
+  </div>
+</header>
+
+<main class="page">
+  <section class="mes-devis journal" aria-labelledby="journal-titre">
+    <h1 id="journal-titre" class="serif">Journal des accès refusés</h1>
+
+    @if (chargement()) {
+      <p>Chargement du journal…</p>
+    } @else if (lignes() === null) {
+      <p class="mes-devis__erreur" role="alert">Le journal n'a pas pu être chargé. Réessayez dans quelques instants.</p>
+    } @else if (lignes()?.length === 0) {
+      <p>Aucun accès refusé pour le moment.</p>
+    } @else {
+      <div class="journal__defilement">
+        <table class="journal__tableau">
+          <caption>Les 200 dernières tentatives, les plus récentes d'abord</caption>
+          <thead>
+            <tr>
+              <th scope="col">Date</th>
+              <th scope="col">Utilisateur</th>
+              <th scope="col">Ressource demandée</th>
+              <th scope="col">Action</th>
+              <th scope="col">Motif</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (ligne of lignes(); track $index) {
+              <tr>
+                <td>{{ date(ligne.date) }}</td>
+                <td>{{ ligne.email }}<br /><small>{{ ligne.profil }}</small></td>
+                <td>{{ ligne.methode }} {{ ligne.chemin }}</td>
+                <td>{{ ligne.rubrique }} / {{ ligne.droit }}</td>
+                <td>{{ motif(ligne.motif) }}</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+  </section>
+</main>
