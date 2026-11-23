@@ -53,8 +53,9 @@ public class Contrat {
     @Column(nullable = false)
     private Integer surface;
 
-    @Column(nullable = false)
-    private Integer franchise;
+    /** T-05 : décimal(10,2) en euros. */
+    @Column(nullable = false, precision = 10, scale = 2)
+    private BigDecimal franchise;
 
     @Column(name = "cotisation_mensuelle", nullable = false, precision = 10, scale = 2)
     private BigDecimal cotisationMensuelle;

@@ -30,6 +30,7 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,9 +41,13 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Slf4j
 @Component
+@Order(DonneesRecette.ORDRE)
 @ConditionalOnProperty(name = "assurance.donnees-test.actif", havingValue = "true")
 @RequiredArgsConstructor
 public class DonneesRecette implements ApplicationRunner {
+
+    /** Exécuté avant le complément T-05 ({@link DonneesRecetteSprint2}), qui s'appuie sur ces comptes. */
+    static final int ORDRE = 1;
 
     static final String ASSURE_1 = "recette.assure1@assureasy.fr";
     static final String ASSURE_2 = "recette.assure2@assureasy.fr";
@@ -152,6 +157,10 @@ public class DonneesRecette implements ApplicationRunner {
         enregistre.setDateCreation(maintenant);
         enregistre.setDateFinValidite(LocalDate.ofInstant(maintenant, FRANCE).plusDays(30));
         enregistre.setDateDernierContact(maintenant);
+        enregistre.setProduit(DevisEnregistre.PRODUIT_HABITATION);
+        enregistre.setStatutDevis("TRANSFORME");
+        enregistre.setFormuleConseillee(FORMULE);
+        enregistre.setChoixDifferentConseil(false);
         return enregistre;
     }
 
@@ -189,6 +198,7 @@ public class DonneesRecette implements ApplicationRunner {
         mandat.setDatePremierPrelevement(debut.withDayOfMonth(10).plusMonths(1));
         mandat.setDateCreation(horloge.instant());
         mandat.setDateSignature(horloge.instant());
+        mandat.setCompteId(dossier.getCompte().getId());
         return mandat;
     }
 
@@ -202,7 +212,7 @@ public class DonneesRecette implements ApplicationRunner {
         contrat.setVille(assure.ville());
         contrat.setTypeLogement(TYPE_LOGEMENT);
         contrat.setSurface(40 + assure.rang() * 10);
-        contrat.setFranchise(300);
+        contrat.setFranchise(new BigDecimal("300.00"));
         contrat.setCotisationMensuelle(COTISATION);
         contrat.setCotisationAnnuelle(new BigDecimal("222.00"));
         contrat.setResiliationHamon(false);

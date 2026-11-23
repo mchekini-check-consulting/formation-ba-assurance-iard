@@ -144,7 +144,7 @@ public class ContratService {
         contrat.setVille(demande.ville());
         contrat.setTypeLogement(demande.typeLogement());
         contrat.setSurface(demande.surface());
-        contrat.setFranchise(demande.franchise());
+        contrat.setFranchise(BigDecimal.valueOf(demande.franchise()));
         contrat.setCotisationMensuelle(mensuelle);
         contrat.setCotisationAnnuelle(annuelle);
         contrat.setResiliationHamon(demande.resiliationHamon());
@@ -181,7 +181,7 @@ public class ContratService {
                 contrat.getSurface(),
                 formule,
                 options,
-                contrat.getFranchise(),
+                contrat.getFranchise().intValue(),
                 contrat.getCotisationMensuelle(),
                 contrat.getCotisationAnnuelle(),
                 mandat.getJourPrelevement(),

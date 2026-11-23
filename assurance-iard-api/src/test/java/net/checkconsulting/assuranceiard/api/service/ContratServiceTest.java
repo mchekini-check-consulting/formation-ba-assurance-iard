@@ -260,7 +260,7 @@ class ContratServiceTest {
         contrat.setVille("Paris");
         contrat.setTypeLogement("appartement");
         contrat.setSurface(45);
-        contrat.setFranchise(300);
+        contrat.setFranchise(new BigDecimal("300.00"));
         contrat.setCotisationMensuelle(new BigDecimal("18.50"));
         contrat.setCotisationAnnuelle(new BigDecimal("222.00"));
         contrat.setResiliationHamon(false);
