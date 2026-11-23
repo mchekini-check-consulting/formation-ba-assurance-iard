@@ -12,6 +12,7 @@ import {
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
+import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
 import { DevisFormule } from './feature/devis-formule/devis-formule';
 import { DevisContrat } from './feature/devis-contrat/devis-contrat';
@@ -117,6 +118,7 @@ export const routes: Routes = [
     loadComponent: () => import('./feature/acces-non-autorise/acces-non-autorise').then((m) => m.AccesNonAutorise),
     title: "Accès non autorisé – Assur'Easy",
   },
+  { path: 'devis-auto/vehicule', component: DevisAutoVehicule, title: "Étape 1.1 – Retrouver mon véhicule – Assur'Easy" },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {
     path: 'devis/besoins',
