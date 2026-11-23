@@ -150,6 +150,16 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    @ExceptionHandler(DocumentIndisponibleException.class)
+    public ProblemDetail documentIndisponible(DocumentIndisponibleException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    @ExceptionHandler(DocumentAltereException.class)
+    public ProblemDetail documentAltere(DocumentAltereException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.INTERNAL_SERVER_ERROR, exception.getMessage());
+    }
+
     @ExceptionHandler(AccesNonAutoriseException.class)
     public ProblemDetail accesNonAutorise(AccesNonAutoriseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());

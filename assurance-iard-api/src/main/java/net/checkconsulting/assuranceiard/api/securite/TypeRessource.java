@@ -14,5 +14,7 @@ public enum TypeRessource {
     /** Contrat (US-15), identifié par la référence du devis. */
     CONTRAT,
     /** Document déposé (US-13), identifié par son numéro. */
-    DOCUMENT
+    DOCUMENT,
+    /** Document PDF généré (T-03 : conditions particulières...), identifié par son numéro dans la table document. */
+    DOCUMENT_CONTRAT
 }

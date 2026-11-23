@@ -1,6 +1,7 @@
 # Dictionnaire de données — Assur'Easy
 
-Schéma après le ticket **T-05** (IA-236, sprint 2) : migrations `V1` à `V27` (dont le correctif `V22.1`) d'`assurance-iard-api`
+Schéma après les tickets **T-05** (IA-236, sprint 2) et **T-03** (IA-238, documents PDF : `V28`) : migrations `V1` à `V28`
+(dont le correctif `V22.1`) d'`assurance-iard-api`
 (base `assurance_iard`) et `V1` à `V5` de `moteurtarifaire` (base `moteurtarifaire`).
 Les tableaux des colonnes et des contraintes en fin de document sont **générés depuis la base** après migration :
 ils font foi en cas de doute.
@@ -75,11 +76,12 @@ compte ─┬─< dossier_souscription ─┬─ mandat_sepa (1 par dossier, hab
         │                     └─< devis_option
         └─< contrat ─┬─> mandat_sepa, vehicule, conducteur (principal), devis_enregistre
                      ├─< contrat_option, historique_statut_contrat
-                     ├─< document (versionné) <─ facture, avenant, preuve_signature
+                     ├─< document (versionné) <─ facture, avenant, preuve_signature ; document ── document_contenu (PDF, T-03)
                      ├─< echeance, facture
                      ├─< avenant ─< avenant_ligne
                      ├─< preuve_signature, declaration_fva, resiliation_hamon
                      └─< sinistre ─< piece_jointe ; sinistre ─< document
+document sans contrat : conditions générales (reference = HABITATION / AUTO), IPID (reference = formule)
 ref_vehicule ─< ref_plaque_test                       (référentiels, données T-04)
 grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire, données T-04)
 ```
@@ -89,7 +91,8 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 | Règle | Où |
 |---|---|
 | Uniques : `contrat.numero`, `facture.numero`, `sinistre.numero`, `mandat_sepa.rum`, `ref_plaque_test.immatriculation` ; `avenant (contrat_id, numero)` ; `devis_auto.devis_id` | contraintes `UNIQUE` |
-| Une seule version EN_VIGUEUR par (contrat, type) de document ; un seul avenant EN_ATTENTE par contrat | index uniques partiels `uk_document_en_vigueur`, `uk_avenant_en_attente` |
+| Une seule version EN_VIGUEUR par (contrat, type, référence) de document (T-03 : plusieurs factures et avenants par contrat ; une version en vigueur des conditions générales par produit) ; les documents sans contrat ni référence (sinistre, devis) ne sont pas concernés ; un seul avenant EN_ATTENTE par contrat | index uniques partiels `uk_document_en_vigueur`, `uk_avenant_en_attente` |
+| PDF d'un document : un seul par document, entre 1 octet et 5 Mo, taille annoncée = taille réelle | `uk_document_contenu_document`, `CHECK` sur `document_contenu` |
 | Bonus-malus entre 0,50 et 3,50 ; jour de prélèvement 5, 10 ou 15 ; TTC = HT + taxe | `CHECK` |
 | Date d'acquisition ≥ mise en circulation et pas après la création de la ligne ; date du sinistre pas après la création ; date d'effet souhaitée entre le lendemain et 90 jours après la création | `CHECK` (la comparaison avec la date du jour est faite par l'application) |
 | Immatriculation au format `AA-123-AA` si renseignée | `CHECK` (pas de contrôle de format sur les numéros de contrat, facture, sinistre) |
@@ -106,6 +109,8 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 - **IBAN** : jamais conservé en entier, ni en clair ni chiffré (`iban_debut`, `iban_fin`, `iban_masque` seulement).
 - **Santé** : aucune donnée médicale ; `sinistre.blesses` est un simple booléen.
 - **Devis** : `devis_enregistre.date_dernier_contact` sert à la purge à 3 ans (US-12).
+- **Documents PDF (T-03)** : l'IBAN n'y figure que masqué (« •••• 4821 ») ; aucune donnée de santé ; les journaux ne
+  gardent que le type, l'identifiant technique du contrat et la version.
 
 ## Reprise des données du sprint 1 (V21 à V23, V27)
 
@@ -119,16 +124,22 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 - Devis existants : produit HABITATION ; statut TRANSFORME si un contrat existe, EXPIRE si la validité est dépassée,
   sinon EN_COURS ; formule conseillée reprise de la recommandation.
 - Mandats existants : client repris du dossier, statut ACTIF.
+- **T-03** : V28 ne modifie aucune ligne existante (`reference` vide). Les PDF des conditions particulières EN_VIGUEUR
+  non stockées (V27, données de recette) sont produits par la tâche de reprise de l'application (toutes les 5 minutes),
+  à leur version actuelle ; une version REMPLACE jamais stockée n'est pas reconstituée.
 
 ## Annulation
 
-Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U27__…sql` et
+Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U28__…sql` et
 `moteurtarifaire/db/annulation/U5__…sql`, à exécuter **à la main, dans l'ordre inverse** (`psql -f`). Ils ne sont
 jamais lancés par Flyway. Chacun retire aussi sa ligne de `flyway_schema_history`, pour pouvoir rejouer la migration.
 `U22_1__…sql` se place entre U23 et U22 ; il ne retire que sa ligne de `flyway_schema_history` (la correction des
 statuts `SIGNE` n'est pas défaite : l'ancienne valeur, invalide, n'est conservée nulle part).
 U21, U22 et U23 s'arrêtent sans rien modifier s'il existe des données qui ne tiennent pas dans le schéma du sprint 1
 (contrats ou devis auto, mandats sans dossier, franchise non entière) : les supprimer d'abord, en connaissance de cause.
+U28 supprime les PDF stockés en base (les documents concernés repassent à `stocke` = faux) et les conditions
+générales provisoires ; il s'arrête sans rien modifier si un contrat a plusieurs documents EN_VIGUEUR du même type
+(plusieurs factures ou avenants).
 
 ## Données de test
 
@@ -148,7 +159,9 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 
 Taille maximale des pièces jointes 5 Mo (contrôlée en base) ; format de facture `FAC-AAAA-NNNNNN` (non contrôlé en
 base) ; franchises 400 € (Intermédiaire) et 500 € (Tous risques) (données T-04) ; conducteur de 17 ans en conduite
-accompagnée non géré.
+accompagnée non géré. T-03 : taille maximale d'un PDF 5 Mo ; mentions de l'assureur, garanties par formule,
+exclusions et conditions générales **provisoires et fictives** (`application.yaml`, `assurance.documents`), à
+remplacer par les éléments du PO.
 
 ## Points pour le sprint 2
 
@@ -158,12 +171,14 @@ accompagnée non géré.
 - L'entité `Contrat` n'expose pas encore les colonnes T-05 (seule la franchise a changé) : à ajouter avec les
   fonctionnalités qui les utilisent.
 - Lien entre les justificatifs d'US-04 (`justificatif`) et la nouvelle table `document` : à faire.
+- **T-03** : les contrats créés après V27 (nouvelles souscriptions) n'ont pas encore de ligne « conditions
+  particulières » : US-21 / US-33 appellent le service de documents à la signature.
 - L'écran `devis-contrat` teste une valeur de statut `SIGNE` que la base n'accepte pas et que le backend n'écrit
   jamais (non corrigé, hors périmètre T-05).
 
 ---
 
-*Tableaux ci-dessous générés depuis la base après migration (V27 et V5).*
+*Tableaux ci-dessous générés depuis la base après migration (V27 et V5), complétés à la main pour V28 (T-03).*
 
 ## Base `assurance_iard` (backend `assurance-iard-api`)
 
@@ -403,12 +418,24 @@ accompagnée non géré.
 | `devis_id` | entier |  |  | → devis_enregistre |
 | `sinistre_id` | entier |  |  | → sinistre |
 | `type` | texte(30) | oui |  |  |
+| `reference` *(T-03)* | texte(40) |  |  | n° de facture ou d'avenant, produit (conditions générales), formule (IPID) |
 | `version` | entier | oui | 1 |  |
 | `statut` | texte(12) | oui | 'EN_VIGUEUR' |  |
 | `motif` | texte(100) |  |  |  |
-| `cle_stockage` | texte(255) |  |  |  |
-| `empreinte` | texte(64) |  |  |  |
+| `cle_stockage` | texte(255) |  |  | T-03 : `base:document_contenu/<id du document>` |
+| `empreinte` | texte(64) |  |  | T-03 : SHA-256 du PDF, vérifiée au téléchargement |
 | `stocke` | booléen | oui | false |  |
+| `date_creation` | horodatage UTC | oui | now() |  |
+| `date_modification` | horodatage UTC | oui | now() |  |
+
+### `document_contenu` *(nouvelle, T-03)*
+
+| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
+|---|---|---|---|---|
+| `id` | entier | oui | clé (auto) |  |
+| `document_id` | entier | oui |  | → document (un contenu par document) |
+| `contenu` | binaire (bytea) | oui |  | le PDF |
+| `taille_octets` | entier | oui |  | 1 octet à 5 Mo |
 | `date_creation` | horodatage UTC | oui | now() |  |
 | `date_modification` | horodatage UTC | oui | now() |  |
 
@@ -737,7 +764,10 @@ accompagnée non géré.
 | `document` | `ck_document_stocke` | contrôle | Un document stocké a une clé de stockage. | `CHECK (((NOT stocke) OR (cle_stockage IS NOT NULL)))` |
 | `document` | `ck_document_type` | contrôle | Type : l'une des 12 valeurs de TYPE_DOCUMENT. | `CHECK (((type) = ANY ((ARRAY['CONDITIONS_PARTICULIERES', 'CONDITIONS_GENERALES', 'IPID', 'FICHE_CONSEIL', 'MANDAT_SEPA', 'ECHEANCIER', 'FACTURE', 'AVENANT', 'MEMO_VEHICULE', 'ATTESTATION', 'DEVIS', 'DECLARATION_SINISTRE']))))` |
 | `document` | `ck_document_version` | contrôle | La version commence à 1. | `CHECK ((version >= 1))` |
-| `document` | `uk_document_en_vigueur` | index unique partiel | Une seule version EN_VIGUEUR par contrat et par type de document. | `UNIQUE (contrat_id, type) WHERE ((statut) = 'EN_VIGUEUR')` |
+| `document` | `uk_document_en_vigueur` | index unique partiel | T-03 : une seule version EN_VIGUEUR par contrat, type et référence ; documents sans contrat concernés seulement s'ils ont une référence. | `UNIQUE (COALESCE(contrat_id, 0), type, COALESCE(reference, '')) WHERE ((statut) = 'EN_VIGUEUR' AND (contrat_id IS NOT NULL OR reference IS NOT NULL))` |
+| `document_contenu` | `ck_document_contenu_taille` | contrôle | Un PDF fait entre 1 octet et 5 Mo. | `CHECK (((taille_octets >= 1) AND (taille_octets <= 5242880)))` |
+| `document_contenu` | `ck_document_contenu_taille_reelle` | contrôle | La taille annoncée est la taille réelle du PDF. | `CHECK ((taille_octets = octet_length(contenu)))` |
+| `document_contenu` | `uk_document_contenu_document` | unique | Un seul contenu par document. | `UNIQUE (document_id)` |
 | `dossier_souscription` | `uk_dossier_souscription_devis` | unique | Pas de doublon sur : compte_id, reference_devis. | `UNIQUE (compte_id, reference_devis)` |
 | `echeance` | `ck_echeance_montant_ttc` | contrôle | Montant TTC = montant HT + taxe. | `CHECK ((montant_ttc = (montant_ht + taxe)))` |
 | `echeance` | `ck_echeance_statut` | contrôle | Statut de l'échéance : A_VENIR, PAYEE ou IMPAYEE. | `CHECK (((statut) = ANY ((ARRAY['A_VENIR', 'PAYEE', 'IMPAYEE']))))` |

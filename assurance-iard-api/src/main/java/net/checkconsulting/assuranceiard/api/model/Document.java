@@ -10,7 +10,10 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** T-05 : document versionné (une seule version EN_VIGUEUR par contrat et par type). */
+/**
+ * T-05 : document versionné. T-03 : une seule version EN_VIGUEUR par contrat, type et référence ; le PDF est rangé
+ * dans {@link DocumentContenu}.
+ */
 @Entity
 @Table(name = "document")
 @Getter
@@ -33,6 +36,10 @@ public class Document extends EntiteHorodatee {
 
     @Column(name = "type", nullable = false, length = 30)
     private String type;
+
+    /** T-03 : n° de facture ou d'avenant, produit (conditions générales), formule (IPID) ; vide sinon. */
+    @Column(name = "reference", length = 40)
+    private String reference;
 
     @Column(name = "version", nullable = false)
     private Integer version = 1;
