@@ -11,6 +11,7 @@ import java.util.List;
 import net.checkconsulting.assuranceiard.api.AssuranceIardApplication;
 import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.DevisEnregistreRepository;
+import net.checkconsulting.assuranceiard.api.repository.DocumentRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.JustificatifRepository;
 import org.junit.jupiter.api.Test;
@@ -80,7 +81,8 @@ class RoutesDeclareesTest {
                 new ProprietairesDevis(mock(DevisEnregistreRepository.class)).type(),
                 new ProprietairesSouscription(mock(DossierSouscriptionRepository.class)).type(),
                 new ProprietairesContrat(mock(ContratRepository.class)).type(),
-                new ProprietairesDocument(mock(JustificatifRepository.class)).type());
+                new ProprietairesDocument(mock(JustificatifRepository.class)).type(),
+                new ProprietairesDocumentContrat(mock(DocumentRepository.class)).type());
 
         assertThat(controlees).containsExactlyInAnyOrderElementsOf(attendues);
     }

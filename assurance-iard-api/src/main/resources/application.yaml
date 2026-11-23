@@ -79,6 +79,31 @@ assurance:
     dossier: ${JUSTIFICATIFS_DOSSIER:justificatifs}
   mail:
     from: ${MAIL_FROM:noreply@assureasy.fr}
+  # T-03 : documents PDF générés. PROVISOIRE, À VALIDER PAR LE PO : mentions de l'assureur fictif, garanties
+  # par formule et exclusions (valeurs fictives, modifiables ici sans toucher au code).
+  documents:
+    assureur:
+      nom: "Assur'Easy SA (assureur fictif)"
+      adresse: "10 rue de la Recette, 75000 Paris"
+      immatriculation: "Société anonyme au capital de 1 000 000 € - RCS Paris 000 000 000 (fictif)"
+      controle: "Entreprise régie par le Code des assurances, contrôlée par l'ACPR (4 place de Budapest, 75009 Paris)"
+    garanties:
+      essentielle: ["Incendie et événements naturels", "Dégâts des eaux", "Responsabilité civile vie privée"]
+      confort: ["Incendie et événements naturels", "Dégâts des eaux", "Responsabilité civile vie privée",
+                "Vol et vandalisme", "Bris de glace"]
+      serenite: ["Incendie et événements naturels", "Dégâts des eaux", "Responsabilité civile vie privée",
+                 "Vol et vandalisme", "Bris de glace", "Rééquipement à neuf"]
+      TIERS: ["Responsabilité civile", "Défense pénale et recours"]
+      INTER: ["Responsabilité civile", "Défense pénale et recours", "Vol et incendie", "Bris de glace"]
+      TR: ["Responsabilité civile", "Défense pénale et recours", "Vol et incendie", "Bris de glace",
+           "Dommages tous accidents"]
+    exclusions: "Les exclusions communes et propres à chaque garantie figurent dans les conditions générales."
+    taille-max: 5MB
+    reprise:
+      active: ${DOCUMENTS_REPRISE_ACTIVE:true}
+      intervalle: 5m
+      delai-initial: 1m
+      lot: 50
 
 moteur-tarifaire:
   url: ${MOTEUR_TARIFAIRE_URL:http://localhost:8081}
