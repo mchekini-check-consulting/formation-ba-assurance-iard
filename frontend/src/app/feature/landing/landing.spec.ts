@@ -3,7 +3,7 @@ import { provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 import { AnnonceService } from '../../core/service/annonce.service';
-import { Landing, codePostalValide } from './landing';
+import { Landing, TITRE_PRINCIPAL, codePostalValide } from './landing';
 
 describe('Landing', () => {
   let fixture: ComponentFixture<Landing>;
@@ -45,40 +45,53 @@ describe('Landing', () => {
   it('affiche toutes les sections de la page', () => {
     const titres = Array.from(page.querySelectorAll('h1, h2')).map((t) => t.textContent?.trim());
     expect(titres).toEqual([
-      'Votre logement assuré en ligne, sans conseiller ni paperasse.',
+      TITRE_PRINCIPAL,
       'Votre tarif habitation',
+      'Votre tarif auto',
       "L'assurance habitation Assur'Easy",
-      'Assuré en 4 étapes',
-      'Questions fréquentes',
-      'Prêt à assurer votre logement ?',
+      "L'assurance auto Assur'Easy",
+      'Un sinistre ? Déclarez-le en ligne',
+      'Aide',
     ]);
-    expect(page.querySelectorAll('.etape')).toHaveLength(4);
-    expect(page.querySelectorAll('.faq')).toHaveLength(4);
+    expect(page.querySelectorAll('.etape')).toHaveLength(3);
+    expect(page.querySelectorAll('.faq')).toHaveLength(3);
+  });
+
+  it('n\'affiche plus la section « Assuré en 4 étapes » ni le bandeau final', () => {
+    const titresH2 = Array.from(page.querySelectorAll('h2')).map((h) => h.textContent?.trim());
+    expect(titresH2).not.toContain('Assuré en 4 étapes');
+    expect(titresH2).not.toContain('Prêt à assurer votre logement ?');
   });
 
   it("affiche l'image principale en fond du haut de page, autour de l'accroche et du formulaire", () => {
     const hautDePage = page.querySelector('main section.bloc--image')!;
     expect(hautDePage).toBeTruthy();
     expect(hautDePage.querySelector('h1')).toBeTruthy();
-    expect(hautDePage.querySelector('form.tarif')).toBeTruthy();
+    expect(hautDePage.querySelector('.tarif')).toBeTruthy();
   });
 
-  it("présente uniquement l'offre habitation, à partir de 7,90 €/mois TTC", () => {
-    expect(page.querySelector('.prix')?.textContent).toContain('7,90 €/mois TTC');
-    expect(Array.from(page.querySelectorAll('.carte h3')).map((h) => h.textContent?.trim())).toEqual([
+  it("présente l'offre habitation, à partir de 7,90 €/mois TTC", () => {
+    const section = page.querySelector('#section-offre-habitation')!;
+    expect(section.querySelector('.prix')?.textContent).toContain('7,90 €/mois TTC');
+    expect(Array.from(section.querySelectorAll('.carte h3')).map((h) => h.textContent?.trim())).toEqual([
       'Essentielle',
       'Confort',
       'Sérénité',
     ]);
-    expect(page.textContent).not.toMatch(/auto(mobile)?\b/i);
   });
 
   it('affiche le picto de chaque formule à côté de son nom', () => {
-    expect(Array.from(page.querySelectorAll('.carte h3 img.carte__picto')).map((i) => i.getAttribute('src'))).toEqual([
+    const section = page.querySelector('#section-offre-habitation')!;
+    expect(Array.from(section.querySelectorAll('.carte h3 img.carte__picto')).map((i) => i.getAttribute('src'))).toEqual([
       'picto-essentielle.png',
       'picto-confort.png',
       'picto-serenite.png',
     ]);
+  });
+
+  it('« Faire mon devis habitation » navigue vers l\'étape 1 du devis habitation', () => {
+    cliquer('Faire mon devis habitation');
+    expect(router.navigate).toHaveBeenCalledWith(['/devis/logement']);
   });
 
   it("affiche l'en-tête avec le logo et les 3 boutons d'accès", () => {
@@ -104,10 +117,8 @@ describe('Landing', () => {
 
   it("affiche les mentions d'assureur et les liens légaux en pied de page", () => {
     const pied = page.querySelector('footer')!;
-    expect(pied.textContent).toContain('RCS Paris 912 345 678');
     expect(pied.textContent).toContain('ACPR');
-    expect(pied.textContent).toContain("La Médiation de l'Assurance");
-    expect(pied.textContent).toContain("© 2026 Assur'Easy. Tous droits réservés.");
+    expect(pied.textContent).toContain('Code des assurances');
     expect(Array.from(pied.querySelectorAll('.lien')).map((l) => l.textContent?.trim())).toEqual([
       'Mentions légales',
       'Données personnelles',
@@ -156,12 +167,6 @@ describe('Landing', () => {
     expect(annonce()).toBeUndefined();
   });
 
-  it("Faire mon devis navigue vers etape 1 du devis (US-09)", () => {
-    cliquer('Faire mon devis');
-    expect(router.navigate).toHaveBeenCalledWith(['/devis/logement']);
-    expect(annonce()).toBeUndefined();
-  });
-
   it('déplie et replie la réponse sous la question cliquée', () => {
     const question = page.querySelectorAll<HTMLButtonElement>('.faq__question')[1];
     expect(page.querySelector('.faq__reponse')).toBeNull();
@@ -178,12 +183,171 @@ describe('Landing', () => {
   });
 
   it("n'ouvre qu'une question à la fois", () => {
-    const questions = page.querySelectorAll<HTMLButtonElement>('.faq__question');
-    questions[0].click();
-    questions[2].click();
+    const faqQuestions = page.querySelectorAll<HTMLButtonElement>('.faq__question');
+    faqQuestions[0].click();
+    faqQuestions[2].click();
     fixture.detectChanges();
     expect(page.querySelectorAll('.faq__reponse')).toHaveLength(1);
     expect(page.querySelector('#faq-reponse-2')).not.toBeNull();
+  });
+
+  describe('section « L\'assurance auto Assur\'Easy »', () => {
+    it('affiche le badge Nouveau, le titre, le prix et les 3 formules', () => {
+      const section = page.querySelector('#section-offre-auto')!;
+      expect(section.querySelector('.badge')?.textContent?.trim()).toBe('Nouveau');
+      expect(section.querySelector('h2')?.textContent?.trim()).toBe("L'assurance auto Assur'Easy");
+      expect(section.querySelector('.prix')?.textContent).toContain('25,00 €/mois TTC');
+      expect(Array.from(section.querySelectorAll('.carte h3')).map((h) => h.textContent?.trim())).toEqual([
+        'Tiers',
+        'Intermédiaire',
+        'Tous risques',
+      ]);
+    });
+
+    it('« Faire mon devis auto » navigue vers l\'étape 1.1 sans mode', () => {
+      cliquer('Faire mon devis auto');
+      expect(router.navigate).toHaveBeenCalledWith(['/devis-auto/vehicule']);
+    });
+  });
+
+  describe('section sinistre', () => {
+    it('affiche le titre, le sous-titre et les 3 étapes', () => {
+      const section = page.querySelector('[aria-labelledby="sinistre-titre"]')!;
+      expect(section.querySelector('h2')?.textContent?.trim()).toBe('Un sinistre ? Déclarez-le en ligne');
+      expect(section.querySelectorAll('.etape')).toHaveLength(3);
+    });
+
+    it('affiche l\'encadré urgence avec le texte et le numéro d\'assistance, après le bouton', () => {
+      const section = page.querySelector('[aria-labelledby="sinistre-titre"]')!;
+      const urgence = section.querySelector('.urgence')!;
+      expect(urgence.textContent).toContain('urgence');
+      expect(urgence.textContent).toContain('112');
+      const boutonDeclarer = Array.from(section.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Déclarer un sinistre')!;
+      expect(boutonDeclarer.compareDocumentPosition(urgence) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    });
+
+    it('« Déclarer un sinistre » navigue vers la connexion', () => {
+      cliquer('Déclarer un sinistre');
+      expect(router.navigate).toHaveBeenCalledWith(['/connexion']);
+    });
+  });
+
+  describe('onglets Habitation / Auto (US-26)', () => {
+    it('affiche l\'onglet Habitation actif par defaut (RG1)', () => {
+      const ongletHabitation = page.querySelector<HTMLButtonElement>('#onglet-habitation')!;
+      const ongletAuto = page.querySelector<HTMLButtonElement>('#onglet-auto')!;
+      expect(ongletHabitation.getAttribute('aria-selected')).toBe('true');
+      expect(ongletAuto.getAttribute('aria-selected')).toBe('false');
+      expect(page.querySelector('#panneau-habitation')?.hasAttribute('hidden')).toBe(false);
+      expect(page.querySelector('#panneau-auto')?.hasAttribute('hidden')).toBe(true);
+    });
+
+    it('bascule vers l\'onglet Auto au clic', () => {
+      cliquer('Auto');
+      expect(page.querySelector('#onglet-auto')?.getAttribute('aria-selected')).toBe('true');
+      expect(page.querySelector('#onglet-habitation')?.getAttribute('aria-selected')).toBe('false');
+      expect(page.querySelector('#panneau-auto')?.hasAttribute('hidden')).toBe(false);
+      expect(page.querySelector('#panneau-habitation')?.hasAttribute('hidden')).toBe(true);
+    });
+
+    it('revient a Habitation au second clic', () => {
+      cliquer('Auto');
+      cliquer('Habitation');
+      expect(page.querySelector('#onglet-habitation')?.getAttribute('aria-selected')).toBe('true');
+      expect(page.querySelector('#panneau-habitation')?.hasAttribute('hidden')).toBe(false);
+    });
+
+    it('gere la navigation clavier ArrowRight et ArrowLeft dans le tablist', () => {
+      const tablist = page.querySelector('[role="tablist"]')!;
+
+      tablist.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+      fixture.detectChanges();
+      expect(page.querySelector('#onglet-auto')?.getAttribute('aria-selected')).toBe('true');
+
+      tablist.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+      fixture.detectChanges();
+      expect(page.querySelector('#onglet-habitation')?.getAttribute('aria-selected')).toBe('true');
+    });
+
+    it('respecte le pattern WAI-ARIA Tabs', () => {
+      expect(page.querySelector('[role="tablist"]')).toBeTruthy();
+      expect(page.querySelectorAll('[role="tab"]')).toHaveLength(2);
+      expect(page.querySelectorAll('[role="tabpanel"]')).toHaveLength(2);
+      const ongletHabitation = page.querySelector('#onglet-habitation')!;
+      expect(ongletHabitation.getAttribute('aria-controls')).toBe('panneau-habitation');
+      expect(page.querySelector('#panneau-habitation')?.getAttribute('aria-labelledby')).toBe('onglet-habitation');
+    });
+
+    describe('formulaire « Votre tarif auto »', () => {
+      it('aucun choix prés-électionné à l\'ouverture de l\'onglet Auto', () => {
+        cliquer('Auto');
+        expect(page.querySelector('[role="radio"][aria-checked="true"]')).toBeNull();
+      });
+
+      it('clic sans choix → message erreur, pas de navigation', () => {
+        cliquer('Auto');
+        cliquer('Commencer mon devis auto');
+        expect(page.querySelector('#erreur-mode-auto')?.textContent).toContain('Choisissez une option');
+        expect(router.navigate).not.toHaveBeenCalled();
+      });
+
+      it('le message disparaît dès qu\'un choix est fait', () => {
+        cliquer('Auto');
+        cliquer('Commencer mon devis auto');
+        expect(page.querySelector('#erreur-mode-auto')).not.toBeNull();
+        cliquer('Je connais ma plaque');
+        expect(page.querySelector('#erreur-mode-auto')).toBeNull();
+      });
+
+      it('choix « Je connais ma plaque » → navigue vers étape 1.1 avec mode=plaque', () => {
+        cliquer('Auto');
+        cliquer('Je connais ma plaque');
+        cliquer('Commencer mon devis auto');
+        expect(router.navigate).toHaveBeenCalledWith(
+          ['/devis-auto/vehicule'],
+          { state: { mode: 'plaque' }, queryParams: { mode: 'plaque' } },
+        );
+      });
+
+      it('choix « Je choisis par marque » → navigue vers étape 1.1 avec mode=marque', () => {
+        cliquer('Auto');
+        cliquer('Je choisis par marque');
+        cliquer('Commencer mon devis auto');
+        expect(router.navigate).toHaveBeenCalledWith(
+          ['/devis-auto/vehicule'],
+          { state: { mode: 'marque' }, queryParams: { mode: 'marque' } },
+        );
+      });
+
+      it('navigation clavier ArrowRight dans le radiogroup sélectionne les options', () => {
+        cliquer('Auto');
+        const radiogroup = page.querySelector('[role="radiogroup"]')!;
+
+        radiogroup.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        fixture.detectChanges();
+        expect(page.querySelector('[role="radio"][aria-checked="true"]')?.textContent?.trim()).toBe('Je connais ma plaque');
+
+        radiogroup.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+        fixture.detectChanges();
+        expect(page.querySelector('[role="radio"][aria-checked="true"]')?.textContent?.trim()).toBe('Je choisis par marque');
+      });
+
+      it('navigation clavier ArrowLeft dans le radiogroup sélectionne les options', () => {
+        cliquer('Auto');
+        const radiogroup = page.querySelector('[role="radiogroup"]')!;
+
+        radiogroup.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowLeft', bubbles: true }));
+        fixture.detectChanges();
+        expect(page.querySelector('[role="radio"][aria-checked="true"]')?.textContent?.trim()).toBe('Je choisis par marque');
+      });
+
+      it('respecte le pattern WAI-ARIA radiogroup', () => {
+        cliquer('Auto');
+        const radiogroup = page.querySelector('[role="radiogroup"]')!;
+        expect(radiogroup.getAttribute('aria-labelledby')).toBe('libelle-mode-auto');
+        expect(page.querySelectorAll('#panneau-auto [role="radio"]')).toHaveLength(2);
+      });
+    });
   });
 
   describe('formulaire « Votre tarif habitation »', () => {

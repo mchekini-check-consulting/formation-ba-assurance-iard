@@ -21,6 +21,7 @@ import { DoubleAuthentification } from './feature/double-authentification/double
 import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
+import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { GestionProfils } from './feature/gestion-profils/gestion-profils';
 import { MesDevis } from './feature/mes-devis/mes-devis';
 import { PageSimple } from './feature/page-simple/page-simple';
@@ -75,6 +76,7 @@ export const routes: Routes = [
     canActivate: [sessionGuard],
     title: "Mes devis – Assur'Easy",
   },
+  { path: 'devis-auto/vehicule', component: DevisAutoVehicule, title: "Étape 1.1 – Retrouver mon véhicule – Assur'Easy" },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {
     path: 'devis/besoins',

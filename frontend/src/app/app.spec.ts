@@ -14,7 +14,7 @@ describe('App (routes)', () => {
 
   it("affiche la landing page à l'accueil", async () => {
     const harness = await RouterTestingHarness.create('/');
-    expect(titre(harness)).toContain('Votre logement assuré en ligne');
+    expect(titre(harness)).toContain('Votre logement');
   });
 
   it.each([
@@ -29,7 +29,7 @@ describe('App (routes)', () => {
 
   it("renvoie une adresse inconnue vers l'accueil", async () => {
     const harness = await RouterTestingHarness.create('/page-inconnue');
-    expect(titre(harness)).toContain('Votre logement assuré en ligne');
+    expect(titre(harness)).toContain('Votre logement');
   });
 
   it('affiche la création de compte sur /inscription', async () => {

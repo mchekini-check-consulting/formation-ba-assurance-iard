@@ -25,8 +25,8 @@
   <section class="bloc bloc--beige bloc--image">
     <div class="conteneur accroche">
       <div class="accroche__texte">
-        <p class="surtitre">Assurance habitation</p>
-        <h1 class="serif">Votre logement assuré en ligne, sans conseiller ni paperasse.</h1>
+        <p class="surtitre">ASSURANCE HABITATION ET AUTO</p>
+        <h1 class="serif">{{ titrePrincipal }}</h1>
         <p class="accroche__intro">
           Obtenez votre tarif en quelques questions, recevez une formule conseillée et signez votre contrat depuis
           votre canapé.
@@ -34,92 +34,178 @@
         <ul class="avantages">
           <li>Tarif immédiat, sans créer de compte</li>
           <li>Souscription et signature 100 % en ligne</li>
-          <li>Nous résilions votre ancien contrat pour vous (loi Hamon)</li>
+          <li>Sinistre déclaré et suivi depuis votre espace</li>
         </ul>
       </div>
 
-      <form class="tarif" aria-labelledby="tarif-titre" novalidate (submit)="calculerTarif($event)">
-        <h2 id="tarif-titre" class="serif">Votre tarif habitation</h2>
-
-        <div class="champ">
-          <span class="libelle" id="libelle-statut">Vous êtes</span>
-          <div class="choix" role="group" aria-labelledby="libelle-statut">
-            <button
-              type="button"
-              class="choix__option"
-              [class.choix__option--actif]="statut() === 'locataire'"
-              [attr.aria-pressed]="statut() === 'locataire'"
-              (click)="choisirStatut('locataire')"
-            >
-              Locataire
-            </button>
-            <button
-              type="button"
-              class="choix__option"
-              [class.choix__option--actif]="statut() === 'proprietaire'"
-              [attr.aria-pressed]="statut() === 'proprietaire'"
-              (click)="choisirStatut('proprietaire')"
-            >
-              Propriétaire
-            </button>
-          </div>
+      <div class="tarif">
+        <div role="tablist" aria-label="Choisir votre produit" class="onglets" (keydown)="gererToucheOnglet($event)">
+          <button
+            role="tab"
+            id="onglet-habitation"
+            class="onglets__onglet"
+            [attr.aria-selected]="ongletActif() === 'habitation'"
+            aria-controls="panneau-habitation"
+            [attr.tabindex]="ongletActif() === 'habitation' ? 0 : -1"
+            type="button"
+            (click)="choisirOnglet('habitation')"
+          >Habitation</button>
+          <button
+            role="tab"
+            id="onglet-auto"
+            class="onglets__onglet"
+            [attr.aria-selected]="ongletActif() === 'auto'"
+            aria-controls="panneau-auto"
+            [attr.tabindex]="ongletActif() === 'auto' ? 0 : -1"
+            type="button"
+            (click)="choisirOnglet('auto')"
+          >Auto</button>
         </div>
 
-        <div class="champ">
-          <span class="libelle" id="libelle-type">Type de logement</span>
-          <div class="choix" role="group" aria-labelledby="libelle-type">
-            <button
-              type="button"
-              class="choix__option"
-              [class.choix__option--actif]="typeLogement() === 'appartement'"
-              [attr.aria-pressed]="typeLogement() === 'appartement'"
-              (click)="choisirType('appartement')"
-            >
-              Appartement
-            </button>
-            <button
-              type="button"
-              class="choix__option"
-              [class.choix__option--actif]="typeLogement() === 'maison'"
-              [attr.aria-pressed]="typeLogement() === 'maison'"
-              (click)="choisirType('maison')"
-            >
-              Maison
-            </button>
-          </div>
+        <div role="tabpanel" id="panneau-habitation" aria-labelledby="onglet-habitation" [hidden]="ongletActif() !== 'habitation'">
+          <form class="tarif__form" aria-labelledby="tarif-titre-habitation" novalidate (submit)="calculerTarif($event)">
+            <h2 id="tarif-titre-habitation" class="serif">Votre tarif habitation</h2>
+
+            <div class="champ">
+              <span class="libelle" id="libelle-statut">Vous êtes</span>
+              <div class="choix" role="group" aria-labelledby="libelle-statut">
+                <button
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="statut() === 'locataire'"
+                  [attr.aria-pressed]="statut() === 'locataire'"
+                  (click)="choisirStatut('locataire')"
+                >
+                  Locataire
+                </button>
+                <button
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="statut() === 'proprietaire'"
+                  [attr.aria-pressed]="statut() === 'proprietaire'"
+                  (click)="choisirStatut('proprietaire')"
+                >
+                  Propriétaire
+                </button>
+              </div>
+            </div>
+
+            <div class="champ">
+              <span class="libelle" id="libelle-type">Type de logement</span>
+              <div class="choix" role="group" aria-labelledby="libelle-type">
+                <button
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="typeLogement() === 'appartement'"
+                  [attr.aria-pressed]="typeLogement() === 'appartement'"
+                  (click)="choisirType('appartement')"
+                >
+                  Appartement
+                </button>
+                <button
+                  type="button"
+                  class="choix__option"
+                  [class.choix__option--actif]="typeLogement() === 'maison'"
+                  [attr.aria-pressed]="typeLogement() === 'maison'"
+                  (click)="choisirType('maison')"
+                >
+                  Maison
+                </button>
+              </div>
+            </div>
+
+            @if (erreurChoix()) {
+              <p class="erreur" role="alert">Indiquez votre statut et le type de logement.</p>
+            }
+
+            <div class="champ">
+              <label class="libelle" for="code-postal">Code postal du logement</label>
+              <input
+                #champCodePostal
+                id="code-postal"
+                class="saisie"
+                [class.saisie--erreur]="erreurCodePostal()"
+                inputmode="numeric"
+                autocomplete="postal-code"
+                maxlength="5"
+                placeholder="Ex. 94000"
+                [attr.aria-invalid]="erreurCodePostal()"
+                [attr.aria-describedby]="erreurCodePostal() ? 'erreur-code-postal' : null"
+                (input)="saisirCodePostal($event)"
+              />
+              @if (erreurCodePostal()) {
+                <p id="erreur-code-postal" class="erreur" role="alert">Saisissez un code postal à 5 chiffres.</p>
+              }
+            </div>
+
+            <button type="submit" class="btn btn--large">Calculer mon tarif</button>
+            <p class="tarif__mention">Gratuit et sans engagement · Aucun compte demandé</p>
+          </form>
         </div>
 
-        @if (erreurChoix()) {
-          <p class="erreur" role="alert">Indiquez votre statut et le type de logement.</p>
-        }
+        <div role="tabpanel" id="panneau-auto" aria-labelledby="onglet-auto" [hidden]="ongletActif() !== 'auto'">
+          <form class="tarif__form" aria-labelledby="tarif-titre-auto" novalidate (submit)="lancerDevisAuto($event)">
+            <h2 id="tarif-titre-auto" class="serif">Votre tarif auto</h2>
 
-        <div class="champ">
-          <label class="libelle" for="code-postal">Code postal du logement</label>
-          <input
-            #champCodePostal
-            id="code-postal"
-            class="saisie"
-            [class.saisie--erreur]="erreurCodePostal()"
-            inputmode="numeric"
-            autocomplete="postal-code"
-            maxlength="5"
-            placeholder="Ex. 94000"
-            [attr.aria-invalid]="erreurCodePostal()"
-            [attr.aria-describedby]="erreurCodePostal() ? 'erreur-code-postal' : null"
-            (input)="saisirCodePostal($event)"
-          />
-          @if (erreurCodePostal()) {
-            <p id="erreur-code-postal" class="erreur" role="alert">Saisissez un code postal à 5 chiffres.</p>
-          }
+            <div class="champ">
+              <span class="libelle" id="libelle-mode-auto">Pour retrouver votre véhicule <span class="obligatoire" aria-hidden="true">*</span></span>
+              <div
+                role="radiogroup"
+                aria-labelledby="libelle-mode-auto"
+                [attr.aria-describedby]="erreurModeAuto() ? 'erreur-mode-auto' : null"
+                class="choix"
+                (keydown)="gererToucheChoixAuto($event)"
+              >
+                <button
+                  #btnPlaque
+                  type="button"
+                  role="radio"
+                  class="choix__option choix__option--icone"
+                  [class.choix__option--actif]="modeAuto() === 'plaque'"
+                  [attr.aria-checked]="modeAuto() === 'plaque'"
+                  [attr.tabindex]="modeAuto() === 'marque' ? -1 : 0"
+                  (click)="choisirModeAuto('plaque')"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                    <rect x="1" y="5" width="18" height="11" rx="2"/>
+                    <line x1="5" y1="10.5" x2="15" y2="10.5"/>
+                  </svg>
+                  Je connais ma plaque
+                </button>
+                <button
+                  #btnMarque
+                  type="button"
+                  role="radio"
+                  class="choix__option choix__option--icone"
+                  [class.choix__option--actif]="modeAuto() === 'marque'"
+                  [attr.aria-checked]="modeAuto() === 'marque'"
+                  [attr.tabindex]="modeAuto() === 'plaque' ? -1 : 0"
+                  (click)="choisirModeAuto('marque')"
+                >
+                  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true" focusable="false">
+                    <path d="M2 11 L4 7 L16 7 L18 11"/>
+                    <rect x="1" y="11" width="18" height="5" rx="1"/>
+                    <circle cx="5" cy="16" r="1.8"/>
+                    <circle cx="15" cy="16" r="1.8"/>
+                  </svg>
+                  Je choisis par marque
+                </button>
+              </div>
+              @if (erreurModeAuto()) {
+                <p id="erreur-mode-auto" class="erreur" role="alert">Choisissez une option.</p>
+              }
+            </div>
+
+            <p class="tarif__obligatoire"><span aria-hidden="true">*</span> Champs obligatoires</p>
+            <button type="submit" class="btn btn--large">Commencer mon devis auto</button>
+            <p class="tarif__mention">Gratuit et sans engagement · Aucun compte demandé</p>
+          </form>
         </div>
-
-        <button type="submit" class="btn btn--large">Calculer mon tarif</button>
-        <p class="tarif__mention">Gratuit et sans engagement · Aucun compte demandé</p>
-      </form>
+      </div>
     </div>
   </section>
 
-  <section class="bloc" aria-labelledby="offre-titre">
+  <section id="section-offre-habitation" class="bloc" aria-labelledby="offre-titre">
     <div class="conteneur pile">
       <div class="offre__entete">
         <div>
@@ -142,14 +228,43 @@
           </article>
         }
       </div>
+      <button type="button" class="btn" (click)="allerAuDevis()">Faire mon devis habitation</button>
     </div>
   </section>
 
-  <section class="bloc bloc--beige" aria-labelledby="etapes-titre">
+  <section id="section-offre-auto" class="bloc bloc--beige" aria-labelledby="offre-auto-titre">
     <div class="conteneur pile">
-      <h2 id="etapes-titre" class="serif titre-section">Assuré en 4 étapes</h2>
+      <div class="offre__entete">
+        <div>
+          <span class="badge">Nouveau</span>
+          <h2 id="offre-auto-titre" class="serif titre-section">L'assurance auto Assur'Easy</h2>
+          <p class="sous-titre">Trois formules, des options à la carte, une formule conseillée selon vos besoins.</p>
+        </div>
+        <p class="prix">À partir de <strong class="serif">25,00 €</strong>/mois TTC</p>
+      </div>
+      <div class="grille">
+        @for (formule of formulesAuto; track formule.nom) {
+          <article class="carte" [class.carte--avant]="formule.miseEnAvant">
+            <h3 class="serif carte__titre">
+              <img class="carte__picto" [src]="formule.picto" alt="" width="40" height="40" />
+              {{ formule.nom }}
+            </h3>
+            <p class="carte__texte">{{ formule.description }}</p>
+          </article>
+        }
+      </div>
+      <button type="button" class="btn" (click)="allerADevisAuto()">Faire mon devis auto</button>
+    </div>
+  </section>
+
+  <section class="bloc" aria-labelledby="sinistre-titre">
+    <div class="conteneur pile">
+      <div>
+        <h2 id="sinistre-titre" class="serif titre-section">Un sinistre ? Déclarez-le en ligne</h2>
+        <p class="sous-titre">Depuis votre espace client, à toute heure, puis suivez votre dossier pas à pas.</p>
+      </div>
       <ol class="grille etapes">
-        @for (etape of etapes; track etape.titre; let numero = $index) {
+        @for (etape of etapesSinistre; track etape.titre; let numero = $index) {
           <li class="etape">
             <span class="etape__numero serif" aria-hidden="true">{{ numero + 1 }}</span>
             <strong>{{ etape.titre }}</strong>
@@ -157,12 +272,17 @@
           </li>
         }
       </ol>
+      <button type="button" class="btn" (click)="allerALaConnexion()">Déclarer un sinistre</button>
+      <div class="urgence" role="note">
+        <p>{{ texteUrgence }}</p>
+        <p><strong>{{ numeroAssistance }}</strong></p>
+      </div>
     </div>
   </section>
 
   <section class="bloc" aria-labelledby="faq-titre">
     <div class="conteneur conteneur--etroit">
-      <h2 id="faq-titre" class="serif titre-section">Questions fréquentes</h2>
+      <h2 id="faq-titre" class="serif titre-section">Aide</h2>
       @for (item of questions; track item.question; let i = $index) {
         <div class="faq">
           <h3>
@@ -185,17 +305,6 @@
     </div>
   </section>
 
-  <section class="bandeau" aria-labelledby="bandeau-titre">
-    <div class="conteneur bandeau__ligne">
-      <div>
-        <h2 id="bandeau-titre" class="serif">Prêt à assurer votre logement ?</h2>
-        <p>Votre tarif en quelques minutes, sans engagement.</p>
-      </div>
-      <button type="button" class="btn btn--blanc btn--large" (click)="allerAuDevis()">
-        Faire mon devis
-      </button>
-    </div>
-  </section>
 </main>
 
 <footer class="pied">
@@ -211,15 +320,6 @@
       <button type="button" class="lien" (click)="bientotDisponible('La page Réclamations')">Réclamations</button>
       <a class="lien" routerLink="/contact">Contact</a>
     </nav>
-    <p>
-      Assur'Easy, société anonyme au capital de 10 000 000 €, RCS Paris 912 345 678, siège social : 18 rue de
-      Châteaudun, 75009 Paris. Entreprise régie par le Code des assurances, soumise au contrôle de l'Autorité de
-      contrôle prudentiel et de résolution (ACPR), 4 place de Budapest, CS 92459, 75436 Paris Cedex 09.
-    </p>
-    <p>
-      En cas de litige, après épuisement des voies de réclamation internes, vous pouvez saisir La Médiation de
-      l'Assurance, TSA 50110, 75441 Paris Cedex 09 (www.mediation-assurance.org).
-    </p>
-    <p>© 2026 Assur'Easy. Tous droits réservés.</p>
+    <p>Assur'Easy · {{ formeSociale }} au capital de {{ capitalSocial }} · RCS {{ villeRcs }} {{ numeroRcs }} · Entreprise régie par le Code des assurances, contrôlée par l'ACPR</p>
   </div>
 </footer>

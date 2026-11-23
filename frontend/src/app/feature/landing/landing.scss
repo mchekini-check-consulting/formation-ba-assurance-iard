@@ -23,6 +23,10 @@
   &--serre {
     gap: 1.25rem;
   }
+
+  > .btn {
+    align-self: flex-start;
+  }
 }
 
 .evitement {
@@ -232,9 +236,6 @@
 .tarif {
   flex: 1 1 360px;
   min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 18px;
   padding: 28px;
   border-radius: 16px;
   background: #fff;
@@ -250,6 +251,59 @@
     font-size: 13px;
     text-align: center;
     color: var(--texte-discret);
+  }
+
+  &__form {
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  &__obligatoire {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-discret);
+  }
+}
+
+.onglets {
+  display: flex;
+  border-bottom: 2px solid var(--bordure);
+  margin-bottom: 20px;
+
+  &__onglet {
+    flex: 1;
+    padding: 10px 8px;
+    border: 0;
+    border-bottom: 3px solid transparent;
+    margin-bottom: -2px;
+    background: none;
+    color: var(--texte-doux);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color 0.15s;
+
+    &:focus-visible {
+      outline: 2px solid var(--rouge);
+      outline-offset: 2px;
+      border-radius: 4px 4px 0 0;
+    }
+
+    &[aria-selected='true'] {
+      color: var(--rouge-fonce);
+      border-bottom-color: var(--rouge);
+      background: var(--rose);
+      border-radius: 6px 6px 0 0;
+    }
+  }
+}
+
+@media (max-width: 320px) {
+  .onglets__onglet {
+    font-size: 13px;
+    padding: 8px 4px;
   }
 }
 
@@ -274,6 +328,52 @@
       background: var(--rose);
       color: var(--rouge-fonce);
       font-weight: 600;
+    }
+
+    &--icone {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      padding: 12px 8px;
+      min-height: 80px;
+      font-size: 13px;
+      line-height: 1.3;
+      text-align: center;
+
+      &.choix__option--actif {
+        border-width: 2.5px;
+      }
+    }
+  }
+}
+
+.badge {
+  display: inline-block;
+  margin-bottom: 8px;
+  padding: 3px 10px;
+  border-radius: 20px;
+  background: var(--rouge-fonce);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.urgence {
+  padding: 20px 24px;
+  border-radius: 12px;
+  background: var(--texte);
+  color: #fff;
+  font-size: 15px;
+  line-height: 1.55;
+
+  p {
+    margin: 0;
+
+    & + p {
+      margin-top: 8px;
     }
   }
 }
@@ -411,31 +511,6 @@
 
 .faq:first-of-type {
   margin-top: 16px;
-}
-
-.bandeau {
-  background: var(--rouge);
-  color: #fff;
-
-  &__ligne {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    justify-content: space-between;
-    gap: 24px;
-    padding-top: 56px;
-    padding-bottom: 56px;
-  }
-
-  h2 {
-    margin: 0 0 8px;
-    font-size: clamp(26px, 2.5vw + 14px, 34px);
-  }
-
-  p {
-    margin: 0;
-    font-size: 17px;
-  }
 }
 
 .pied {
