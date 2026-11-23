@@ -1,6 +1,6 @@
 # Dictionnaire de données — Assur'Easy
 
-Schéma après le ticket **T-05** (IA-236, sprint 2) : migrations `V1` à `V27` d'`assurance-iard-api`
+Schéma après le ticket **T-05** (IA-236, sprint 2) : migrations `V1` à `V27` (dont le correctif `V22.1`) d'`assurance-iard-api`
 (base `assurance_iard`) et `V1` à `V5` de `moteurtarifaire` (base `moteurtarifaire`).
 Les tableaux des colonnes et des contraintes en fin de document sont **générés depuis la base** après migration :
 ils font foi en cas de doute.
@@ -109,6 +109,10 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 
 ## Reprise des données du sprint 1 (V21 à V23, V27)
 
+- **V22.1 — correction de données invalides** (et non changement de statut des contrats existants) : la valeur
+  `SIGNE`, écrite par une ancienne branche jamais fusionnée (`feature/moteurtarifaire`), devient `ACTIF` si la date
+  d'effet est aujourd'hui ou passée, `EN_ATTENTE_EFFET` sinon. Tout autre statut hors des 10 valeurs autorisées
+  arrête la migration avec la liste des valeurs trouvées, sans rien modifier.
 - Contrats existants : produit HABITATION, **statut inchangé**, client, formule, mandat, devis et jour de prélèvement
   retrouvés à partir du dossier, une ligne d'historique (auteur SYSTEME), conditions particulières en version 1
   EN_VIGUEUR (`stocke` = faux : le PDF n'a jamais été stocké).
@@ -121,6 +125,8 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U27__…sql` et
 `moteurtarifaire/db/annulation/U5__…sql`, à exécuter **à la main, dans l'ordre inverse** (`psql -f`). Ils ne sont
 jamais lancés par Flyway. Chacun retire aussi sa ligne de `flyway_schema_history`, pour pouvoir rejouer la migration.
+`U22_1__…sql` se place entre U23 et U22 ; il ne retire que sa ligne de `flyway_schema_history` (la correction des
+statuts `SIGNE` n'est pas défaite : l'ancienne valeur, invalide, n'est conservée nulle part).
 U21, U22 et U23 s'arrêtent sans rien modifier s'il existe des données qui ne tiennent pas dans le schéma du sprint 1
 (contrats ou devis auto, mandats sans dossier, franchise non entière) : les supprimer d'abord, en connaissance de cause.
 
