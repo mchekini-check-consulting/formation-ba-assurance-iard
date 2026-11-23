@@ -12,7 +12,7 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: "54e8762"
+      dev: 1bad9ce
       qualif: "54e8762"
       preprod: ""
       prod: ""
@@ -145,7 +145,7 @@ applications:
     type: backend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
     tag:
-      dev: fd30ea3
+      dev: 1bad9ce
       qualif: fd30ea3
       preprod: ""
       prod: ""
