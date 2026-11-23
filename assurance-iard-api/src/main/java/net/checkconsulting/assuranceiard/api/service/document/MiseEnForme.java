@@ -31,7 +31,7 @@ public final class MiseEnForme {
 
     public static String montant(BigDecimal valeur) {
         return new DecimalFormat("#,##0.00", DecimalFormatSymbols.getInstance(Locale.FRANCE)).format(valeur)
-                .replace(' ', ' ').replace(' ', ' ') + " €";
+                .replace('\u202F', ' ').replace('\u00A0', ' ') + " €";
     }
 
     public static String date(LocalDate valeur) {
