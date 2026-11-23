@@ -48,6 +48,12 @@ public class RefOption {
     @Column(name = "formules_compatibles", nullable = false, columnDefinition = "text[]")
     private List<String> formulesCompatibles = List.of();
 
+    @Column(name = "categorie_taxe", length = 20)
+    private String categorieTaxe;
+
+    @Column(name = "soumis_bonus_malus", nullable = false)
+    private Boolean soumisBonus = false;
+
     /** Horodatages renseignés par la base (référentiel chargé par script, T-04). */
     @Column(name = "date_creation", insertable = false, updatable = false)
     private Instant dateCreation;

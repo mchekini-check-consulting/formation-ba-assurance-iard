@@ -19,6 +19,9 @@ import java.util.UUID;
 import net.checkconsulting.moteurtarifaire.api.model.CalculTarif;
 import net.checkconsulting.moteurtarifaire.api.repository.CalculTarifRepository;
 import net.checkconsulting.moteurtarifaire.api.repository.ParametreTarifaireRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefFormuleRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefOptionRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefTarifRepository;
 import net.checkconsulting.moteurtarifaire.api.repository.VersionGrilleRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -58,9 +61,18 @@ class TarifHabitationIT {
     @Autowired
     private ParametreTarifaireRepository parametres;
 
+    @Autowired
+    private RefFormuleRepository refFormules;
+
+    @Autowired
+    private RefOptionRepository refOptions;
+
+    @Autowired
+    private RefTarifRepository refTarifs;
+
     @BeforeEach
     void installerLaGrille() {
-        JeuxDeDonnees.installerGrilleDeReference(versions, parametres);
+        JeuxDeDonnees.installerGrilleDeReference(versions, parametres, refFormules, refOptions, refTarifs);
     }
 
     private ResultActions envoyer(Map<String, Object> corps) throws Exception {

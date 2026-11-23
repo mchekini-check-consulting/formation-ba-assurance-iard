@@ -33,11 +33,37 @@ class ReferentielsAutoTest {
     }
 
     @Test
+    void uneFormuleADesListesVidesParDefaut() {
+        RefFormule formule = new RefFormule();
+
+        assertThat(formule.getGarantiesIncluses()).isEmpty();
+        assertThat(formule.getNonCouvert()).isEmpty();
+        assertThat(formule.getSoumisBonus()).isFalse();
+        assertThat(formule.getPartRc()).isNull();
+    }
+
+    @Test
+    void uneFormuleGardeSesChampsTechniquesAuto() {
+        RefFormule formule = new RefFormule();
+        formule.setGarantiesIncluses(List.of("RC", "INCENDIE"));
+        formule.setNonCouvert(List.of("BRIS_GLACE"));
+        formule.setPartRc(new BigDecimal("0.6500"));
+        formule.setSoumisBonus(true);
+
+        assertThat(formule.getGarantiesIncluses()).containsExactly("RC", "INCENDIE");
+        assertThat(formule.getNonCouvert()).containsExactly("BRIS_GLACE");
+        assertThat(formule.getPartRc()).isEqualByComparingTo("0.65");
+        assertThat(formule.getSoumisBonus()).isTrue();
+    }
+
+    @Test
     void uneOptionEstFacultativeEtSansFormuleCompatibleParDefaut() {
         RefOption option = new RefOption();
 
         assertThat(option.getObligatoire()).isFalse();
         assertThat(option.getFormulesCompatibles()).isEmpty();
+        assertThat(option.getSoumisBonus()).isFalse();
+        assertThat(option.getCategorieTaxe()).isNull();
 
         option.setId(3L);
         option.setGrilleId(2L);
@@ -47,14 +73,17 @@ class ReferentielsAutoTest {
         option.setProduit("AUTO");
         option.setObligatoire(true);
         option.setFormulesCompatibles(List.of("TIERS", "INTER", "TR"));
+        option.setCategorieTaxe("ASSURANCE");
+        option.setSoumisBonus(true);
         option.setDateCreation(MAINTENANT);
         option.setDateModification(MAINTENANT);
 
         assertThat(List.of(option.getId(), option.getGrilleId(), option.getCode(), option.getLibelle(),
                 option.getPrixMensuel(), option.getProduit(), option.getObligatoire(), option.getFormulesCompatibles(),
+                option.getCategorieTaxe(), option.getSoumisBonus(),
                 option.getDateCreation(), option.getDateModification()))
                 .containsExactly(3L, 2L, "RC", "Responsabilité civile", new BigDecimal("12.00"), "AUTO", true,
-                        List.of("TIERS", "INTER", "TR"), MAINTENANT, MAINTENANT);
+                        List.of("TIERS", "INTER", "TR"), "ASSURANCE", true, MAINTENANT, MAINTENANT);
     }
 
     @Test

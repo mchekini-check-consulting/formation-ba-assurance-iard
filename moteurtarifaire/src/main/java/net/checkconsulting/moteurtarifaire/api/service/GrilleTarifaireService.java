@@ -19,33 +19,36 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class GrilleTarifaireService {
 
+    private static final String HABITATION = "HABITATION";
+
     private final VersionGrilleRepository versions;
     private final ParametreTarifaireRepository parametres;
     private final GrilleTarifaireAssembleur assembleur;
     private final ValidateurGrille validateur;
 
+    /** Grille HABITATION applicable à la date donnée. Utilisé par le calcul habitation. */
     @Transactional(readOnly = true)
     public Optional<GrilleTarifaire> applicableAu(LocalDate date) {
-        List<VersionGrille> applicables = versions.findApplicablesAu(date);
+        List<VersionGrille> applicables = versions.findApplicablesAu(date, HABITATION);
         if (applicables.isEmpty()) {
-            log.warn("Aucune grille tarifaire en vigueur au {}", date);
+            log.warn("Aucune grille tarifaire HABITATION en vigueur au {}", date);
         }
         if (applicables.size() > 1) {
-            log.error("Plusieurs grilles tarifaires en vigueur au {}", date);
-            throw new GrilleInvalideException("Plusieurs grilles tarifaires sont en vigueur au " + date + ".");
+            log.error("Plusieurs grilles tarifaires HABITATION en vigueur au {}", date);
+            throw new GrilleInvalideException("Plusieurs grilles tarifaires HABITATION sont en vigueur au " + date + ".");
         }
         return applicables.stream().findFirst().map(this::charger);
     }
 
     @Transactional(readOnly = true)
     public void verifierToutes() {
-        List<VersionGrille> toutes = versions.findAllByOrderByDateDebutAsc();
+        List<VersionGrille> toutes = versions.findByProduitOrderByDateDebutAsc(HABITATION);
         if (toutes.isEmpty()) {
-            throw new GrilleInvalideException("Aucune grille tarifaire n'existe en base.");
+            throw new GrilleInvalideException("Aucune grille tarifaire HABITATION n'existe en base.");
         }
         toutes.forEach(this::charger);
         verifierPeriodes(toutes);
-        log.info("Grilles tarifaires contrôlées : {}", toutes.stream().map(VersionGrille::getVersion).toList());
+        log.info("Grilles tarifaires HABITATION contrôlées : {}", toutes.stream().map(VersionGrille::getVersion).toList());
     }
 
     private GrilleTarifaire charger(VersionGrille version) {

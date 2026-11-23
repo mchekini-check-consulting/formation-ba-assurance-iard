@@ -23,6 +23,9 @@ import net.checkconsulting.moteurtarifaire.api.enums.ResiliationAnterieure;
 import net.checkconsulting.moteurtarifaire.api.enums.StatutOccupant;
 import net.checkconsulting.moteurtarifaire.api.enums.TypeLogement;
 import net.checkconsulting.moteurtarifaire.api.repository.ParametreTarifaireRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefFormuleRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefOptionRepository;
+import net.checkconsulting.moteurtarifaire.api.repository.RefTarifRepository;
 import net.checkconsulting.moteurtarifaire.api.service.ValidateurGrille;
 import net.checkconsulting.moteurtarifaire.api.repository.VersionGrilleRepository;
 import net.checkconsulting.moteurtarifaire.api.service.critere.CritereDependances;
@@ -43,8 +46,16 @@ public final class JeuxDeDonnees {
     private JeuxDeDonnees() {
     }
 
-    public static void installerGrilleDeReference(VersionGrilleRepository versions, ParametreTarifaireRepository parametres) {
+    public static void installerGrilleDeReference(VersionGrilleRepository versions,
+            ParametreTarifaireRepository parametres,
+            RefFormuleRepository refFormules,
+            RefOptionRepository refOptions,
+            RefTarifRepository refTarifs) {
+        // ordre FK : enfants d'abord, grille_tarifaire en dernier
         parametres.deleteAllInBatch();
+        refTarifs.deleteAllInBatch();
+        refFormules.deleteAllInBatch();
+        refOptions.deleteAllInBatch();
         versions.deleteAllInBatch();
         Long idGrille = versions.save(versionDeReference()).getId();
         List<ParametreTarifaire> lignes = parametresDeReference();
@@ -60,6 +71,7 @@ public final class JeuxDeDonnees {
 
     public static VersionGrille versionDeReference() {
         VersionGrille version = new VersionGrille();
+        version.setProduit("HABITATION");
         version.setVersion("TEST-REFERENCE");
         version.setDateDebut(LocalDate.of(2000, 1, 1));
         return version;
