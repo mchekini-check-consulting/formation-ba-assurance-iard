@@ -512,36 +512,7 @@ accompagnée non géré.
 | `date_signature` | horodatage UTC |  |  |  |
 | `iban_debut` | texte(4) |  |  |  |
 | `compte_id` | entier | oui |  | → compte |
-| `iban_masque` | texte(34) |  | calculé :  |  |
-
-### `CASE`
-
-| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
-|---|---|---|---|---|
-| `` |  |  |  |  |
-
-### `    WHEN (iban_fin IS NULL) THEN NULL::text`
-
-| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
-|---|---|---|---|---|
-| `` |  |  |  |  |
-
-### `    ELSE ('•••• '::text `
-
-| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
-|---|---|---|---|---|
-| ` (iban_fin)::text)` |  |  |  |  |
-
-### `END`
-
-| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
-|---|---|---|---|---|
-| `` |  |  |  |  |
-
-### `mandat_sepa`
-
-| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
-|---|---|---|---|---|
+| `iban_masque` | texte(34) |  | calculé : `CASE WHEN iban_fin IS NULL THEN NULL ELSE '•••• ' \|\| iban_fin END` (4 derniers caractères seulement) |  |
 | `bic` | texte(11) |  |  |  |
 | `banque` | texte(100) |  |  |  |
 | `statut` | texte(10) | oui | 'ACTIF' |  |
@@ -723,86 +694,87 @@ accompagnée non géré.
 
 ### Contraintes (uniques et contrôles) — Base `assurance_iard` (backend `assurance-iard-api`)
 
-| Table | Contrainte | Nature | Définition |
-|---|---|---|---|
-| `avenant` | `ck_avenant_numero` | contrôle | `CHECK ((numero >= 1))` |
-| `avenant` | `ck_avenant_statut` | contrôle | `CHECK (((statut) IN [EN_ATTENTE, ACCEPTE, ABANDONNE])))` |
-| `avenant` | `uk_avenant_en_attente` | index unique partiel | `UNIQUE (contrat_id) WHERE ((statut) = EN_ATTENTE)` |
-| `avenant` | `uk_avenant_numero` | unique | `UNIQUE (contrat_id, numero)` |
-| `avenant_ligne` | `ck_avenant_ligne_action` | contrôle | `CHECK (((action) IN [AJOUT, RETRAIT])))` |
-| `code_signature_contrat` | `uk_code_signature_contrat` | unique | `UNIQUE (contrat_id)` |
-| `code_verification` | `uk_code_verification_jeton` | unique | `UNIQUE (jeton_hash)` |
-| `compte` | `uk_compte_email` | unique | `UNIQUE (email)` |
-| `conducteur` | `ck_conducteur_annees_assurance` | contrôle | `CHECK (((annees_assurance IS NULL) OR (annees_assurance >= 0)))` |
-| `conducteur` | `ck_conducteur_bonus_malus` | contrôle | `CHECK (((coefficient_bonus_malus >= 0.50) AND (coefficient_bonus_malus <= 3.50)))` |
-| `conducteur` | `ck_conducteur_nb_sinistres` | contrôle | `CHECK (((nb_sinistres_3_ans IS NULL) OR (nb_sinistres_3_ans >= 0)))` |
-| `conducteur` | `ck_conducteur_resiliation` | contrôle | `CHECK (((resiliation_assureur) IN [AUCUNE, NON_PAIEMENT, SINISTRALITE, FAUSSE_DECLARATION])))` |
-| `contrat` | `ck_contrat_auto` | contrôle | `CHECK ((((produit) <> AUTO) OR ((vehicule_id IS NOT NULL) AND (conducteur_principal_id IS NOT NULL))))` |
-| `contrat` | `ck_contrat_frequence_paiement` | contrôle | `CHECK (((frequence_paiement) IN [MENSUEL, ANNUEL])))` |
-| `contrat` | `ck_contrat_habitation` | contrôle | `CHECK ((((produit) <> HABITATION) OR ((adresse_logement IS NOT NULL) AND (code_postal IS NOT NULL) AND (ville IS NOT NULL) AND (type_logement IS NOT NULL) AND (surface IS NOT NULL))))` |
-| `contrat` | `ck_contrat_jour_prelevement` | contrôle | `CHECK ((jour_prelevement = ANY [5, 10, 15]))` |
-| `contrat` | `ck_contrat_motif_fin` | contrôle | `CHECK (((motif_fin) IN [ECHEANCE, LOI_HAMON, VENTE_VEHICULE, DEMENAGEMENT, NON_PAIEMENT, RENONCIATION, AUTRE])))` |
-| `contrat` | `ck_contrat_produit` | contrôle | `CHECK (((produit) IN [HABITATION, AUTO])))` |
-| `contrat` | `ck_contrat_signe_mandat` | contrôle | `CHECK (((signe_le IS NULL) OR (mandat_sepa_id IS NOT NULL)))` |
-| `contrat` | `ck_contrat_statut` | contrôle | `CHECK (((statut) IN [EN_ATTENTE_DE_SIGNATURE, EN_ATTENTE_EFFET, ACTIF, ACTIF_JUSTIFICATIFS_ATTENDUS, AVENANT_EN_ATTENTE, IMPAYE, SUSPENDU, RESILIATION_EN_COURS, RESILIE, RENONCE])))` |
-| `contrat` | `contrat_numero_key` | unique | `UNIQUE (numero)` |
-| `contrat_option` | `ck_contrat_option_dates` | contrôle | `CHECK (((date_fin IS NULL) OR (date_fin >= date_debut)))` |
-| `declaration_fva` | `ck_declaration_fva_statut` | contrôle | `CHECK (((statut) IN [A_ENVOYER, DECLAREE, REJETEE, DIFFEREE])))` |
-| `devis_auto` | `ck_devis_auto_ancien_assureur` | contrôle | `CHECK (((NOT assure_plus_un_an) OR ((ancien_assureur IS NOT NULL) AND (ancien_numero_contrat IS NOT NULL))))` |
-| `devis_auto` | `ck_devis_auto_date_effet` | contrôle | `CHECK (((date_effet_souhaitee IS NULL) OR ((date_effet_souhaitee >= ((date_creation)::date + 1)) AND (date_effet_souhaitee <= ((date_creation)::date + 90)))))` |
-| `devis_auto` | `uk_devis_auto_devis` | unique | `UNIQUE (devis_id)` |
-| `devis_enregistre` | `ck_devis_enregistre_habitation` | contrôle | `CHECK ((((produit) <> HABITATION) OR ((reference IS NOT NULL) AND (type_logement IS NOT NULL) AND (adresse IS NOT NULL) AND (code_postal IS NOT NULL) AND (ville IS NOT NULL) AND (surface IS NOT NULL) AND (formule IS NOT NULL) AND (options IS NOT NULL) AND (franchise IS NOT NULL) AND (prix_mensuel IS NOT NULL))))` |
-| `devis_enregistre` | `ck_devis_enregistre_produit` | contrôle | `CHECK (((produit) IN [HABITATION, AUTO])))` |
-| `devis_enregistre` | `ck_devis_enregistre_statut_devis` | contrôle | `CHECK (((statut_devis) IN [EN_COURS, VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE, TRANSFORME, REFUSE_EN_LIGNE, EXPIRE])))` |
-| `devis_enregistre` | `uk_devis_enregistre_compte_reference` | unique | `UNIQUE (compte_id, reference)` |
-| `devis_option` | `uk_devis_option` | unique | `UNIQUE (devis_id, code_option)` |
-| `document` | `ck_document_statut` | contrôle | `CHECK (((statut) IN [EN_VIGUEUR, REMPLACE])))` |
-| `document` | `ck_document_stocke` | contrôle | `CHECK (((NOT stocke) OR (cle_stockage IS NOT NULL)))` |
-| `document` | `ck_document_type` | contrôle | `CHECK (((type) IN [CONDITIONS_PARTICULIERES, CONDITIONS_GENERALES, IPID, FICHE_CONSEIL, MANDAT_SEPA, ECHEANCIER, FACTURE, AVENANT, MEMO_VEHICULE, ATTESTATION, DEVIS, DECLARATION_SINISTRE])))` |
-| `document` | `ck_document_version` | contrôle | `CHECK ((version >= 1))` |
-| `document` | `uk_document_en_vigueur` | index unique partiel | `UNIQUE (contrat_id, type) WHERE ((statut) = EN_VIGUEUR)` |
-| `dossier_souscription` | `uk_dossier_souscription_devis` | unique | `UNIQUE (compte_id, reference_devis)` |
-| `echeance` | `ck_echeance_montant_ttc` | contrôle | `CHECK ((montant_ttc = (montant_ht + taxe)))` |
-| `echeance` | `ck_echeance_statut` | contrôle | `CHECK (((statut) IN [A_VENIR, PAYEE, IMPAYEE])))` |
-| `facture` | `ck_facture_montant_ttc` | contrôle | `CHECK ((montant_ttc = (montant_ht + taxe)))` |
-| `facture` | `ck_facture_periode` | contrôle | `CHECK ((periode_fin >= periode_debut))` |
-| `facture` | `uk_facture_numero` | unique | `UNIQUE (numero)` |
-| `historique_statut_contrat` | `ck_historique_statut_apres` | contrôle | `CHECK (((statut_apres) IN [EN_ATTENTE_DE_SIGNATURE, EN_ATTENTE_EFFET, ACTIF, ACTIF_JUSTIFICATIFS_ATTENDUS, AVENANT_EN_ATTENTE, IMPAYE, SUSPENDU, RESILIATION_EN_COURS, RESILIE, RENONCE])))` |
-| `historique_statut_contrat` | `ck_historique_statut_auteur` | contrôle | `CHECK (((auteur) IN [CLIENT, SYSTEME, GESTIONNAIRE])))` |
-| `historique_statut_contrat` | `ck_historique_statut_avant` | contrôle | `CHECK (((statut_avant) IN [EN_ATTENTE_DE_SIGNATURE, EN_ATTENTE_EFFET, ACTIF, ACTIF_JUSTIFICATIFS_ATTENDUS, AVENANT_EN_ATTENTE, IMPAYE, SUSPENDU, RESILIATION_EN_COURS, RESILIE, RENONCE])))` |
-| `justificatif` | `uk_justificatif_categorie` | unique | `UNIQUE (dossier_id, categorie)` |
-| `lien_reinitialisation` | `uk_lien_reinitialisation_jeton` | unique | `UNIQUE (jeton_hash)` |
-| `mandat_sepa` | `ck_mandat_sepa_statut` | contrôle | `CHECK (((statut) IN [ACTIF, REVOQUE])))` |
-| `mandat_sepa` | `uk_mandat_sepa_dossier` | unique | `UNIQUE (dossier_id)` |
-| `mandat_sepa` | `uk_mandat_sepa_rum` | unique | `UNIQUE (rum)` |
-| `permission` | `uk_permission` | unique | `UNIQUE (profil, rubrique, droit)` |
-| `piece_jointe` | `ck_piece_jointe_format` | contrôle | `CHECK (((format) IN [PDF, JPG, PNG])))` |
-| `piece_jointe` | `ck_piece_jointe_statut` | contrôle | `CHECK (((statut) IN [STOCKEE, REFUSEE])))` |
-| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | `CHECK (((taille_octets >= 1) AND (taille_octets <= 5242880)))` |
-| `preuve_signature` | `ck_preuve_signature_nb_essais` | contrôle | `CHECK (((nb_essais >= 1) AND (nb_essais <= 3)))` |
-| `recommandation_devis` | `uk_recommandation_devis_reference` | unique | `UNIQUE (reference)` |
-| `ref_plaque_test` | `ck_ref_plaque_test_comportement` | contrôle | `CHECK (((comportement) IN [TROUVE, INCONNU, ERREUR, DELAI])))` |
-| `ref_plaque_test` | `uk_ref_plaque_test_immatriculation` | unique | `UNIQUE (immatriculation)` |
-| `ref_vehicule` | `ck_ref_vehicule_energie` | contrôle | `CHECK (((energie) IN [ESSENCE, DIESEL, HYBRIDE, ELECTRIQUE, GPL])))` |
-| `resiliation_hamon` | `ck_resiliation_hamon_nb_essais` | contrôle | `CHECK ((nb_essais >= 0))` |
-| `resiliation_hamon` | `ck_resiliation_hamon_statut` | contrôle | `CHECK (((statut) IN [A_ENVOYER, ENVOYEE, ACCEPTEE, INTROUVABLE, ERREUR])))` |
-| `session_client` | `uk_session_client_jeton` | unique | `UNIQUE (jeton_hash)` |
-| `sinistre` | `ck_sinistre_date_survenance` | contrôle | `CHECK ((date_survenance <= (date_creation)::date))` |
-| `sinistre` | `ck_sinistre_declarant` | contrôle | `CHECK (((declarant) IN [SOUSCRIPTEUR, CONDUCTEUR, PROCHE])))` |
-| `sinistre` | `ck_sinistre_declare` | contrôle | `CHECK ((((statut) <> DECLARE) OR (declaration_honneur AND (numero IS NOT NULL) AND (declare_le IS NOT NULL))))` |
-| `sinistre` | `ck_sinistre_statut` | contrôle | `CHECK (((statut) IN [BROUILLON, DECLARE])))` |
-| `sinistre` | `ck_sinistre_type` | contrôle | `CHECK (((type) IN [ACCIDENT_TIERS, ACCIDENT_SANS_TIERS, VOL, BRIS_GLACE, INCENDIE, CLIMATIQUE_CATNAT, AUTRE, DEGAT_EAUX, VOL_CAMBRIOLAGE, RC_TIERS])))` |
-| `sinistre` | `uk_sinistre_numero` | unique | `UNIQUE (numero)` |
-| `tarif_devis` | `uk_tarif_devis_reference` | unique | `UNIQUE (reference_devis)` |
-| `vehicule` | `ck_vehicule_date_acquisition` | contrôle | `CHECK (((date_acquisition IS NULL) OR (((date_mise_circulation IS NULL) OR (date_acquisition >= date_mise_circulation)) AND (date_acquisition <= (date_creation)::date))))` |
-| `vehicule` | `ck_vehicule_energie` | contrôle | `CHECK (((energie) IN [ESSENCE, DIESEL, HYBRIDE, ELECTRIQUE, GPL])))` |
-| `vehicule` | `ck_vehicule_immatriculation` | contrôle | `CHECK (((immatriculation IS NULL) OR ((immatriculation) ~ '^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$')))` |
-| `vehicule` | `ck_vehicule_km_annuel` | contrôle | `CHECK (((km_annuel IS NULL) OR (km_annuel >= 0)))` |
-| `vehicule` | `ck_vehicule_mode_achat` | contrôle | `CHECK (((mode_achat) IN [COMPTANT, CREDIT, LOA, LLD])))` |
-| `vehicule` | `ck_vehicule_source` | contrôle | `CHECK (((source) IN [PLAQUE, MARQUE])))` |
-| `vehicule` | `ck_vehicule_stationnement` | contrôle | `CHECK (((stationnement) IN [GARAGE_FERME, PARKING_PRIVE, RUE])))` |
-| `vehicule` | `ck_vehicule_titulaire` | contrôle | `CHECK (((titulaire_carte_grise) IN [SOUSCRIPTEUR, CONJOINT, ENFANT, SOCIETE_LOCATION, AUTRE_PERSONNE])))` |
-| `vehicule` | `ck_vehicule_usage` | contrôle | `CHECK (((usage) IN [PRIVE, TRAJET_TRAVAIL, PROFESSIONNEL])))` |
+| Table | Contrainte | Nature | Règle en français | Définition SQL |
+|---|---|---|---|---|
+| `avenant` | `ck_avenant_numero` | contrôle | Le numéro d'avenant commence à 1. | `CHECK ((numero >= 1))` |
+| `avenant` | `ck_avenant_statut` | contrôle | Statut : EN_ATTENTE, ACCEPTE ou ABANDONNE. | `CHECK (((statut) = ANY ((ARRAY['EN_ATTENTE', 'ACCEPTE', 'ABANDONNE']))))` |
+| `avenant` | `uk_avenant_en_attente` | index unique partiel | Un seul avenant EN_ATTENTE par contrat. | `UNIQUE (contrat_id) WHERE ((statut) = 'EN_ATTENTE')` |
+| `avenant` | `uk_avenant_numero` | unique | Un numéro d'avenant n'est utilisé qu'une fois par contrat. | `UNIQUE (contrat_id, numero)` |
+| `avenant_ligne` | `ck_avenant_ligne_action` | contrôle | Action : AJOUT ou RETRAIT. | `CHECK (((action) = ANY ((ARRAY['AJOUT', 'RETRAIT']))))` |
+| `code_signature_contrat` | `uk_code_signature_contrat` | unique | Pas de doublon sur : contrat_id. | `UNIQUE (contrat_id)` |
+| `code_verification` | `uk_code_verification_jeton` | unique | Pas de doublon sur : jeton_hash. | `UNIQUE (jeton_hash)` |
+| `compte` | `uk_compte_email` | unique | Pas de doublon sur : email. | `UNIQUE (email)` |
+| `conducteur` | `ck_conducteur_annees_assurance` | contrôle | Le nombre d'années d'assurance n'est jamais négatif. | `CHECK (((annees_assurance IS NULL) OR (annees_assurance >= 0)))` |
+| `conducteur` | `ck_conducteur_bonus_malus` | contrôle | Le coefficient bonus-malus est compris entre 0,50 et 3,50. | `CHECK (((coefficient_bonus_malus >= 0.50) AND (coefficient_bonus_malus <= 3.50)))` |
+| `conducteur` | `ck_conducteur_nb_sinistres` | contrôle | Le nombre de sinistres sur 3 ans n'est jamais négatif. | `CHECK (((nb_sinistres_3_ans IS NULL) OR (nb_sinistres_3_ans >= 0)))` |
+| `conducteur` | `ck_conducteur_resiliation` | contrôle | Résiliation par l'assureur : AUCUNE, NON_PAIEMENT, SINISTRALITE ou FAUSSE_DECLARATION. | `CHECK (((resiliation_assureur) = ANY ((ARRAY['AUCUNE', 'NON_PAIEMENT', 'SINISTRALITE', 'FAUSSE_DECLARATION']))))` |
+| `contrat` | `ck_contrat_auto` | contrôle | Un contrat AUTO a un véhicule et un conducteur principal. | `CHECK ((((produit) <> 'AUTO') OR ((vehicule_id IS NOT NULL) AND (conducteur_principal_id IS NOT NULL))))` |
+| `contrat` | `ck_contrat_frequence_paiement` | contrôle | Fréquence de paiement : MENSUEL ou ANNUEL. | `CHECK (((frequence_paiement) = ANY ((ARRAY['MENSUEL', 'ANNUEL']))))` |
+| `contrat` | `ck_contrat_habitation` | contrôle | Un contrat HABITATION a une adresse, un code postal, une ville, un type de logement et une surface. | `CHECK ((((produit) <> 'HABITATION') OR ((adresse_logement IS NOT NULL) AND (code_postal IS NOT NULL) AND (ville IS NOT NULL) AND (type_logement IS NOT NULL) AND (surface IS NOT NULL))))` |
+| `contrat` | `ck_contrat_jour_prelevement` | contrôle | Le jour de prélèvement est le 5, le 10 ou le 15. | `CHECK ((jour_prelevement = ANY (ARRAY[5, 10, 15])))` |
+| `contrat` | `ck_contrat_motif_fin` | contrôle | Motif de fin : ECHEANCE, LOI_HAMON, VENTE_VEHICULE, DEMENAGEMENT, NON_PAIEMENT, RENONCIATION ou AUTRE. | `CHECK (((motif_fin) = ANY ((ARRAY['ECHEANCE', 'LOI_HAMON', 'VENTE_VEHICULE', 'DEMENAGEMENT', 'NON_PAIEMENT', 'RENONCIATION', 'AUTRE']))))` |
+| `contrat` | `ck_contrat_produit` | contrôle | Produit : HABITATION ou AUTO. | `CHECK (((produit) = ANY ((ARRAY['HABITATION', 'AUTO']))))` |
+| `contrat` | `ck_contrat_signe_mandat` | contrôle | Un contrat signé a un mandat SEPA. | `CHECK (((signe_le IS NULL) OR (mandat_sepa_id IS NOT NULL)))` |
+| `contrat` | `ck_contrat_statut` | contrôle | Statut : l'une des 10 valeurs de STATUT_CONTRAT (orthographe du projet : EN_ATTENTE_DE_SIGNATURE). | `CHECK (((statut) = ANY ((ARRAY['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'ACTIF', 'ACTIF_JUSTIFICATIFS_ATTENDUS', 'AVENANT_EN_ATTENTE', 'IMPAYE', 'SUSPENDU', 'RESILIATION_EN_COURS', 'RESILIE', 'RENONCE']))))` |
+| `contrat` | `contrat_numero_key` | unique | Pas de doublon sur : numero. | `UNIQUE (numero)` |
+| `contrat_option` | `ck_contrat_option_dates` | contrôle | Une option ne se termine pas avant d'avoir commencé. | `CHECK (((date_fin IS NULL) OR (date_fin >= date_debut)))` |
+| `declaration_fva` | `ck_declaration_fva_statut` | contrôle | Statut FVA : A_ENVOYER, DECLAREE, REJETEE ou DIFFEREE. | `CHECK (((statut) = ANY ((ARRAY['A_ENVOYER', 'DECLAREE', 'REJETEE', 'DIFFEREE']))))` |
+| `devis_auto` | `ck_devis_auto_ancien_assureur` | contrôle | Assuré depuis plus d'un an : ancien assureur et ancien numéro de contrat obligatoires. | `CHECK (((NOT assure_plus_un_an) OR ((ancien_assureur IS NOT NULL) AND (ancien_numero_contrat IS NOT NULL))))` |
+| `devis_auto` | `ck_devis_auto_date_effet` | contrôle | Date d'effet souhaitée entre le lendemain et 90 jours après la création du devis. | `CHECK (((date_effet_souhaitee IS NULL) OR ((date_effet_souhaitee >= ((date_creation)::date + 1)) AND (date_effet_souhaitee <= ((date_creation)::date + 90)))))` |
+| `devis_auto` | `uk_devis_auto_devis` | unique | Pas de doublon sur : devis_id. | `UNIQUE (devis_id)` |
+| `devis_enregistre` | `ck_devis_enregistre_habitation` | contrôle | Un devis HABITATION a sa référence, son logement, sa formule, ses options, sa franchise et son prix. | `CHECK ((((produit) <> 'HABITATION') OR ((reference IS NOT NULL) AND (type_logement IS NOT NULL) AND (adresse IS NOT NULL) AND (code_postal IS NOT NULL) AND (ville IS NOT NULL) AND (surface IS NOT NULL) AND (formule IS NOT NULL) AND (options IS NOT NULL) AND (franchise IS NOT NULL) AND (prix_mensuel IS NOT NULL))))` |
+| `devis_enregistre` | `ck_devis_enregistre_produit` | contrôle | Produit : HABITATION ou AUTO. | `CHECK (((produit) = ANY ((ARRAY['HABITATION', 'AUTO']))))` |
+| `devis_enregistre` | `ck_devis_enregistre_statut_devis` | contrôle | Statut du devis : l'une des 8 valeurs de STATUT_DEVIS. | `CHECK (((statut_devis) = ANY ((ARRAY['EN_COURS', 'VEHICULE_RENSEIGNE', 'BESOINS_RENSEIGNES', 'FORMULE_CHOISIE', 'RECAP_VALIDE', 'TRANSFORME', 'REFUSE_EN_LIGNE', 'EXPIRE']))))` |
+| `devis_enregistre` | `uk_devis_enregistre_compte_reference` | unique | Pas de doublon sur : compte_id, reference. | `UNIQUE (compte_id, reference)` |
+| `devis_option` | `uk_devis_option` | unique | Pas de doublon sur : devis_id, code_option. | `UNIQUE (devis_id, code_option)` |
+| `document` | `ck_document_statut` | contrôle | Statut du document : EN_VIGUEUR ou REMPLACE. | `CHECK (((statut) = ANY ((ARRAY['EN_VIGUEUR', 'REMPLACE']))))` |
+| `document` | `ck_document_stocke` | contrôle | Un document stocké a une clé de stockage. | `CHECK (((NOT stocke) OR (cle_stockage IS NOT NULL)))` |
+| `document` | `ck_document_type` | contrôle | Type : l'une des 12 valeurs de TYPE_DOCUMENT. | `CHECK (((type) = ANY ((ARRAY['CONDITIONS_PARTICULIERES', 'CONDITIONS_GENERALES', 'IPID', 'FICHE_CONSEIL', 'MANDAT_SEPA', 'ECHEANCIER', 'FACTURE', 'AVENANT', 'MEMO_VEHICULE', 'ATTESTATION', 'DEVIS', 'DECLARATION_SINISTRE']))))` |
+| `document` | `ck_document_version` | contrôle | La version commence à 1. | `CHECK ((version >= 1))` |
+| `document` | `uk_document_en_vigueur` | index unique partiel | Une seule version EN_VIGUEUR par contrat et par type de document. | `UNIQUE (contrat_id, type) WHERE ((statut) = 'EN_VIGUEUR')` |
+| `dossier_souscription` | `uk_dossier_souscription_devis` | unique | Pas de doublon sur : compte_id, reference_devis. | `UNIQUE (compte_id, reference_devis)` |
+| `echeance` | `ck_echeance_montant_ttc` | contrôle | Montant TTC = montant HT + taxe. | `CHECK ((montant_ttc = (montant_ht + taxe)))` |
+| `echeance` | `ck_echeance_statut` | contrôle | Statut de l'échéance : A_VENIR, PAYEE ou IMPAYEE. | `CHECK (((statut) = ANY ((ARRAY['A_VENIR', 'PAYEE', 'IMPAYEE']))))` |
+| `facture` | `ck_facture_montant_ttc` | contrôle | Montant TTC = montant HT + taxe. | `CHECK ((montant_ttc = (montant_ht + taxe)))` |
+| `facture` | `ck_facture_periode` | contrôle | La période facturée ne se termine pas avant d'avoir commencé. | `CHECK ((periode_fin >= periode_debut))` |
+| `facture` | `uk_facture_numero` | unique | Pas de doublon sur : numero. | `UNIQUE (numero)` |
+| `historique_statut_contrat` | `ck_historique_statut_apres` | contrôle | Nouveau statut : l'une des 10 valeurs de STATUT_CONTRAT. | `CHECK (((statut_apres) = ANY ((ARRAY['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'ACTIF', 'ACTIF_JUSTIFICATIFS_ATTENDUS', 'AVENANT_EN_ATTENTE', 'IMPAYE', 'SUSPENDU', 'RESILIATION_EN_COURS', 'RESILIE', 'RENONCE']))))` |
+| `historique_statut_contrat` | `ck_historique_statut_auteur` | contrôle | Auteur du changement : CLIENT, SYSTEME ou GESTIONNAIRE. | `CHECK (((auteur) = ANY ((ARRAY['CLIENT', 'SYSTEME', 'GESTIONNAIRE']))))` |
+| `historique_statut_contrat` | `ck_historique_statut_avant` | contrôle | Ancien statut (vide à la création) : l'une des 10 valeurs de STATUT_CONTRAT. | `CHECK (((statut_avant) = ANY ((ARRAY['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'ACTIF', 'ACTIF_JUSTIFICATIFS_ATTENDUS', 'AVENANT_EN_ATTENTE', 'IMPAYE', 'SUSPENDU', 'RESILIATION_EN_COURS', 'RESILIE', 'RENONCE']))))` |
+| `justificatif` | `uk_justificatif_categorie` | unique | Pas de doublon sur : dossier_id, categorie. | `UNIQUE (dossier_id, categorie)` |
+| `lien_reinitialisation` | `uk_lien_reinitialisation_jeton` | unique | Pas de doublon sur : jeton_hash. | `UNIQUE (jeton_hash)` |
+| `mandat_sepa` | `ck_mandat_sepa_statut` | contrôle | Statut du mandat : ACTIF ou REVOQUE. | `CHECK (((statut) = ANY ((ARRAY['ACTIF', 'REVOQUE']))))` |
+| `mandat_sepa` | `uk_mandat_sepa_dossier` | unique | Pas de doublon sur : dossier_id. | `UNIQUE (dossier_id)` |
+| `mandat_sepa` | `uk_mandat_sepa_rum` | unique | Pas de doublon sur : rum. | `UNIQUE (rum)` |
+| `permission` | `uk_permission` | unique | Pas de doublon sur : profil, rubrique, droit. | `UNIQUE (profil, rubrique, droit)` |
+| `piece_jointe` | `ck_piece_jointe_format` | contrôle | Format : PDF, JPG ou PNG. | `CHECK (((format) = ANY ((ARRAY['PDF', 'JPG', 'PNG']))))` |
+| `piece_jointe` | `ck_piece_jointe_statut` | contrôle | Statut de la pièce : STOCKEE ou REFUSEE. | `CHECK (((statut) = ANY ((ARRAY['STOCKEE', 'REFUSEE']))))` |
+| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | Taille entre 1 octet et 5 Mo (hypothèse non validée par la PO). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 5242880)))` |
+| `preuve_signature` | `ck_preuve_signature_nb_essais` | contrôle | Signature obtenue en 1 à 3 essais. | `CHECK (((nb_essais >= 1) AND (nb_essais <= 3)))` |
+| `recommandation_devis` | `uk_recommandation_devis_reference` | unique | Pas de doublon sur : reference. | `UNIQUE (reference)` |
+| `ref_plaque_test` | `ck_ref_plaque_test_comportement` | contrôle | Comportement simulé : TROUVE, INCONNU, ERREUR ou DELAI. | `CHECK (((comportement) = ANY ((ARRAY['TROUVE', 'INCONNU', 'ERREUR', 'DELAI']))))` |
+| `ref_plaque_test` | `uk_ref_plaque_test_immatriculation` | unique | Pas de doublon sur : immatriculation. | `UNIQUE (immatriculation)` |
+| `ref_vehicule` | `ck_ref_vehicule_energie` | contrôle | Énergie : ESSENCE, DIESEL, HYBRIDE, ELECTRIQUE ou GPL. | `CHECK (((energie) = ANY ((ARRAY['ESSENCE', 'DIESEL', 'HYBRIDE', 'ELECTRIQUE', 'GPL']))))` |
+| `resiliation_hamon` | `ck_resiliation_hamon_nb_essais` | contrôle | Le nombre d'essais n'est jamais négatif. | `CHECK ((nb_essais >= 0))` |
+| `resiliation_hamon` | `ck_resiliation_hamon_statut` | contrôle | Statut : A_ENVOYER, ENVOYEE, ACCEPTEE, INTROUVABLE ou ERREUR. | `CHECK (((statut) = ANY ((ARRAY['A_ENVOYER', 'ENVOYEE', 'ACCEPTEE', 'INTROUVABLE', 'ERREUR']))))` |
+| `session_client` | `uk_session_client_jeton` | unique | Pas de doublon sur : jeton_hash. | `UNIQUE (jeton_hash)` |
+| `sinistre` | `ck_sinistre_date_survenance` | contrôle | Le sinistre ne survient pas après la création de la déclaration (date du jour contrôlée par l'application). | `CHECK ((date_survenance <= (date_creation)::date))` |
+| `sinistre` | `ck_sinistre_declarant` | contrôle | Déclarant : SOUSCRIPTEUR, CONDUCTEUR ou PROCHE. | `CHECK (((declarant) = ANY ((ARRAY['SOUSCRIPTEUR', 'CONDUCTEUR', 'PROCHE']))))` |
+| `sinistre` | `ck_sinistre_declare` | contrôle | Un sinistre DECLARE a la déclaration sur l'honneur, un numéro et une date de déclaration. | `CHECK ((((statut) <> 'DECLARE') OR (declaration_honneur AND (numero IS NOT NULL) AND (declare_le IS NOT NULL))))` |
+| `sinistre` | `ck_sinistre_statut` | contrôle | Statut : BROUILLON ou DECLARE. | `CHECK (((statut) = ANY ((ARRAY['BROUILLON', 'DECLARE']))))` |
+| `sinistre` | `ck_sinistre_type` | contrôle | Type : un type de sinistre auto ou habitation (cohérence avec le produit vérifiée par l'application, US-24). | `CHECK (((type) = ANY ((ARRAY['ACCIDENT_TIERS', 'ACCIDENT_SANS_TIERS', 'VOL', 'BRIS_GLACE', 'INCENDIE', 'CLIMATIQUE_CATNAT', 'AUTRE', 'DEGAT_EAUX', 'VOL_CAMBRIOLAGE', 'RC_TIERS']))))` |
+| `sinistre` | `uk_sinistre_numero` | unique | Pas de doublon sur : numero. | `UNIQUE (numero)` |
+| `tarif_devis` | `uk_tarif_devis_reference` | unique | Pas de doublon sur : reference_devis. | `UNIQUE (reference_devis)` |
+| `vehicule` | `ck_vehicule_date_acquisition` | contrôle | Acquisition pas avant la mise en circulation, ni après la création de la ligne. | `CHECK (((date_acquisition IS NULL) OR (((date_mise_circulation IS NULL) OR (date_acquisition >= date_mise_circulation)) AND (date_acquisition <= (date_creation)::date))))` |
+| `vehicule` | `ck_vehicule_energie` | contrôle | Énergie : ESSENCE, DIESEL, HYBRIDE, ELECTRIQUE ou GPL. | `CHECK (((energie) = ANY ((ARRAY['ESSENCE', 'DIESEL', 'HYBRIDE', 'ELECTRIQUE', 'GPL']))))` |
+| `vehicule` | `ck_vehicule_immatriculation` | contrôle | Immatriculation au format AA-123-AA si elle est renseignée. | `CHECK (((immatriculation IS NULL) OR ((immatriculation) ~ '^[A-Z]{2}-[0-9]{3}-[A-Z]{2}$')))` |
+| `vehicule` | `ck_vehicule_km_annuel` | contrôle | Le kilométrage annuel n'est jamais négatif. | `CHECK (((km_annuel IS NULL) OR (km_annuel >= 0)))` |
+| `vehicule` | `ck_vehicule_mode_achat` | contrôle | Mode d'achat : COMPTANT, CREDIT, LOA ou LLD. | `CHECK (((mode_achat) = ANY ((ARRAY['COMPTANT', 'CREDIT', 'LOA', 'LLD']))))` |
+| `vehicule` | `ck_vehicule_source` | contrôle | Véhicule trouvé par PLAQUE ou par MARQUE. | `CHECK (((source) = ANY ((ARRAY['PLAQUE', 'MARQUE']))))` |
+| `vehicule` | `ck_vehicule_stationnement` | contrôle | Stationnement : GARAGE_FERME, PARKING_PRIVE ou RUE. | `CHECK (((stationnement) = ANY ((ARRAY['GARAGE_FERME', 'PARKING_PRIVE', 'RUE']))))` |
+| `vehicule` | `ck_vehicule_titulaire` | contrôle | Titulaire de la carte grise : SOUSCRIPTEUR, CONJOINT, ENFANT, SOCIETE_LOCATION ou AUTRE_PERSONNE. | `CHECK (((titulaire_carte_grise) = ANY ((ARRAY['SOUSCRIPTEUR', 'CONJOINT', 'ENFANT', 'SOCIETE_LOCATION', 'AUTRE_PERSONNE']))))` |
+| `vehicule` | `ck_vehicule_usage` | contrôle | Usage : PRIVE, TRAJET_TRAVAIL ou PROFESSIONNEL. | `CHECK (((usage) = ANY ((ARRAY['PRIVE', 'TRAJET_TRAVAIL', 'PROFESSIONNEL']))))` |
+
 
 ## Base `moteurtarifaire` (backend `moteurtarifaire`)
 
@@ -883,16 +855,16 @@ accompagnée non géré.
 
 ### Contraintes (uniques et contrôles) — Base `moteurtarifaire` (backend `moteurtarifaire`)
 
-| Table | Contrainte | Nature | Définition |
-|---|---|---|---|
-| `calcul_tarif` | `calcul_tarif_id_tarif_key` | unique | `UNIQUE (id_tarif)` |
-| `grille_tarifaire` | `grille_tarifaire_dates` | contrôle | `CHECK (((date_fin IS NULL) OR (date_fin >= date_debut)))` |
-| `grille_tarifaire` | `grille_tarifaire_version_key` | unique | `UNIQUE (version)` |
-| `parametre_tarifaire` | `parametre_tarifaire_unique` | unique | `UNIQUE (grille_id, categorie, cle)` |
-| `ref_formule` | `ref_formule_code` | contrôle | `CHECK (((code) IN [TIERS, INTER, TR])))` |
-| `ref_formule` | `ref_formule_unique` | unique | `UNIQUE (grille_id, code)` |
-| `ref_option` | `ref_option_produit` | contrôle | `CHECK (((produit) IN [HABITATION, AUTO])))` |
-| `ref_option` | `ref_option_unique` | unique | `UNIQUE (grille_id, code)` |
-| `ref_tarif` | `ref_tarif_bornes` | contrôle | `CHECK (((borne_min IS NULL) OR (borne_max IS NULL) OR (borne_max >= borne_min)))` |
-| `ref_tarif` | `ref_tarif_coefficient` | contrôle | `CHECK ((coefficient > (0)))` |
-| `ref_tarif` | `ref_tarif_critere` | contrôle | `CHECK (((critere) IN [AGE, BONUS_MALUS, USAGE, VALEUR_VEHICULE])))` |
+| Table | Contrainte | Nature | Règle en français | Définition SQL |
+|---|---|---|---|---|
+| `calcul_tarif` | `calcul_tarif_id_tarif_key` | unique | Pas de doublon sur : id_tarif. | `UNIQUE (id_tarif)` |
+| `grille_tarifaire` | `grille_tarifaire_dates` | contrôle | Une version de grille ne se termine pas avant d'avoir commencé. | `CHECK (((date_fin IS NULL) OR (date_fin >= date_debut)))` |
+| `grille_tarifaire` | `grille_tarifaire_version_key` | unique | Pas de doublon sur : version. | `UNIQUE (version)` |
+| `parametre_tarifaire` | `parametre_tarifaire_unique` | unique | Pas de doublon sur : grille_id, categorie, cle. | `UNIQUE (grille_id, categorie, cle)` |
+| `ref_formule` | `ref_formule_code` | contrôle | Code de formule : TIERS, INTER ou TR. | `CHECK (((code) = ANY ((ARRAY['TIERS', 'INTER', 'TR']))))` |
+| `ref_formule` | `ref_formule_unique` | unique | Pas de doublon sur : grille_id, code. | `UNIQUE (grille_id, code)` |
+| `ref_option` | `ref_option_produit` | contrôle | Produit : HABITATION ou AUTO. | `CHECK (((produit) = ANY ((ARRAY['HABITATION', 'AUTO']))))` |
+| `ref_option` | `ref_option_unique` | unique | Pas de doublon sur : grille_id, code. | `UNIQUE (grille_id, code)` |
+| `ref_tarif` | `ref_tarif_bornes` | contrôle | La borne maximale n'est pas inférieure à la borne minimale. | `CHECK (((borne_min IS NULL) OR (borne_max IS NULL) OR (borne_max >= borne_min)))` |
+| `ref_tarif` | `ref_tarif_coefficient` | contrôle | Le coefficient est strictement positif. | `CHECK ((coefficient > (0)::numeric))` |
+| `ref_tarif` | `ref_tarif_critere` | contrôle | Critère : AGE, BONUS_MALUS, USAGE ou VALEUR_VEHICULE. | `CHECK (((critere) = ANY ((ARRAY['AGE', 'BONUS_MALUS', 'USAGE', 'VALEUR_VEHICULE']))))` |
