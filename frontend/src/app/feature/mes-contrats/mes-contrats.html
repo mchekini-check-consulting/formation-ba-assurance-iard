@@ -1,15 +1,5 @@
-<header class="entete">
-  <div class="entete__ligne">
-    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
-      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
-      <span class="logo__nom serif">Assur'Easy</span>
-    </a>
-    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
-  </div>
-</header>
-
-<main class="page">
-  <section class="mes-devis" aria-labelledby="mes-contrats-titre">
+<iard-cadre-espace>
+  <section class="mes-contrats" aria-labelledby="mes-contrats-titre">
     <h1 id="mes-contrats-titre" class="serif">Mes contrats</h1>
 
     @if (chargement()) {
@@ -20,10 +10,10 @@
       <p>Vous n'avez pas encore de contrat.</p>
     }
 
-    <ul class="mes-devis__liste">
+    <ul class="mes-contrats__grille">
       @for (contrat of liste(); track contrat.numero) {
         <li><iard-carte-contrat [contrat]="contrat" /></li>
       }
     </ul>
   </section>
-</main>
+</iard-cadre-espace>

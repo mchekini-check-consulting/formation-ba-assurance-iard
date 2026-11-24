@@ -32,8 +32,8 @@ class EspaceClientResourceTest {
 
     @Test
     void us18TableauDeBord() throws Exception {
-        when(service.tableauDeBord(JETON)).thenReturn(new TableauDeBordResponse("David", List.of(), true, List.of(),
-                List.of(), false, List.of()));
+        when(service.tableauDeBord(JETON)).thenReturn(new TableauDeBordResponse("David", "Leroy", List.of(), true,
+                List.of(), List.of(), false, List.of()));
 
         mockMvc.perform(get("/espace-client/tableau-de-bord").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isOk())

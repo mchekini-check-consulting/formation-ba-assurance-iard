@@ -1,14 +1,4 @@
-<header class="entete">
-  <div class="entete__ligne">
-    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
-      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
-      <span class="logo__nom serif">Assur'Easy</span>
-    </a>
-    <a class="btn btn--contour" routerLink="/espace-client">Mon espace</a>
-  </div>
-</header>
-
-<main class="page">
+<iard-cadre-espace>
   <section class="mes-devis" aria-labelledby="contrat-titre">
     <a routerLink="/espace-client/contrats">← Mes contrats</a>
     @if (fiche(); as f) {
@@ -150,4 +140,4 @@
       <p>Chargement du contrat…</p>
     }
   </section>
-</main>
+</iard-cadre-espace>

@@ -1,0 +1,23 @@
+.mes-contrats {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+
+  h1 {
+    margin: 0;
+  }
+
+  // Cartes en grille de 2 colonnes, 1 sur mobile (maquette US-18).
+  &__grille {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+
+    @media (width < 700px) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+}

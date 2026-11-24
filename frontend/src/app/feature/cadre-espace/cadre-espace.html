@@ -1,0 +1,68 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <div class="compte">
+      @if (initiales()) {
+        <span class="compte__initiales" aria-hidden="true">{{ initiales() }}</span>
+      }
+      <span class="compte__nom">{{ nomAffiche() }}</span>
+      <button type="button" class="compte__deconnexion" (click)="seDeconnecter()">Se déconnecter</button>
+    </div>
+  </div>
+</header>
+
+<div class="cadre">
+  <!-- RG5 : barre latérale à gauche sur ordinateur, au-dessus du contenu sur mobile -->
+  <aside class="barre">
+    <nav class="barre__navigation" aria-label="Mon espace">
+      <ul class="barre__liste">
+        @for (entree of navigation(); track entree.adresse) {
+          <li>
+            <a
+              class="barre__lien"
+              [routerLink]="entree.adresse"
+              [class.barre__lien--actif]="estActif(entree.adresse, entree.exacte)"
+              [attr.aria-current]="estActif(entree.adresse, entree.exacte) ? 'page' : null"
+              >{{ entree.libelle }}</a
+            >
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- US-04 : liens du back-office, pour les profils internes seulement, séparés de la navigation client -->
+    @if (estInterne()) {
+      <nav class="interne" aria-labelledby="titre-interne">
+        <p id="titre-interne" class="interne__titre">Espace interne</p>
+        <ul class="barre__liste">
+          @if (peut('COMPTES_UTILISATEURS')) {
+            <li><a class="barre__lien" routerLink="/back-office/clients"
+                [class.barre__lien--actif]="estActif('/back-office/clients')"
+                [attr.aria-current]="estActif('/back-office/clients') ? 'page' : null">Dossiers clients</a></li>
+          }
+          @if (profil() === 'ADMINISTRATEUR') {
+            <li><a class="barre__lien" routerLink="/admin/profils"
+                [class.barre__lien--actif]="estActif('/admin/profils')"
+                [attr.aria-current]="estActif('/admin/profils') ? 'page' : null">Gérer les profils</a></li>
+          }
+          @if (peut('PROFILS')) {
+            <li>
+              <a class="barre__lien" routerLink="/admin/acces-refuses"
+                [class.barre__lien--actif]="estActif('/admin/acces-refuses')"
+                [attr.aria-current]="estActif('/admin/acces-refuses') ? 'page' : null"
+                >Journal des accès refusés</a
+              >
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+  </aside>
+
+  <main class="contenu">
+    <ng-content />
+  </main>
+</div>

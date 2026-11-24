@@ -1,0 +1,163 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--beige);
+}
+
+.entete {
+  background: #fff;
+  border-bottom: 1px solid var(--bordure);
+
+  &__ligne {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px 16px;
+  }
+}
+
+.compte {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  min-width: 0;
+
+  &__initiales {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--rose);
+    color: var(--rouge-fonce);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  &__nom {
+    font-weight: 600;
+    overflow-wrap: anywhere;
+  }
+
+  // Lien discret : pas un bouton plein.
+  &__deconnexion {
+    padding: 4px 0;
+    border: 0;
+    background: none;
+    color: var(--texte-discret);
+    font: inherit;
+    font-size: 14px;
+    text-decoration: underline;
+    cursor: pointer;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--rouge);
+    }
+  }
+}
+
+.cadre {
+  flex: 1;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(16px, 4vw, 32px) 16px;
+  display: grid;
+  grid-template-columns: 220px minmax(0, 1fr);
+  align-items: start;
+  gap: 32px;
+}
+
+.barre {
+  position: sticky;
+  top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+
+  &__liste {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__lien {
+    display: block;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--texte);
+    font-weight: 600;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      background: #fff;
+      color: var(--rouge);
+    }
+
+    // Lien actif : fond, couleur et filet (pas la couleur seule).
+    &--actif {
+      background: #fff;
+      color: var(--rouge-fonce);
+      box-shadow: inset 4px 0 0 var(--rouge);
+    }
+  }
+}
+
+// Bloc séparé, visuellement distinct de la navigation client.
+.interne {
+  padding: 14px 10px 10px;
+  border: 1px dashed var(--gris);
+  border-radius: 12px;
+  background: var(--bordure-claire);
+
+  &__titre {
+    margin: 0 4px 8px;
+    color: var(--texte-discret);
+    font-size: 13px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+}
+
+.contenu {
+  min-width: 0;
+}
+
+// RG5 : sur mobile, la navigation passe au-dessus du contenu et revient à la ligne (pas de défilement horizontal).
+@media (width < 900px) {
+  .cadre {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+
+  .barre {
+    position: static;
+    gap: 12px;
+
+    &__liste {
+      flex-direction: row;
+      flex-wrap: wrap;
+    }
+
+    &__lien {
+      padding: 8px 12px;
+
+      &--actif {
+        box-shadow: inset 0 -3px 0 var(--rouge);
+      }
+    }
+  }
+}

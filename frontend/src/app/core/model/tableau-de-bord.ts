@@ -3,6 +3,7 @@ import { ContratResume, Produit } from './contrat';
 /** US-18, AC1 : l'essentiel de l'espace client. Une rubrique non autorisée par le profil est vide et masquée. */
 export interface TableauDeBord {
   prenom: string | null;
+  nom: string | null;
   contrats: ContratResume[];
   devisVisibles: boolean;
   devisEnCours: DevisEnCours[];
@@ -52,3 +53,6 @@ const LIBELLES_SINISTRE: Record<string, string> = {
 export function libelleSinistre(type: string): string {
   return LIBELLES_SINISTRE[type] ?? type;
 }
+
+/** Statut d'un sinistre affiché (les brouillons ne sont jamais renvoyés par le serveur). */
+export const LIBELLE_SINISTRE_DECLARE = 'Déclaré';

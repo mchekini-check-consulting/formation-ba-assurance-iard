@@ -93,6 +93,7 @@ public class EspaceClientService {
 
         return new TableauDeBordResponse(
                 compte.getPrenom(),
+                compte.getNom(),
                 sesContrats.stream().map(this::resume).toList(),
                 devisVisibles,
                 devisVisibles ? devisEnCours(compte) : List.of(),
@@ -147,11 +148,15 @@ public class EspaceClientService {
                 contrat.getNumero(),
                 contrat.getProduit(),
                 contrat.getStatut(),
+                contrat.getFormule(),
                 bienAssure(contrat),
+                contrat.getTypeLogement(),
+                contrat.getVille(),
                 contrat.getCotisationMensuelle(),
                 contrat.getDateEffet(),
                 echeance(contrat),
-                contrat.getDateFin());
+                contrat.getDateFin(),
+                contrat.getMandatSepa() == null ? null : contrat.getMandatSepa().getIbanMasque());
     }
 
     private LocalDate echeance(Contrat contrat) {
