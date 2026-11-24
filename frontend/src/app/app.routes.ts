@@ -23,7 +23,6 @@ import { DoubleAuthentification } from './feature/double-authentification/double
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { GestionProfils } from './feature/gestion-profils/gestion-profils';
-import { MesDevis } from './feature/mes-devis/mes-devis';
 import { PageSimple } from './feature/page-simple/page-simple';
 import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
 
@@ -79,7 +78,7 @@ export const routes: Routes = [
   },
   {
     path: 'espace-client/devis',
-    component: MesDevis,
+    loadComponent: () => import('./feature/mes-devis/mes-devis').then((m) => m.MesDevis),
     canActivate: [droitGuard('DEVIS', 'CONSULTER')],
     title: "Mes devis – Assur'Easy",
   },

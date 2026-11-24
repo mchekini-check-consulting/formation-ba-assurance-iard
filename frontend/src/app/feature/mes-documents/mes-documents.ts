@@ -2,12 +2,13 @@ import { Component, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { DocumentClient, libelleCategorie } from '../../core/model/document';
 import { DocumentsService } from '../../core/service/documents.service';
+import { CadreEspace } from '../cadre-espace/cadre-espace';
 
 /** US-04, AC1 : les documents déposés par le client connecté, et seulement les siens. */
 @Component({
   selector: 'iard-mes-documents',
-  imports: [RouterLink],
-  styleUrls: ['../compte-cree/compte-cree.scss', '../mes-devis/mes-devis.scss'],
+  imports: [RouterLink, CadreEspace],
+  styleUrls: ['../mes-devis/mes-devis.scss'],
   templateUrl: './mes-documents.html',
 })
 export class MesDocuments {

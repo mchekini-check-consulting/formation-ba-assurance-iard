@@ -24,6 +24,14 @@ describe('MesDocuments (US-04, AC1)', () => {
     fixture.detectChanges();
   };
 
+  it('US-18 : s’affiche dans le cadre de l’espace client, sans l’ancien bouton « Mon espace »', () => {
+    repondre([]);
+    expect(page.querySelector('iard-cadre-espace .barre__navigation')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace .compte__deconnexion')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace main section')).not.toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('liste mes documents avec un lien pour les ouvrir', () => {
     expect(page.textContent).toContain('Chargement de vos documents');
     repondre([{ id: 5, referenceDevis: 'r', categorie: 'identite', typeDocument: 'passeport', nomFichier: 'p.pdf', typeFichier: 'pdf', taille: 3 }]);

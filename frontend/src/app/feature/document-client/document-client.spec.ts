@@ -31,6 +31,15 @@ describe('DocumentClientPage (US-04)', () => {
     vi.restoreAllMocks();
   });
 
+  it('US-18 : s’affiche dans le cadre de l’espace client, sans l’ancien bouton « Mon espace »', () => {
+    http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));
+    fixture.detectChanges();
+    expect(page.querySelector('iard-cadre-espace .barre__navigation')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace .compte__deconnexion')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace main section')).not.toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('prépare le document puis libère sa mémoire en quittant la page', () => {
     expect(page.textContent).toContain('Chargement du document');
     http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));

@@ -64,6 +64,14 @@ describe('MesDevis', () => {
 
   afterEach(() => http.verify());
 
+  it('US-18 : s’affiche dans le cadre de l’espace client, sans l’ancien bouton « Mon espace »', () => {
+    afficher([]);
+    expect(page.querySelector('iard-cadre-espace .barre__navigation')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace .compte__deconnexion')).not.toBeNull();
+    expect(page.querySelector('iard-cadre-espace main section')).not.toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('AC1 : affiche le devis et sa date de fin de validité', () => {
     afficher([valide]);
     expect(page.textContent).toContain('Formule Confort');
