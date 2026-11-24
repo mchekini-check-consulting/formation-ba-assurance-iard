@@ -66,7 +66,7 @@ public class ContratResource {
     /**
      * US-21, AC1 : régénère les conditions particulières (nouvelle version, PDF envoyé par e-mail). Droit
      * DOCUMENTS/CREER ; seul le propriétaire du contrat peut le faire, un refus est tracé dans acces_refuse (US-04).
-     * 422 si le contrat est Suspendu ou pas encore signé (RG2), 409 si aucune donnée n'a changé depuis la
+     * 422 si le contrat est Suspendu, pas encore signé, Résilié ou Renoncé (RG2), 409 si aucune donnée n'a changé depuis la
      * version en vigueur, 429 si une régénération date de moins d'une minute.
      */
     @PostMapping("/contrats/{numero}/conditions-particulieres")

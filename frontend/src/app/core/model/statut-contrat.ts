@@ -22,8 +22,9 @@ export interface DescriptionStatut {
 /**
  * US-18, RG3 : libellé, couleur, message et actions possibles de chaque statut. « Voir les factures » est rattaché à
  * l'action « Générer une facture » (interprétation à valider PO).
- * US-21, RG2 (recette) : « Régénérer » est possible pour tout contrat signé, sauf Suspendu (et jamais avant la
- * signature). Elle prime sur RG3 d'US-18 pour Impayé, Résiliation en cours, Résilié et Renoncé (à valider PO).
+ * US-21, RG2 (recette) : « Régénérer » est possible pour tout contrat signé et en vigueur, sauf Suspendu : jamais
+ * avant la signature, ni pour un contrat Résilié ou Renoncé (ses anciens documents restent téléchargeables). Elle
+ * prime sur RG3 d'US-18 pour Impayé et Résiliation en cours (à valider PO).
  * Même règle côté serveur : RegenerationContratService.STATUTS_EXCLUS.
  */
 export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
@@ -79,13 +80,13 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Résilié',
     ton: 'gris',
     message: 'Votre contrat est résilié. Vos anciens documents et factures restent consultables.',
-    actions: ['detail', 'regenerer', 'genererFacture'],
+    actions: ['detail', 'genererFacture'],
   },
   RENONCE: {
     libelle: 'Renoncé',
     ton: 'gris',
     message: 'Vous avez renoncé à ce contrat. Ses documents restent consultables.',
-    actions: ['detail', 'regenerer'],
+    actions: ['detail'],
   },
 };
 

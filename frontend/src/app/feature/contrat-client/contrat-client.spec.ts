@@ -265,7 +265,7 @@ describe('ContratClient (US-18, AC3)', () => {
       expect(page.querySelector('.fiche__confirmation--erreur')?.textContent).toContain("n'a pas pu aboutir");
     });
 
-    it.each(['IMPAYE', 'RESILIE', 'RENONCE', 'EN_ATTENTE_EFFET'])(
+    it.each(['IMPAYE', 'RESILIATION_EN_COURS', 'EN_ATTENTE_EFFET'])(
       'RG2 : bouton proposé pour un contrat signé %s',
       (statut) => {
         ouvrir('AE-RECETTE-A03');
@@ -275,8 +275,8 @@ describe('ContratClient (US-18, AC3)', () => {
       },
     );
 
-    it.each(['SUSPENDU', 'EN_ATTENTE_DE_SIGNATURE'])(
-      'RG2 : pas de bouton pour un contrat %s (les versions restent visibles)',
+    it.each(['SUSPENDU', 'EN_ATTENTE_DE_SIGNATURE', 'RESILIE', 'RENONCE'])(
+      'RG2 : pas de bouton pour un contrat %s (les versions restent visibles et téléchargeables)',
       (statut) => {
         ouvrir('AE-RECETTE-A03');
         repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, statut });

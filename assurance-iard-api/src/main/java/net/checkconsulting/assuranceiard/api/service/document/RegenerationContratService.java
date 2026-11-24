@@ -30,21 +30,38 @@ import org.springframework.transaction.support.TransactionOperations;
  * EN_VIGUEUR, version N REMPLACE, PDF stocké avec son empreinte), puis les envoie par e-mail (AC3). Le motif est
  * enregistré dans document.motif ({@link MotifRegeneration}).
  *
- * <p>Point d'entrée unique, réutilisable par les autres US : {@link #regenerer(long, MotifRegeneration)}. Seule la
- * demande du client (DEMANDE_CLIENT) est soumise à ses règles : RG2 (statut : pas Suspendu, contrat signé), une par minute, et
- * « données inchangées ». Un déclenchement automatique (AVENANT, COORDONNEES, CONDITIONS_GENERALES) n'est jamais
- * bloqué. RG1 : ni les garanties ni la cotisation ne changent (seul un document est créé).
+ * <p>Point d'entrée unique, réutilisable par les autres US : {@link #regenerer(long, MotifRegeneration)}.
+ * <ul>
+ *   <li>Aucune nouvelle version pour un contrat qui n'est plus en vigueur (Résilié, Renoncé), quel que soit le motif :
+ *       ses anciennes versions restent consultables et téléchargeables.</li>
+ *   <li>Demande du client (DEMANDE_CLIENT) : en plus, refusée pour un contrat Suspendu ou pas encore signé (RG2), une
+ *       par minute, et refusée si les données sont inchangées.</li>
+ *   <li>Déclenchement automatique (AVENANT, COORDONNEES, CONDITIONS_GENERALES) : jamais bloqué par la minute ni par
+ *       « données inchangées ». L'appelant vérifie {@link #estRegenerable(String, MotifRegeneration)} avant d'appeler
+ *       (sinon {@link RegenerationImpossibleException}).</li>
+ * </ul>
+ * RG1 : ni les garanties ni la cotisation ne changent (seul un document est créé).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RegenerationContratService {
 
+    /** Contrats qui ne sont plus en vigueur : aucune nouvelle version, quel que soit le déclencheur. */
+    public static final Set<String> STATUTS_HORS_VIGUEUR = Set.of("RESILIE", "RENONCE");
+
     /**
-     * RG2 d'US-21 (recette) : le client peut régénérer tout contrat signé, sauf Suspendu ; jamais avant la signature.
-     * Même règle à l'écran (statut-contrat.ts). Elle prime sur RG3 d'US-18 (interprétation à valider par le PO).
+     * RG2 d'US-21 (recette) : le client ne peut pas régénérer un contrat Suspendu, pas encore signé, ou qui n'est plus
+     * en vigueur (Résilié, Renoncé). Même règle à l'écran (statut-contrat.ts). Elle prime sur RG3 d'US-18
+     * (interprétation à valider par le PO).
      */
-    public static final Set<String> STATUTS_EXCLUS = Set.of("SUSPENDU", "EN_ATTENTE_DE_SIGNATURE");
+    public static final Set<String> STATUTS_EXCLUS = Set.of("SUSPENDU", "EN_ATTENTE_DE_SIGNATURE", "RESILIE",
+            "RENONCE");
+
+    /** Vrai si une nouvelle version peut être créée pour un contrat dans ce statut, avec ce motif. */
+    public static boolean estRegenerable(String statut, MotifRegeneration motif) {
+        return motif.demandeDuClient() ? !STATUTS_EXCLUS.contains(statut) : !STATUTS_HORS_VIGUEUR.contains(statut);
+    }
     static final Duration DELAI_MINIMUM = Duration.ofMinutes(1);
     private static final String CONDITIONS_PARTICULIERES = TypeDocument.CONDITIONS_PARTICULIERES.name();
 
@@ -90,8 +107,11 @@ public class RegenerationContratService {
         Contrat contrat = contrats.findById(contratId).orElseThrow(ContratInconnuException::new);
         // Verrou sur la version en vigueur : deux demandes simultanées ne se croisent pas.
         Optional<Document> actuelle = documents.enVigueurVerrouille(contratId, CONDITIONS_PARTICULIERES, "");
+        if (!estRegenerable(contrat.getStatut(), motif)) {
+            throw new RegenerationImpossibleException();
+        }
         if (motif.demandeDuClient()) {
-            verifierLaDemandeDuClient(contrat, actuelle);
+            verifierLaDemandeDuClient(actuelle);
         }
         Document document = service.generer(
                 DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, contratId, motif.name()));
@@ -99,11 +119,8 @@ public class RegenerationContratService {
         return new Generation(document, contrat.getNumero(), compte.getEmail(), compte.getPrenom());
     }
 
-    /** Règles du bouton : statut (RG2 : contrat signé, pas Suspendu), une régénération par minute, données changées. */
-    private void verifierLaDemandeDuClient(Contrat contrat, Optional<Document> actuelle) {
-        if (STATUTS_EXCLUS.contains(contrat.getStatut())) {
-            throw new RegenerationImpossibleException();
-        }
+    /** Règles du bouton, après le statut : une régénération par minute, données changées. */
+    private void verifierLaDemandeDuClient(Optional<Document> actuelle) {
         if (actuelle.isEmpty()) {
             return;
         }

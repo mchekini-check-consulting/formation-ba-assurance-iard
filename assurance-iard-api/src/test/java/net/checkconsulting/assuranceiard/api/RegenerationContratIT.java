@@ -204,9 +204,15 @@ class RegenerationContratIT {
     }
 
     @Test
-    void rg2UnContratImpayeOuResiliePeutEtreRegenere() throws Exception {
+    void rg2UnContratImpayePeutEtreRegenereMaisPasUnContratResilieOuRenonce() throws Exception {
         regenerer(camille, "AE-RECETTE-A06").andExpect(status().isOk());
-        regenerer(camille, "AE-RECETTE-A09").andExpect(status().isOk());
+        regenerer(camille, "AE-RECETTE-A09").andExpect(status().is(422));
+        regenerer(camille, "AE-RECETTE-A10").andExpect(status().is(422));
+        // Les anciennes versions restent téléchargeables (aucune nouvelle version créée).
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM document d JOIN contrat c ON c.id = d.contrat_id
+                WHERE c.numero IN ('AE-RECETTE-A09', 'AE-RECETTE-A10') AND d.type = 'CONDITIONS_PARTICULIERES'""",
+                Integer.class)).isEqualTo(2);
     }
 
     @Test

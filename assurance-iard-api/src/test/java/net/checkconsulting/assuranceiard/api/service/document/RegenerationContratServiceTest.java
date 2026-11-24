@@ -15,6 +15,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.util.List;
 import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
 import net.checkconsulting.assuranceiard.api.exception.ContratInconnuException;
@@ -108,16 +109,16 @@ class RegenerationContratServiceTest {
 
     @ParameterizedTest
     @ValueSource(strings = {"EN_ATTENTE_EFFET", "ACTIF_JUSTIFICATIFS_ATTENDUS", "AVENANT_EN_ATTENTE", "IMPAYE",
-        "RESILIATION_EN_COURS", "RESILIE", "RENONCE"})
-    void rg2ToutContratSigneSaufSuspenduPeutEtreRegenere(String statut) {
+        "RESILIATION_EN_COURS"})
+    void rg2ToutContratSigneEtEnVigueurSaufSuspenduPeutEtreRegenere(String statut) {
         contrat.setStatut(statut);
 
         assertThat(service.regenererALaDemandeDuClient(NUMERO).version()).isEqualTo(2);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"SUSPENDU", "EN_ATTENTE_DE_SIGNATURE"})
-    void rg2PasDeRegenerationSurUnContratSuspenduOuPasEncoreSigne(String statut) {
+    @ValueSource(strings = {"SUSPENDU", "EN_ATTENTE_DE_SIGNATURE", "RESILIE", "RENONCE"})
+    void rg2PasDeRegenerationSurUnContratSuspenduPasEncoreSigneOuPlusEnVigueur(String statut) {
         contrat.setStatut(statut);
 
         assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))
@@ -173,6 +174,28 @@ class RegenerationContratServiceTest {
 
         assertThat(service.regenerer(3L, motif).version()).isEqualTo(2);
         verify(generation, never()).contenuAJour(any());
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"RESILIE", "RENONCE"})
+    void unDeclenchementAutomatiqueNeConcernePasUnContratPlusEnVigueur(String statut) {
+        contrat.setStatut(statut);
+
+        for (MotifRegeneration motif : List.of(MotifRegeneration.AVENANT, MotifRegeneration.COORDONNEES,
+                MotifRegeneration.CONDITIONS_GENERALES)) {
+            assertThatThrownBy(() -> service.regenerer(3L, motif)).isInstanceOf(RegenerationImpossibleException.class);
+        }
+        verify(generation, never()).generer(any());
+    }
+
+    @Test
+    void estRegenerableIndiqueAuxAutresUsCeQuiEstPossible() {
+        assertThat(RegenerationContratService.estRegenerable("ACTIF", MotifRegeneration.DEMANDE_CLIENT)).isTrue();
+        assertThat(RegenerationContratService.estRegenerable("SUSPENDU", MotifRegeneration.DEMANDE_CLIENT)).isFalse();
+        assertThat(RegenerationContratService.estRegenerable("SUSPENDU", MotifRegeneration.AVENANT)).isTrue();
+        assertThat(RegenerationContratService.estRegenerable("RESILIE", MotifRegeneration.AVENANT)).isFalse();
+        assertThat(RegenerationContratService.estRegenerable("RENONCE", MotifRegeneration.CONDITIONS_GENERALES))
+                .isFalse();
     }
 
     @Test
