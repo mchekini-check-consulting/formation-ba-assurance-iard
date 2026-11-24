@@ -7,17 +7,41 @@
     <p class="mes-devis__erreur" role="alert">Vos documents n'ont pas pu être chargés. Réessayez dans quelques instants.</p>
   } @else if (liste()?.length === 0) {
     <p>Vous n'avez pas encore déposé de document.</p>
+  } @else {
+    <!-- US-18 : un seul bloc, une ligne par document, regroupée par souscription -->
+    <div class="documents">
+      @for (groupe of groupes(); track groupe.referenceDevis) {
+        <section class="documents__groupe" [attr.aria-labelledby]="'souscription-' + groupe.referenceDevis">
+          <h2 class="documents__titre" [id]="'souscription-' + groupe.referenceDevis">
+            {{ groupe.titre }}
+          </h2>
+          <ul class="documents__liste">
+            @for (document of groupe.documents; track document.id) {
+              <li class="document">
+                <svg class="document__icone" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                  <path
+                    d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5M8 13h8M8 17h6"
+                    fill="none"
+                    stroke="currentColor"
+                    stroke-width="1.6"
+                    stroke-linejoin="round"
+                  />
+                </svg>
+                <div class="document__texte">
+                  <span class="document__type">{{ libelleCategorie(document.categorie) }}</span>
+                  <span class="document__fichier">{{ document.nomFichier }}</span>
+                </div>
+                <a
+                  class="document__ouvrir"
+                  [routerLink]="['/espace-client/documents', document.id]"
+                  [attr.aria-label]="'Ouvrir : ' + libelleCategorie(document.categorie) + ', ' + document.nomFichier"
+                  >Ouvrir</a
+                >
+              </li>
+            }
+          </ul>
+        </section>
+      }
+    </div>
   }
-
-  <ul class="mes-devis__liste">
-    @for (document of liste(); track document.id) {
-      <li class="devis-ligne">
-        <h2 class="serif">{{ libelleCategorie(document.categorie) }}</h2>
-        <p>{{ document.nomFichier }}</p>
-        <div class="devis-ligne__actions">
-          <a class="btn" [routerLink]="['/espace-client/documents', document.id]">Ouvrir</a>
-        </div>
-      </li>
-    }
-  </ul>
 </section>
