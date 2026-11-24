@@ -2,19 +2,21 @@ import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { Component } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { RouterTestingHarness } from '@angular/router/testing';
 import { Router, provideRouter } from '@angular/router';
 import { AnnonceService } from '../../core/service/annonce.service';
 import { ConnexionService } from '../../core/service/connexion.service';
 import { EspaceClientService } from '../../core/service/espace-client.service';
 import { CadreEspace } from './cadre-espace';
 
-@Component({ imports: [CadreEspace], template: '<iard-cadre-espace><p class="projete">Contenu</p></iard-cadre-espace>' })
+/** Page enfant fictive, affichée par le gabarit de route. */
+@Component({ template: '<p class="projete">Contenu</p>' })
 class PageDEssai {}
 
 const URL_TABLEAU = '/api/assurance-iard-api/espace-client/tableau-de-bord';
 
 describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', () => {
-  let fixture: ComponentFixture<PageDEssai>;
+  let fixture: ComponentFixture<CadreEspace>;
   let page: HTMLElement;
   let http: HttpTestingController;
   let connexion: ConnexionService;
@@ -23,7 +25,7 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
   const afficherAvec = (profil: string, droits: string[]): void => {
     connexion.profilClient.set(profil);
     connexion.droitsClient.set(droits);
-    fixture = TestBed.createComponent(PageDEssai);
+    fixture = TestBed.createComponent(CadreEspace);
     fixture.detectChanges();
     page = fixture.nativeElement as HTMLElement;
   };
@@ -34,7 +36,11 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
     sessionStorage.setItem('assureasy.session', 'session');
     TestBed.configureTestingModule({
       providers: [
-        provideRouter([{ path: 'espace-client', children: [] }, { path: 'espace-client/contrats', children: [] }]),
+        provideRouter([
+          { path: 'espace-client', component: CadreEspace, children: [{ path: '', component: PageDEssai }] },
+          { path: 'espace-client/contrats/:numero', children: [] },
+          { path: 'back-office/clients/:id', children: [] },
+        ]),
         provideHttpClient(),
         provideHttpClientTesting(),
       ],
@@ -50,9 +56,12 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
     sessionStorage.clear();
   });
 
-  it('affiche le contenu de la page à côté de la navigation', () => {
-    afficherAvec('ASSURE', []);
-    expect(page.querySelector('main .projete')?.textContent).toBe('Contenu');
+  it('gabarit de route : affiche la page enfant à droite de la barre latérale', async () => {
+    connexion.droitsClient.set([]);
+    const harnais = await RouterTestingHarness.create('/espace-client');
+    const rendu = harnais.routeNativeElement?.closest('iard-cadre-espace') ?? harnais.fixture.nativeElement;
+    expect(rendu.querySelector('.cadre > main .projete')?.textContent).toBe('Contenu');
+    expect(rendu.querySelector('.cadre > aside.barre')).not.toBeNull();
   });
 
   describe('en-tête', () => {
@@ -111,15 +120,25 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
       expect(liens('.barre__navigation')).toEqual(['Tableau de bord', 'Mes devis']);
     });
 
-    it('le lien actif est mis en évidence et annoncé (aria-current)', async () => {
-      afficherAvec('ASSURE', ['DEVIS:CONSULTER']);
-      await router.navigateByUrl('/espace-client');
+    it('le lien actif est mis en évidence et annoncé (aria-current), y compris sur une page en dessous', async () => {
+      afficherAvec('ASSURE', ['CONTRATS:CONSULTER', 'DEVIS:CONSULTER']);
+      http.expectOne(URL_TABLEAU).flush({ prenom: 'Alice', nom: 'Martin' });
+      await router.navigateByUrl('/espace-client/contrats/AE-1');
       fixture.detectChanges();
 
-      const actif = page.querySelector('.barre__lien--actif');
-      expect(actif?.textContent?.trim()).toBe('Tableau de bord');
-      expect(actif?.getAttribute('aria-current')).toBe('page');
-      expect(page.querySelectorAll('.barre__lien--actif')).toHaveLength(1);
+      const actif = page.querySelectorAll('.barre__lien--actif');
+      expect(Array.from(actif).map((lien) => lien.textContent?.trim())).toEqual(['Mes contrats']);
+      expect(actif[0].getAttribute('aria-current')).toBe('page');
+      // « Tableau de bord » n'est actif que sur son adresse exacte.
+      expect(page.querySelector('a[href="/espace-client"]')?.getAttribute('aria-current')).toBeNull();
+    });
+
+    it('le lien interne de la page affichée est actif dans le bloc « Espace interne »', async () => {
+      afficherAvec('ADMINISTRATEUR', ['COMPTES_UTILISATEURS:CONSULTER', 'PROFILS:CONSULTER']);
+      await router.navigateByUrl('/back-office/clients/12');
+      fixture.detectChanges();
+
+      expect(page.querySelector('.interne .barre__lien--actif')?.textContent?.trim()).toBe('Dossiers clients');
     });
   });
 

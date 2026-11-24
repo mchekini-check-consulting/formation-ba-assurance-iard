@@ -25,14 +25,14 @@ describe('MesContrats (US-04, AC1 / US-18)', () => {
     fixture.detectChanges();
   };
 
-  it('affiche le chargement puis mes contrats habitation et auto, dans le cadre de l’espace client', () => {
+  it('affiche le chargement puis mes contrats habitation et auto', () => {
     expect(page.textContent).toContain('Chargement de vos contrats');
     repondre([CONTRAT_HABITATION, CONTRAT_AUTO]);
 
     const titres = Array.from(page.querySelectorAll('h3')).map((titre) => titre.textContent?.trim());
     expect(titres).toEqual(['Appartement · Créteil', 'Renault Clio · AB-003-CD']);
     expect(page.querySelector('.badge-statut')?.textContent?.trim()).toBe('Actif');
-    expect(page.querySelector('iard-cadre-espace nav')).not.toBeNull();
+    expect(page.querySelector('header')).toBeNull();
   });
 
   it('ouvre la fiche par numéro, et non plus par référence de devis', () => {

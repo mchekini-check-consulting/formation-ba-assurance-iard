@@ -58,7 +58,6 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
     page = fixture.nativeElement as HTMLElement;
   };
   const repondre = (corps: object, status = 200): void => {
-    // Page et en-tête demandent le tableau de bord en même temps : un seul appel.
     http.expectOne(URL_TABLEAU).flush(corps, { status, statusText: 'x' });
     fixture.detectChanges();
   };
@@ -91,7 +90,8 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
     it('accueille le client par son prénom, avec le sous-titre de la maquette', () => {
       expect(texte('h1')).toBe('Bonjour Camille');
       expect(texte('.tableau-de-bord__sous-titre')).toBe("L'essentiel de vos assurances, en un coup d'œil.");
-      expect(texte('.compte__nom')).toBe('Camille Durand');
+      // En-tête (initiales, nom) : fourni par le cadre commun, testé dans cadre-espace.spec.ts.
+      expect(page.querySelector('header')).toBeNull();
     });
 
     it('« Mes contrats » : lien « Tout voir » et cartes en grille', () => {
@@ -282,6 +282,5 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
 
     http.expectNone(URL_TABLEAU);
     expect(texte('h1')).toBe('Mon espace');
-    expect(page.querySelector('.interne')).not.toBeNull();
   });
 });

@@ -1,8 +1,8 @@
 import { Component, computed, inject } from '@angular/core';
 import { toSignal } from '@angular/core/rxjs-interop';
-import { NavigationEnd, Router, RouterLink } from '@angular/router';
+import { NavigationEnd, Router, RouterLink, RouterOutlet } from '@angular/router';
 import { filter, map } from 'rxjs';
-import { navigationClient } from '../../core/config/raccourcis';
+import { navigationClient, navigationInterne } from '../../core/config/raccourcis';
 import { formaterNomPropre, initiales } from '../../core/model/identite';
 import { AnnonceService } from '../../core/service/annonce.service';
 import { ConnexionService } from '../../core/service/connexion.service';
@@ -12,10 +12,12 @@ import { EspaceClientService } from '../../core/service/espace-client.service';
  * US-18 : cadre des pages de l'espace client. En-tête (logo ; initiales, prénom et nom, « Se déconnecter »),
  * barre latérale à gauche sur ordinateur, au-dessus du contenu sur mobile (RG5). Les liens du back-office sont dans
  * un bloc « Espace interne » séparé, pour les profils internes seulement (US-04).
+ * Gabarit de route : parent de toutes les pages de /espace-client, /back-office et /admin (app.routes.ts). Une page
+ * accessible depuis la barre latérale s'affiche toujours dans ce cadre (règle vérifiée par app.routes.spec.ts).
  */
 @Component({
   selector: 'iard-cadre-espace',
-  imports: [RouterLink],
+  imports: [RouterLink, RouterOutlet],
   templateUrl: './cadre-espace.html',
   styleUrl: './cadre-espace.scss',
 })
@@ -54,6 +56,15 @@ export class CadreEspace {
   protected readonly navigation = computed(() => {
     this.connexion.droitsClient();
     return navigationClient().filter((entree) => !entree.rubrique || this.peut(entree.rubrique));
+  });
+
+  /** Liens du back-office autorisés : profils internes seulement (le bloc n'est pas affiché sinon). */
+  protected readonly navigationInterne = computed(() => {
+    this.connexion.droitsClient();
+    const profil = this.connexion.profilClient();
+    return navigationInterne().filter((entree) =>
+      entree.administrateur ? profil === 'ADMINISTRATEUR' : !entree.rubrique || this.peut(entree.rubrique),
+    );
   });
 
   constructor() {

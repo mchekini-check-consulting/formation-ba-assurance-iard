@@ -38,22 +38,14 @@
       <nav class="interne" aria-labelledby="titre-interne">
         <p id="titre-interne" class="interne__titre">Espace interne</p>
         <ul class="barre__liste">
-          @if (peut('COMPTES_UTILISATEURS')) {
-            <li><a class="barre__lien" routerLink="/back-office/clients"
-                [class.barre__lien--actif]="estActif('/back-office/clients')"
-                [attr.aria-current]="estActif('/back-office/clients') ? 'page' : null">Dossiers clients</a></li>
-          }
-          @if (profil() === 'ADMINISTRATEUR') {
-            <li><a class="barre__lien" routerLink="/admin/profils"
-                [class.barre__lien--actif]="estActif('/admin/profils')"
-                [attr.aria-current]="estActif('/admin/profils') ? 'page' : null">Gérer les profils</a></li>
-          }
-          @if (peut('PROFILS')) {
+          @for (entree of navigationInterne(); track entree.adresse) {
             <li>
-              <a class="barre__lien" routerLink="/admin/acces-refuses"
-                [class.barre__lien--actif]="estActif('/admin/acces-refuses')"
-                [attr.aria-current]="estActif('/admin/acces-refuses') ? 'page' : null"
-                >Journal des accès refusés</a
+              <a
+                class="barre__lien"
+                [routerLink]="entree.adresse"
+                [class.barre__lien--actif]="estActif(entree.adresse)"
+                [attr.aria-current]="estActif(entree.adresse) ? 'page' : null"
+                >{{ entree.libelle }}</a
               >
             </li>
           }
@@ -62,7 +54,8 @@
     }
   </aside>
 
+  <!-- Gabarit de route : la page de l'espace s'affiche ici (routes enfants de /espace-client, /back-office, /admin) -->
   <main class="contenu">
-    <ng-content />
+    <router-outlet />
   </main>
 </div>

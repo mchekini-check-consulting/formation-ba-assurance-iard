@@ -1,16 +1,14 @@
-<iard-cadre-espace>
-  <section class="mes-devis" aria-labelledby="document-titre">
-    <a routerLink="/espace-client/documents">← Mes documents</a>
-    <h1 id="document-titre" class="serif">Document</h1>
-    @if (adresse(); as lien) {
-      <p>Votre document est prêt.</p>
-      <div class="devis-ligne__actions">
-        <a class="btn" [href]="lien" target="_blank" rel="noopener">Ouvrir le document</a>
-      </div>
-    } @else if (erreur()) {
-      <p class="mes-devis__erreur" role="alert">Ce document n'a pas pu être ouvert. Réessayez dans quelques instants.</p>
-    } @else {
-      <p>Chargement du document…</p>
-    }
-  </section>
-</iard-cadre-espace>
+<section class="mes-devis" aria-labelledby="document-titre">
+  <a routerLink="/espace-client/documents">← Mes documents</a>
+  <h1 id="document-titre" class="serif">Document</h1>
+  @if (adresse(); as lien) {
+    <p>Votre document est prêt.</p>
+    <div class="devis-ligne__actions">
+      <a class="btn" [href]="lien" target="_blank" rel="noopener">Ouvrir le document</a>
+    </div>
+  } @else if (erreur()) {
+    <p class="mes-devis__erreur" role="alert">Ce document n'a pas pu être ouvert. Réessayez dans quelques instants.</p>
+  } @else {
+    <p>Chargement du document…</p>
+  }
+</section>

@@ -133,3 +133,18 @@ export function tuiles(livraisons = LIVRAISONS, adresses = ADRESSES): Entree[] {
 export function adresseSiLivree(fonction: keyof typeof LIVRAISONS, livraisons = LIVRAISONS, adresses = ADRESSES): string | null {
   return siLivree(fonction, '', livraisons, adresses)[0]?.adresse ?? null;
 }
+
+/**
+ * Liens du back-office (US-04), dans le bloc « Espace interne » de la barre latérale, pour les profils internes
+ * seulement. `rubrique` : droit de consultation nécessaire ; `administrateur` : réservé à l'administrateur.
+ */
+export function navigationInterne(): (Entree & {
+  rubrique?: 'COMPTES_UTILISATEURS' | 'PROFILS';
+  administrateur?: boolean;
+})[] {
+  return [
+    { libelle: 'Dossiers clients', adresse: '/back-office/clients', rubrique: 'COMPTES_UTILISATEURS' },
+    { libelle: 'Gérer les profils', adresse: '/admin/profils', administrateur: true },
+    { libelle: 'Journal des accès refusés', adresse: '/admin/acces-refuses', rubrique: 'PROFILS' },
+  ];
+}

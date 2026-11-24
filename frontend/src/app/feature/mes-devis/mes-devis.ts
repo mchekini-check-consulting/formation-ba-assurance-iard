@@ -4,12 +4,11 @@ import { DevisEnregistre, MENTION_CONSERVATION, formaterDate, messageReprise } f
 import { FORMULES, formaterPrix } from '../../core/model/recommandation';
 import { DevisEnregistreService } from '../../core/service/devis-enregistre.service';
 import { DevisService } from '../../core/service/devis.service';
-import { CadreEspace } from '../cadre-espace/cadre-espace';
 
 /** US-12 : les devis du client connecté. */
 @Component({
   selector: 'iard-mes-devis',
-  imports: [RouterLink, CadreEspace],
+  imports: [RouterLink],
   styleUrls: ['./mes-devis.scss'],
   templateUrl: './mes-devis.html',
 })

@@ -22,9 +22,11 @@ import { DevisPaiement } from './feature/devis-paiement/devis-paiement';
 import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
-import { GestionProfils } from './feature/gestion-profils/gestion-profils';
 import { PageSimple } from './feature/page-simple/page-simple';
 import { ReinitialisationMotDePasse } from './feature/reinitialisation-mot-de-passe/reinitialisation-mot-de-passe';
+
+/** US-18 : le cadre commun de l'espace (en-tête et barre latérale), chargé à la demande. */
+export const CADRE_ESPACE = () => import('./feature/cadre-espace/cadre-espace').then((m) => m.CadreEspace);
 
 export const routes: Routes = [
   { path: '', component: Landing, title: "Assur'Easy – Assurance habitation en ligne" },
@@ -56,62 +58,87 @@ export const routes: Routes = [
     canActivate: [verificationGuard],
     title: "Double authentification – Assur'Easy",
   },
+  // US-18 : gabarit de route. Toute page de l'espace client, du back-office et de l'administration s'affiche dans
+  // le cadre commun (en-tête, barre latérale à gauche) : ajouter une page = ajouter une route enfant ici.
+  // US-04 : chaque page garde sa garde de droit, relue auprès du serveur (le serveur refait le contrôle).
   {
     path: 'espace-client',
-    // US-18 : tableau de bord chargé à la demande (comme les autres pages de l'espace client).
-    loadComponent: () => import('./feature/espace-client/espace-client').then((m) => m.EspaceClient),
-    canActivate: [sessionGuard],
-    title: "Mon espace – Assur'Easy",
-  },
-  // US-04 : chaque page vérifie le droit du profil, relu auprès du serveur (le serveur refait le contrôle).
-  {
-    path: 'espace-client/documents',
-    loadComponent: () => import('./feature/mes-documents/mes-documents').then((m) => m.MesDocuments),
-    canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
-    title: "Mes documents – Assur'Easy",
-  },
-  {
-    path: 'espace-client/documents/:id',
-    loadComponent: () => import('./feature/document-client/document-client').then((m) => m.DocumentClientPage),
-    canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
-    title: "Document – Assur'Easy",
-  },
-  {
-    path: 'espace-client/devis',
-    loadComponent: () => import('./feature/mes-devis/mes-devis').then((m) => m.MesDevis),
-    canActivate: [droitGuard('DEVIS', 'CONSULTER')],
-    title: "Mes devis – Assur'Easy",
-  },
-  {
-    path: 'espace-client/contrats',
-    loadComponent: () => import('./feature/mes-contrats/mes-contrats').then((m) => m.MesContrats),
-    canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
-    title: "Mes contrats – Assur'Easy",
-  },
-  {
-    // US-18 : fiche par numéro ; une ancienne adresse par référence de devis redirige vers le numéro.
-    path: 'espace-client/contrats/:numero',
-    loadComponent: () => import('./feature/contrat-client/contrat-client').then((m) => m.ContratClient),
-    canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
-    title: "Mon contrat – Assur'Easy",
-  },
-  {
-    path: 'back-office/clients',
-    loadComponent: () => import('./feature/dossiers-clients/dossiers-clients').then((m) => m.DossiersClients),
-    canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
-    title: "Dossiers clients – Assur'Easy",
+    loadComponent: CADRE_ESPACE,
+    children: [
+      {
+        path: '',
+        loadComponent: () => import('./feature/espace-client/espace-client').then((m) => m.EspaceClient),
+        canActivate: [sessionGuard],
+        title: "Mon espace – Assur'Easy",
+      },
+      {
+        path: 'documents',
+        loadComponent: () => import('./feature/mes-documents/mes-documents').then((m) => m.MesDocuments),
+        canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
+        title: "Mes documents – Assur'Easy",
+      },
+      {
+        path: 'documents/:id',
+        loadComponent: () => import('./feature/document-client/document-client').then((m) => m.DocumentClientPage),
+        canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],
+        title: "Document – Assur'Easy",
+      },
+      {
+        path: 'devis',
+        loadComponent: () => import('./feature/mes-devis/mes-devis').then((m) => m.MesDevis),
+        canActivate: [droitGuard('DEVIS', 'CONSULTER')],
+        title: "Mes devis – Assur'Easy",
+      },
+      {
+        path: 'contrats',
+        loadComponent: () => import('./feature/mes-contrats/mes-contrats').then((m) => m.MesContrats),
+        canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+        title: "Mes contrats – Assur'Easy",
+      },
+      {
+        // US-18 : fiche par numéro ; une ancienne adresse par référence de devis redirige vers le numéro.
+        path: 'contrats/:numero',
+        loadComponent: () => import('./feature/contrat-client/contrat-client').then((m) => m.ContratClient),
+        canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+        title: "Mon contrat – Assur'Easy",
+      },
+    ],
   },
   {
-    path: 'back-office/clients/:id',
-    loadComponent: () => import('./feature/dossier-client/dossier-client').then((m) => m.DossierClient),
-    canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
-    title: "Dossier client – Assur'Easy",
+    path: 'back-office',
+    loadComponent: CADRE_ESPACE,
+    children: [
+      {
+        path: 'clients',
+        loadComponent: () => import('./feature/dossiers-clients/dossiers-clients').then((m) => m.DossiersClients),
+        canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
+        title: "Dossiers clients – Assur'Easy",
+      },
+      {
+        path: 'clients/:id',
+        loadComponent: () => import('./feature/dossier-client/dossier-client').then((m) => m.DossierClient),
+        canActivate: [droitGuard('COMPTES_UTILISATEURS', 'CONSULTER', true)],
+        title: "Dossier client – Assur'Easy",
+      },
+    ],
   },
   {
-    path: 'admin/acces-refuses',
-    loadComponent: () => import('./feature/journal-acces/journal-acces').then((m) => m.JournalAcces),
-    canActivate: [droitGuard('PROFILS', 'CONSULTER', true)],
-    title: "Journal des accès refusés – Assur'Easy",
+    path: 'admin',
+    loadComponent: CADRE_ESPACE,
+    children: [
+      {
+        path: 'profils',
+        loadComponent: () => import('./feature/gestion-profils/gestion-profils').then((m) => m.GestionProfils),
+        canActivate: [adminGuard],
+        title: "Gestion des profils – Assur'Easy",
+      },
+      {
+        path: 'acces-refuses',
+        loadComponent: () => import('./feature/journal-acces/journal-acces').then((m) => m.JournalAcces),
+        canActivate: [droitGuard('PROFILS', 'CONSULTER', true)],
+        title: "Journal des accès refusés – Assur'Easy",
+      },
+    ],
   },
   {
     path: 'acces-non-autorise',
@@ -149,12 +176,6 @@ export const routes: Routes = [
     component: DevisContrat,
     canActivate: [mandatSigneGuard, sessionGuard],
     title: "Mon contrat – Assur'Easy",
-  },
-  {
-    path: 'admin/profils',
-    component: GestionProfils,
-    canActivate: [adminGuard],
-    title: "Gestion des profils – Assur'Easy",
   },
   { path: '**', redirectTo: '' },
 ];

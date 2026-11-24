@@ -31,12 +31,11 @@ describe('DocumentClientPage (US-04)', () => {
     vi.restoreAllMocks();
   });
 
-  it('US-18 : s’affiche dans le cadre de l’espace client, sans l’ancien bouton « Mon espace »', () => {
+  it('US-18 : n’a plus son propre en-tête (le cadre commun est apporté par la route)', () => {
     http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));
     fixture.detectChanges();
-    expect(page.querySelector('iard-cadre-espace .barre__navigation')).not.toBeNull();
-    expect(page.querySelector('iard-cadre-espace .compte__deconnexion')).not.toBeNull();
-    expect(page.querySelector('iard-cadre-espace main section')).not.toBeNull();
+    expect(page.querySelector('header')).toBeNull();
+    expect(page.querySelector('main')).toBeNull();
     expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
   });
 
@@ -45,7 +44,7 @@ describe('DocumentClientPage (US-04)', () => {
     http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));
     fixture.detectChanges();
 
-    expect(page.querySelector('main .btn')?.getAttribute('href')).toBe('blob:document');
+    expect(page.querySelector('section .btn')?.getAttribute('href')).toBe('blob:document');
     fixture.destroy();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:document');
   });
