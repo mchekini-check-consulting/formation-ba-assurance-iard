@@ -2,7 +2,20 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { apiBase } from '../config/api';
-import { Contrat, ContratResume, DemandeContrat, FicheContrat } from '../model/contrat';
+import { Contrat, ContratResume, DemandeContrat, FicheContrat, Regeneration } from '../model/contrat';
+
+/** US-21 : régénération des conditions particulières. */
+export type ResultatRegeneration =
+  | { statut: 'regenere'; regeneration: Regeneration }
+  /** 429 : une régénération date de moins d'une minute. */
+  | { statut: 'trop-tot'; message: string }
+  /** 422 : le statut du contrat ne permet pas la régénération (RG2, RG3 d'US-18). */
+  | { statut: 'impossible'; message: string }
+  | { statut: 'erreur-technique' };
+
+export const MESSAGE_TROP_TOT = "Vos conditions particulières viennent d'être régénérées. Réessayez dans une minute.";
+export const MESSAGE_IMPOSSIBLE =
+  "La régénération des conditions particulières n'est pas possible pour ce contrat dans son statut actuel.";
 
 export type ResultatFiche =
   | { statut: 'obtenu'; fiche: FicheContrat }
@@ -43,6 +56,31 @@ export class ContratService {
   /** US-04, AC1 / US-18 : les contrats habitation et auto du client connecté ; null s'ils n'ont pas pu être chargés. */
   lister(): Observable<ContratResume[] | null> {
     return this.http.get<ContratResume[]>(`${apiBase('assurance-iard-api')}/contrats`).pipe(catchError(() => of(null)));
+  }
+
+  /**
+   * US-21, AC1 : régénère les conditions particulières (nouvelle version, envoyée par e-mail). Un refus (403) est
+   * affiché par la page « Accès non autorisé ».
+   */
+  regenerer(numero: string): Observable<ResultatRegeneration> {
+    return this.http
+      .post<Regeneration>(
+        `${apiBase('assurance-iard-api')}/contrats/${encodeURIComponent(numero)}/conditions-particulieres`,
+        null,
+      )
+      .pipe(
+        map((regeneration): ResultatRegeneration => ({ statut: 'regenere', regeneration })),
+        catchError((erreur: HttpErrorResponse) => {
+          const detail = (erreur.error as { detail?: string } | null)?.detail;
+          if (erreur.status === 429) {
+            return of<ResultatRegeneration>({ statut: 'trop-tot', message: detail ?? MESSAGE_TROP_TOT });
+          }
+          if (erreur.status === 422) {
+            return of<ResultatRegeneration>({ statut: 'impossible', message: detail ?? MESSAGE_IMPOSSIBLE });
+          }
+          return of<ResultatRegeneration>({ statut: 'erreur-technique' });
+        }),
+      );
   }
 
   /** US-18, AC3 : fiche d'un contrat par son numéro. Un refus (403) est affiché par la page « Accès non autorisé ». */

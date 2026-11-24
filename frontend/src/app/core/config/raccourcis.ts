@@ -10,8 +10,8 @@ import { ActionContrat, decrireStatut } from '../model/statut-contrat';
 export const LIVRAISONS = {
   /** US-23 */
   modifierGaranties: false,
-  /** US-21 */
-  regenerer: false,
+  /** US-21 : livrée (régénération depuis la section « Versions » de la fiche contrat) */
+  regenerer: true,
   /** US-22 : Mes factures, Générer une facture */
   factures: false,
   /** US-24 : Mes sinistres, Déclarer un sinistre */
@@ -21,7 +21,13 @@ export const LIVRAISONS = {
 };
 
 /** Adresse des pages des fonctions livrées (à renseigner à la livraison). */
-export const ADRESSES: Partial<Record<keyof typeof LIVRAISONS, string>> = {};
+export const ADRESSES: Partial<Record<keyof typeof LIVRAISONS, string>> = {
+  /** US-21 : la régénération se fait sur la fiche du contrat (section « Versions »), sous cette adresse. */
+  regenerer: '/espace-client/contrats',
+};
+
+/** US-21 : ancre de la section « Versions » de la fiche contrat. */
+export const ANCRE_VERSIONS = 'versions';
 
 /** Ce dont les raccourcis ont besoin d'un contrat (résumé ou fiche). */
 export type ContratRaccourcis = Pick<ContratResume, 'numero' | 'produit' | 'statut' | 'referenceDevis'>;
@@ -29,6 +35,8 @@ export type ContratRaccourcis = Pick<ContratResume, 'numero' | 'produit' | 'stat
 export interface Lien {
   commandes: string[];
   parametres?: Record<string, string>;
+  /** Section de la page à afficher (ancre). */
+  fragment?: string;
 }
 
 export interface Raccourci {
@@ -65,7 +73,16 @@ export const RACCOURCIS: Record<
     livre: LIVRAISONS.modifierGaranties,
     produits: ['HABITATION', 'AUTO'],
   },
-  regenerer: { libelle: 'Régénérer mon contrat', livre: LIVRAISONS.regenerer, produits: ['HABITATION', 'AUTO'] },
+  regenerer: {
+    libelle: 'Régénérer mon contrat',
+    livre: LIVRAISONS.regenerer,
+    produits: ['HABITATION', 'AUTO'],
+    // US-21 : ouvre la fiche du contrat sur sa section « Versions », où se trouve le bouton de régénération.
+    lien: (contrat) =>
+      ADRESSES.regenerer
+        ? { commandes: [ADRESSES.regenerer, contrat.numero], fragment: ANCRE_VERSIONS }
+        : null,
+  },
   genererFacture: { libelle: 'Générer une facture', livre: LIVRAISONS.factures, produits: ['HABITATION', 'AUTO'] },
   declarerSinistre: { libelle: 'Déclarer un sinistre', livre: LIVRAISONS.sinistres, produits: ['HABITATION', 'AUTO'] },
 };

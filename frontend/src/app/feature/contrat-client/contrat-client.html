@@ -131,6 +131,59 @@
         </ul>
       }
     </div>
+
+    <!-- US-21 : versions des conditions particulières (AC2) et régénération (AC1, AC3) -->
+    <section class="devis-ligne" [id]="'versions'" aria-labelledby="titre-versions">
+      <div class="devis-ligne__entete">
+        <h2 id="titre-versions" class="serif">Versions de mes conditions particulières</h2>
+      </div>
+      @if (peutRegenerer()) {
+        <div class="devis-ligne__actions">
+          <button type="button" class="btn" [disabled]="regenerationEnCours()" (click)="regenerer()">
+            {{ regenerationEnCours() ? 'Régénération en cours…' : 'Régénérer mes conditions particulières' }}
+          </button>
+        </div>
+      }
+      @if (messageRegeneration(); as message) {
+        <p
+          class="fiche__confirmation"
+          [class.fiche__confirmation--erreur]="!message.succes"
+          [attr.role]="message.succes ? 'status' : 'alert'"
+        >
+          {{ message.texte }}
+        </p>
+      }
+      @if (f.versionsConditionsParticulieres.length === 0) {
+        <p>Vos conditions particulières seront disponibles ici dès leur création.</p>
+      } @else {
+        <ul class="fiche__documents versions">
+          @for (version of f.versionsConditionsParticulieres; track version.id) {
+            <li>
+              <span>
+                Version {{ version.version }}
+                <span class="versions__statut" [class.versions__statut--en-vigueur]="version.statut === 'EN_VIGUEUR'">{{
+                  LIBELLES_STATUT_VERSION[version.statut] ?? version.statut
+                }}</span>
+                @if (version.dateCreation) {
+                  <span class="versions__date"> du {{ dateDuJour(version.dateCreation) }}</span>
+                }
+              </span>
+              <button
+                type="button"
+                class="btn btn--contour"
+                [attr.aria-label]="'Télécharger : conditions particulières, version ' + version.version"
+                (click)="telechargerVersion(version)"
+              >
+                Télécharger
+              </button>
+              @if (messages()[version.id]; as message) {
+                <p class="mes-devis__erreur fiche__message" role="status">{{ message }}</p>
+              }
+            </li>
+          }
+        </ul>
+      }
+    </section>
   } @else if (erreur()) {
     <h1 id="contrat-titre" class="serif">Contrat</h1>
     <p class="mes-devis__erreur" role="alert">{{ erreur() }}</p>

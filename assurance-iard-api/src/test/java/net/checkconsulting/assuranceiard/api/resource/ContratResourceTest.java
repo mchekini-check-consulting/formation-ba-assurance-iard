@@ -27,6 +27,10 @@ import net.checkconsulting.assuranceiard.api.exception.MandatNonSigneException;
 import net.checkconsulting.assuranceiard.api.exception.SessionInvalideException;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
 import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
+import net.checkconsulting.assuranceiard.api.service.document.RegenerationContratService;
+import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
+import net.checkconsulting.assuranceiard.api.exception.RegenerationImpossibleException;
+import net.checkconsulting.assuranceiard.api.exception.RegenerationTropRapprocheeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -58,6 +62,9 @@ class ContratResourceTest {
 
     @MockitoBean
     private EspaceClientService espaceClientService;
+
+    @MockitoBean
+    private RegenerationContratService regenerationService;
 
     private ResultActions generer(String corps) throws Exception {
         return mockMvc.perform(post("/devis/contrat")
@@ -238,13 +245,15 @@ class ContratResourceTest {
                 LocalDate.of(2027, 9, 25), null,
                 new FicheContratResponse.Paiement("MENSUEL", 5, "•••• 7788", "AE-RUM-RECETTE-A"),
                 List.of(new FicheContratResponse.Document(12L, "CONDITIONS_PARTICULIERES",
-                        "Conditions particulières", 1, null))));
+                        "Conditions particulières", 1, null)),
+                List.of(new FicheContratResponse.Version(12L, 1, "EN_VIGUEUR", null, "Signature du contrat", true))));
 
         mockMvc.perform(get("/contrats/AE-RECETTE-A03").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.vehicule.immatriculation").value("AB-003-CD"))
                 .andExpect(jsonPath("$.paiement.ibanMasque").value("•••• 7788"))
-                .andExpect(jsonPath("$.documents[0].id").value(12));
+                .andExpect(jsonPath("$.documents[0].id").value(12))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].statut").value("EN_VIGUEUR"));
     }
 
     @Test
@@ -254,6 +263,42 @@ class ContratResourceTest {
         mockMvc.perform(get("/contrats/AE-INCONNU").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.detail").value("Contrat inconnu."));
+    }
+
+    private ResultActions regenerer(String numero) throws Exception {
+        return mockMvc.perform(post("/contrats/" + numero + "/conditions-particulieres")
+                .header(HttpHeaders.AUTHORIZATION, JETON));
+    }
+
+    @Test
+    void us21RegenereLesConditionsParticulieres() throws Exception {
+        when(regenerationService.regenerer("AE-RECETTE-A03"))
+                .thenReturn(new RegenerationResponse(55L, 3, java.time.Instant.parse("2026-11-24T10:00:00Z"), true,
+                        true));
+
+        regenerer("AE-RECETTE-A03")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.documentId").value(55))
+                .andExpect(jsonPath("$.version").value(3))
+                .andExpect(jsonPath("$.emailEnvoye").value(true));
+    }
+
+    @Test
+    void us21Rg2StatutQuiNePermetPasLaRegenerationEst422() throws Exception {
+        when(regenerationService.regenerer("AE-RECETTE-A07")).thenThrow(new RegenerationImpossibleException());
+
+        regenerer("AE-RECETTE-A07")
+                .andExpect(status().is(422))
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("pas possible")));
+    }
+
+    @Test
+    void us21UneRegenerationParMinuteEst429() throws Exception {
+        when(regenerationService.regenerer("AE-RECETTE-A03")).thenThrow(new RegenerationTropRapprocheeException());
+
+        regenerer("AE-RECETTE-A03")
+                .andExpect(status().isTooManyRequests())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("une minute")));
     }
 
     private ContratResponse uneReponse() {

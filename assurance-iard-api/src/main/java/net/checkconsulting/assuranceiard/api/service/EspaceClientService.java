@@ -134,7 +134,17 @@ public class EspaceClientService {
                 contrat.getDateFin(),
                 new FicheContratResponse.Paiement(paiement.frequence(), paiement.jourPrelevement(),
                         paiement.ibanMasque(), paiement.rum()),
-                documentsDeLaFiche(contrat));
+                documentsDeLaFiche(contrat),
+                versionsConditionsParticulieres(contrat.getId()));
+    }
+
+    /** US-21, AC2 : versions des conditions particulières, en vigueur et remplacées, la plus récente d'abord. */
+    private List<FicheContratResponse.Version> versionsConditionsParticulieres(long contratId) {
+        return documents.versionsDuContrat(contratId, TypeDocument.CONDITIONS_PARTICULIERES.name()).stream()
+                .map(document -> new FicheContratResponse.Version(document.getId(), document.getVersion(),
+                        document.getStatut(), document.getDateCreation(), document.getMotif(),
+                        Boolean.TRUE.equals(document.getStocke())))
+                .toList();
     }
 
     private boolean peut(Compte compte, Rubrique rubrique) {

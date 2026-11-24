@@ -25,6 +25,7 @@
           [class.btn--contour]="raccourci.action !== 'detail'"
           [routerLink]="raccourci.lien.commandes"
           [queryParams]="raccourci.lien.parametres"
+          [fragment]="raccourci.lien.fragment"
           [attr.aria-label]="raccourci.libelle + ' ' + c.numero"
           >{{ raccourci.libelle }}</a
         >

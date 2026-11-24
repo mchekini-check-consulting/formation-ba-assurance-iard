@@ -100,7 +100,35 @@ export interface FicheContrat {
   dateFin: string | null;
   paiement: { frequence: string | null; jourPrelevement: number | null; ibanMasque: string | null; rum: string | null };
   documents: DocumentContrat[];
+  /** US-21, AC2 : versions des conditions particulières, la plus récente d'abord. */
+  versionsConditionsParticulieres: VersionDocument[];
 }
+
+/** US-21, AC2 : une version des conditions particulières. */
+export interface VersionDocument {
+  id: number;
+  version: number;
+  /** EN_VIGUEUR ou REMPLACE. */
+  statut: string;
+  dateCreation: string | null;
+  motif: string | null;
+  /** Faux tant que son PDF n'est pas produit (téléchargement « en préparation »). */
+  disponible: boolean;
+}
+
+/** US-21 : résultat d'une régénération des conditions particulières. */
+export interface Regeneration {
+  documentId: number;
+  version: number;
+  dateCreation: string | null;
+  disponible: boolean;
+  emailEnvoye: boolean;
+}
+
+export const LIBELLES_STATUT_VERSION: Record<string, string> = {
+  EN_VIGUEUR: 'En vigueur',
+  REMPLACE: 'Remplacée',
+};
 
 export const LIBELLES_PRODUIT: Record<Produit, string> = {
   HABITATION: 'Habitation',
