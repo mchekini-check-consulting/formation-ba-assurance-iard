@@ -1,0 +1,92 @@
+// US-18 (recette) : liste compacte dans un seul bloc blanc, une ligne par document.
+.documents {
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgb(20 20 30 / 8%);
+  overflow: hidden;
+
+  &__groupe + &__groupe {
+    border-top: 1px solid var(--bordure);
+  }
+
+  &__titre {
+    margin: 0;
+    padding: 14px 20px 6px;
+    color: var(--texte-discret);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  &__liste {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+}
+
+.document {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 20px;
+  min-width: 0;
+
+  & + & {
+    border-top: 1px solid var(--bordure-claire);
+  }
+
+  &__icone {
+    flex: none;
+    color: var(--texte-discret);
+  }
+
+  &__texte {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 2px 10px;
+  }
+
+  &__type {
+    font-weight: 700;
+  }
+
+  &__fichier {
+    color: var(--texte-discret);
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+
+  // Simple lien rouge, aligné à droite (pas un bouton).
+  &__ouvrir {
+    flex: none;
+    color: var(--rouge);
+    font-weight: 600;
+
+    &:hover,
+    &:focus-visible {
+      color: var(--rouge-fonce);
+    }
+  }
+}
+
+// RG5 : sur mobile, le nom du fichier passe sous le type ; « Ouvrir » reste à droite, sans défilement horizontal.
+@media (width < 600px) {
+  .document {
+    align-items: flex-start;
+    padding: 12px 16px;
+
+    &__texte {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+  }
+
+  .documents__titre {
+    padding: 12px 16px 4px;
+  }
+}
