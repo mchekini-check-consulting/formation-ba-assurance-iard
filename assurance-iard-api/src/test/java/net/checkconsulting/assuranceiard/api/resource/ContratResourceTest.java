@@ -16,6 +16,8 @@ import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
+import net.checkconsulting.assuranceiard.api.dto.FicheContratResponse;
+import net.checkconsulting.assuranceiard.api.exception.ContratInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureEpuiseException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureExpireException;
 import net.checkconsulting.assuranceiard.api.exception.CodeSignatureIncorrectException;
@@ -24,6 +26,7 @@ import net.checkconsulting.assuranceiard.api.exception.GestionErreurs;
 import net.checkconsulting.assuranceiard.api.exception.MandatNonSigneException;
 import net.checkconsulting.assuranceiard.api.exception.SessionInvalideException;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
+import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
@@ -52,6 +55,9 @@ class ContratResourceTest {
 
     @MockitoBean
     private ContratService contratService;
+
+    @MockitoBean
+    private EspaceClientService espaceClientService;
 
     private ResultActions generer(String corps) throws Exception {
         return mockMvc.perform(post("/devis/contrat")
@@ -205,13 +211,48 @@ class ContratResourceTest {
     }
 
     @Test
-    void us04ListeMesContrats() throws Exception {
-        when(contratService.lister(JETON)).thenReturn(List.of(new ContratResumeResponse(REFERENCE, "AE-2026-000001",
-                "ACTIF", "12 rue des Lilas", "75001", "Paris", new BigDecimal("18.50"), LocalDate.of(2026, 12, 1))));
+    void us04EtUs18ListeMesContratsHabitationEtAuto() throws Exception {
+        when(espaceClientService.contrats(JETON)).thenReturn(List.of(
+                new ContratResumeResponse(REFERENCE, "AE-2026-000001", "HABITATION", "ACTIF",
+                        "12 rue des Lilas, 75001 Paris", new BigDecimal("18.50"), LocalDate.of(2026, 12, 1),
+                        LocalDate.of(2027, 12, 1), null),
+                new ContratResumeResponse(null, "AE-RECETTE-A03", "AUTO", "ACTIF", "Renault Clio · AB-003-CD",
+                        new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), LocalDate.of(2027, 9, 25), null)));
 
         mockMvc.perform(get("/contrats").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].numero").value("AE-2026-000001"));
+                .andExpect(jsonPath("$[0].numero").value("AE-2026-000001"))
+                .andExpect(jsonPath("$[1].produit").value("AUTO"))
+                .andExpect(jsonPath("$[1].referenceDevis").doesNotExist())
+                .andExpect(jsonPath("$[1].bienAssure").value("Renault Clio · AB-003-CD"));
+    }
+
+    @Test
+    void us18FicheContratParNumero() throws Exception {
+        when(espaceClientService.fiche("AE-RECETTE-A03")).thenReturn(new FicheContratResponse("AE-RECETTE-A03", null,
+                "AUTO", "ACTIF", "TR", null,
+                new FicheContratResponse.Vehicule("Renault", "Clio", "V TCe 90", "AB-003-CD"),
+                new BigDecimal("500.00"), List.of(new FicheContratResponse.Garantie("RC", new BigDecimal("12.00"))),
+                new BigDecimal("45.00"), new BigDecimal("540.00"), LocalDate.of(2026, 9, 25),
+                LocalDate.of(2027, 9, 25), null,
+                new FicheContratResponse.Paiement("MENSUEL", 5, "•••• 7788", "AE-RUM-RECETTE-A"),
+                List.of(new FicheContratResponse.Document(12L, "CONDITIONS_PARTICULIERES",
+                        "Conditions particulières", 1, null))));
+
+        mockMvc.perform(get("/contrats/AE-RECETTE-A03").header(HttpHeaders.AUTHORIZATION, JETON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.vehicule.immatriculation").value("AB-003-CD"))
+                .andExpect(jsonPath("$.paiement.ibanMasque").value("•••• 7788"))
+                .andExpect(jsonPath("$.documents[0].id").value(12));
+    }
+
+    @Test
+    void us18FicheDUnContratInconnu() throws Exception {
+        when(espaceClientService.fiche("AE-INCONNU")).thenThrow(new ContratInconnuException());
+
+        mockMvc.perform(get("/contrats/AE-INCONNU").header(HttpHeaders.AUTHORIZATION, JETON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.detail").value("Contrat inconnu."));
     }
 
     private ContratResponse uneReponse() {

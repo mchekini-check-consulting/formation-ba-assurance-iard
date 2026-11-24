@@ -18,7 +18,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
-import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
@@ -229,15 +228,6 @@ class ContratServiceTest {
         return new GenerationContratRequest(
                 REFERENCE, "12 rue des Lilas", "75001", "Paris",
                 "appartement", 45, 300, false);
-    }
-
-    @Test
-    void us04ListeLesContratsDuClientConnecte() {
-        when(contrats.findByDossierCompteOrderByDateCreationDesc(compte)).thenReturn(List.of(unContratExistant()));
-
-        assertThat(service.lister(JETON)).containsExactly(new ContratResumeResponse(REFERENCE, "AE-2026-000001",
-                "EN_ATTENTE_DE_SIGNATURE", "12 rue des Lilas", "75001", "Paris", new BigDecimal("18.50"),
-                LocalDate.of(2026, 12, 1)));
     }
 
     @Test

@@ -24,6 +24,6 @@ public class ConservationDevisService {
     @Transactional
     public void supprimerDevisTropAnciens() {
         Instant limite = horloge.instant().atZone(FRANCE).minusYears(DUREE_CONSERVATION_ANS).toInstant();
-        repository.deleteByDateDernierContactBefore(limite);
+        repository.supprimerHabitationsSansContactDepuis(limite);
     }
 }

@@ -81,6 +81,7 @@ class RoutesDeclareesTest {
                 new ProprietairesDevis(mock(DevisEnregistreRepository.class)).type(),
                 new ProprietairesSouscription(mock(DossierSouscriptionRepository.class)).type(),
                 new ProprietairesContrat(mock(ContratRepository.class)).type(),
+                new ProprietairesContratNumero(mock(ContratRepository.class)).type(),
                 new ProprietairesDocument(mock(JustificatifRepository.class)).type(),
                 new ProprietairesDocumentContrat(mock(DocumentRepository.class)).type());
 

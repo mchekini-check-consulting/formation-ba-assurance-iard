@@ -1,0 +1,35 @@
+// Couleurs contrastées (texte foncé sur fond clair, ratio ≥ 4,5:1) : le texte porte toujours l'information.
+.badge-statut {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid currentcolor;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+
+  &--orange {
+    background: #fff3e0;
+    color: #8a4b00;
+  }
+
+  &--bleu {
+    background: #e8f0fb;
+    color: #1d4f91;
+  }
+
+  &--vert {
+    background: #e7f5ea;
+    color: #1e6b34;
+  }
+
+  &--rouge {
+    background: #fbeaea;
+    color: #a82b27;
+  }
+
+  &--gris {
+    background: #f0f0f2;
+    color: #4a4a4f;
+  }
+}

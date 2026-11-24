@@ -2,7 +2,12 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable, catchError, map, of } from 'rxjs';
 import { apiBase } from '../config/api';
-import { Contrat, ContratResume, DemandeContrat } from '../model/contrat';
+import { Contrat, ContratResume, DemandeContrat, FicheContrat } from '../model/contrat';
+
+export type ResultatFiche =
+  | { statut: 'obtenu'; fiche: FicheContrat }
+  | { statut: 'introuvable' }
+  | { statut: 'erreur-technique' };
 
 export type ResultatGeneration =
   | { statut: 'genere'; contrat: Contrat }
@@ -35,9 +40,19 @@ export class ContratService {
   private readonly http = inject(HttpClient);
   private readonly url = `${apiBase('assurance-iard-api')}/devis/contrat`;
 
-  /** US-04, AC1 : les contrats du client connecté ; null s'ils n'ont pas pu être chargés. */
+  /** US-04, AC1 / US-18 : les contrats habitation et auto du client connecté ; null s'ils n'ont pas pu être chargés. */
   lister(): Observable<ContratResume[] | null> {
     return this.http.get<ContratResume[]>(`${apiBase('assurance-iard-api')}/contrats`).pipe(catchError(() => of(null)));
+  }
+
+  /** US-18, AC3 : fiche d'un contrat par son numéro. Un refus (403) est affiché par la page « Accès non autorisé ». */
+  obtenirFiche(numero: string): Observable<ResultatFiche> {
+    return this.http.get<FicheContrat>(`${apiBase('assurance-iard-api')}/contrats/${encodeURIComponent(numero)}`).pipe(
+      map((fiche): ResultatFiche => ({ statut: 'obtenu', fiche })),
+      catchError((erreur: HttpErrorResponse) =>
+        of<ResultatFiche>(erreur.status === 404 ? { statut: 'introuvable' } : { statut: 'erreur-technique' }),
+      ),
+    );
   }
 
   generer(demande: DemandeContrat): Observable<ResultatGeneration> {

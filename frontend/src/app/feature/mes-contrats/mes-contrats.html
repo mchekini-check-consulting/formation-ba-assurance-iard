@@ -22,18 +22,7 @@
 
     <ul class="mes-devis__liste">
       @for (contrat of liste(); track contrat.numero) {
-        <li class="devis-ligne">
-          <div class="devis-ligne__entete">
-            <h2 class="serif">Contrat {{ contrat.numero }}</h2>
-            <span class="badge">{{ LIBELLES_STATUT[contrat.statut] }}</span>
-          </div>
-          <p>{{ contrat.adresseLogement }}, {{ contrat.codePostal }} {{ contrat.ville }}</p>
-          <p><strong>{{ formaterPrix(contrat.cotisationMensuelle) }}&#160;€/mois</strong></p>
-          <p>Date d'effet : {{ formaterDate(contrat.dateEffet) }}</p>
-          <div class="devis-ligne__actions">
-            <a class="btn" [routerLink]="['/espace-client/contrats', contrat.referenceDevis]">Voir le contrat</a>
-          </div>
-        </li>
+        <li><iard-carte-contrat [contrat]="contrat" /></li>
       }
     </ul>
   </section>

@@ -1,0 +1,47 @@
+import { StatutContrat } from './contrat';
+import { STATUTS_CONTRAT, decrireStatut } from './statut-contrat';
+
+describe('statuts du contrat (US-18, RG3 et AC5)', () => {
+  it('connaît les 10 statuts avec leur libellé exact', () => {
+    expect(Object.keys(STATUTS_CONTRAT)).toHaveLength(10);
+    expect(STATUTS_CONTRAT.EN_ATTENTE_EFFET.libelle).toBe("En attente d'effet");
+    expect(STATUTS_CONTRAT.ACTIF_JUSTIFICATIFS_ATTENDUS.libelle).toBe('Actif · justificatifs attendus');
+    expect(STATUTS_CONTRAT.RENONCE.libelle).toBe('Renoncé');
+    expect(Object.keys(STATUTS_CONTRAT)).not.toContain('SIGNE');
+  });
+
+  it.each(Object.entries(STATUTS_CONTRAT))('%s a un texte, un message et « Voir le détail »', (_statut, description) => {
+    expect(description.libelle.length).toBeGreaterThan(0);
+    expect(description.message.length).toBeGreaterThan(0);
+    expect(description.actions).toContain('detail');
+  });
+
+  it.each<[StatutContrat, string]>([
+    ['EN_ATTENTE_DE_SIGNATURE', 'orange'],
+    ['EN_ATTENTE_EFFET', 'bleu'],
+    ['ACTIF', 'vert'],
+    ['ACTIF_JUSTIFICATIFS_ATTENDUS', 'bleu'],
+    ['AVENANT_EN_ATTENTE', 'orange'],
+    ['IMPAYE', 'rouge'],
+    ['SUSPENDU', 'rouge'],
+    ['RESILIATION_EN_COURS', 'gris'],
+    ['RESILIE', 'gris'],
+    ['RENONCE', 'gris'],
+  ])('%s est %s', (statut, ton) => {
+    expect(STATUTS_CONTRAT[statut].ton).toBe(ton);
+  });
+
+  it('bloque les actions de RG3', () => {
+    expect(STATUTS_CONTRAT.EN_ATTENTE_DE_SIGNATURE.actions).not.toContain('declarerSinistre');
+    expect(STATUTS_CONTRAT.AVENANT_EN_ATTENTE.actions).not.toContain('modifierGaranties');
+    expect(STATUTS_CONTRAT.IMPAYE.actions).not.toContain('modifierGaranties');
+    expect(STATUTS_CONTRAT.SUSPENDU.actions).not.toContain('regenerer');
+    expect(STATUTS_CONTRAT.RESILIE.actions).not.toContain('declarerSinistre');
+    expect(STATUTS_CONTRAT.RENONCE.actions).toEqual(['detail']);
+    expect(STATUTS_CONTRAT.ACTIF.actions).toHaveLength(5);
+  });
+
+  it('affiche en texte un statut inconnu, sans autre action que le détail', () => {
+    expect(decrireStatut('NOUVEAU')).toEqual({ libelle: 'NOUVEAU', ton: 'gris', message: '', actions: ['detail'] });
+  });
+});

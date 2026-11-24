@@ -6,34 +6,152 @@
     </a>
     <button type="button" class="btn btn--contour" (click)="seDeconnecter()">Se déconnecter</button>
   </div>
+  <!-- RG5 : la navigation passe au-dessus du contenu et revient à la ligne, sans défilement horizontal -->
+  <!-- US-04, AC3 : seulement les rubriques autorisées par le profil (droits de l'US-02 fournis par le serveur) -->
+  <nav class="navigation" aria-label="Mon espace">
+    <ul class="navigation__liste">
+      @if (peut('CONTRATS', 'CONSULTER')) {
+        <li><a routerLink="/espace-client/contrats">Mes contrats</a></li>
+      }
+      @if (peut('DEVIS', 'CONSULTER')) {
+        <li><a routerLink="/espace-client/devis">Mes devis</a></li>
+      }
+      @if (peut('DOCUMENTS', 'CONSULTER')) {
+        <li><a routerLink="/espace-client/documents">Mes documents</a></li>
+      }
+      @if (estInterne()) {
+        @if (peut('COMPTES_UTILISATEURS', 'CONSULTER')) {
+          <li><a routerLink="/back-office/clients">Dossiers clients</a></li>
+        }
+        @if (profil() === 'ADMINISTRATEUR') {
+          <li><a routerLink="/admin/profils">Gérer les profils</a></li>
+        }
+        @if (peut('PROFILS', 'CONSULTER')) {
+          <li><a routerLink="/admin/acces-refuses">Journal des accès refusés</a></li>
+        }
+      }
+    </ul>
+  </nav>
 </header>
 
 <main class="page">
-  <section class="confirmation" aria-labelledby="espace-titre">
-    <h1 id="espace-titre" class="serif">Mon espace</h1>
-    <p>
-      Vous êtes connecté avec <strong>{{ email() }}</strong>.
-    </p>
-    <!-- US-04, AC3 : seulement les rubriques autorisées par le profil (droits de l'US-02 fournis par le serveur) -->
-    @if (peut('DEVIS', 'CONSULTER')) {
-      <a class="btn confirmation__action" routerLink="/espace-client/devis">Mes devis</a>
-    }
-    @if (peut('CONTRATS', 'CONSULTER')) {
-      <a class="btn confirmation__action" routerLink="/espace-client/contrats">Mes contrats</a>
-    }
-    @if (peut('DOCUMENTS', 'CONSULTER')) {
-      <a class="btn confirmation__action" routerLink="/espace-client/documents">Mes documents</a>
-    }
-    @if (estInterne()) {
-      @if (peut('COMPTES_UTILISATEURS', 'CONSULTER')) {
-        <a class="btn btn--contour confirmation__action" routerLink="/back-office/clients">Dossiers clients</a>
+  <div class="mes-devis tableau-de-bord">
+    <h1 class="serif">
+      @if (tableau()?.prenom; as prenom) {
+        Bonjour {{ prenom }}
+      } @else {
+        Mon espace
       }
-      @if (profil() === 'ADMINISTRATEUR') {
-        <a class="btn btn--contour confirmation__action" routerLink="/admin/profils">Gérer les profils</a>
+    </h1>
+    <p class="tableau-de-bord__connexion">Vous êtes connecté avec <strong>{{ email() }}</strong>.</p>
+
+    @switch (etat()) {
+      @case ('chargement') {
+        <p>Chargement de votre espace…</p>
       }
-      @if (peut('PROFILS', 'CONSULTER')) {
-        <a class="btn btn--contour confirmation__action" routerLink="/admin/acces-refuses">Journal des accès refusés</a>
+      @case ('erreur') {
+        <p class="mes-devis__erreur" role="alert">
+          Votre espace n'a pas pu être chargé. Réessayez dans quelques instants.
+        </p>
+      }
+      @case ('affiche') {
+        @if (tableau(); as t) {
+          <section class="tableau-de-bord__section" aria-labelledby="titre-contrats">
+            <h2 id="titre-contrats" class="serif">Mes contrats</h2>
+            @if (t.contrats.length === 0) {
+              <!-- AC6 : sans contrat, orientation vers la souscription -->
+              <div class="devis-ligne sans-contrat">
+                <p>Vous n'avez pas encore de contrat. Assurez votre logement ou votre véhicule en quelques minutes.</p>
+                <div class="devis-ligne__actions">
+                  <a class="btn" routerLink="/devis/logement">Assurer mon logement</a>
+                  <a class="btn btn--contour" routerLink="/devis-auto/vehicule">Assurer mon véhicule</a>
+                </div>
+              </div>
+            } @else {
+              <ul class="mes-devis__liste">
+                @for (contrat of t.contrats; track contrat.numero) {
+                  <li><iard-carte-contrat [contrat]="contrat" /></li>
+                }
+              </ul>
+            }
+          </section>
+
+          @if (t.devisVisibles) {
+            <section class="tableau-de-bord__section" aria-labelledby="titre-devis">
+              <h2 id="titre-devis" class="serif">Mes devis en cours</h2>
+              @if (t.devisEnCours.length === 0) {
+                <p>Aucun devis en cours.</p>
+              } @else {
+                <ul class="mes-devis__liste">
+                  @for (devis of t.devisEnCours; track $index) {
+                    <li class="devis-ligne">
+                      <h3 class="serif">{{ LIBELLES_PRODUIT[devis.produit] }} · {{ libelleFormule(devis.formule) }}</h3>
+                      @if (devis.description) {
+                        <p>{{ devis.description }}</p>
+                      }
+                      <p><strong>{{ formaterPrix(devis.prixMensuel) }}&#160;€/mois</strong></p>
+                      <p>Valable jusqu'au {{ formaterDate(devis.dateFinValidite) }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+
+          <section class="tableau-de-bord__section" aria-labelledby="titre-factures">
+            <h2 id="titre-factures" class="serif">Mes dernières factures</h2>
+            @if (t.dernieresFactures.length === 0) {
+              <p>Aucune facture pour le moment.</p>
+            } @else {
+              <ul class="mes-devis__liste">
+                @for (facture of t.dernieresFactures; track facture.numero) {
+                  <li class="devis-ligne">
+                    <h3 class="serif">Facture {{ facture.numero }}</h3>
+                    <p>Contrat {{ facture.numeroContrat }}</p>
+                    <p>
+                      Du {{ formaterDate(facture.periodeDebut) }} au {{ formaterDate(facture.periodeFin) }} :
+                      <strong>{{ formaterPrix(facture.montantTtc) }}&#160;€</strong>
+                    </p>
+                    @if (facture.documentId !== null) {
+                      <div class="devis-ligne__actions">
+                        <button type="button" class="btn btn--contour" (click)="telechargerFacture(facture)">
+                          Télécharger la facture {{ facture.numero }}
+                        </button>
+                      </div>
+                      @if (messagesFactures()[facture.numero]; as message) {
+                        <p class="mes-devis__erreur" role="status">{{ message }}</p>
+                      }
+                    } @else {
+                      <p class="mes-devis__mention">PDF bientôt disponible.</p>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </section>
+
+          @if (t.sinistresVisibles) {
+            <section class="tableau-de-bord__section" aria-labelledby="titre-sinistres">
+              <h2 id="titre-sinistres" class="serif">Mes sinistres déclarés</h2>
+              @if (t.sinistres.length === 0) {
+                <p>Aucun sinistre déclaré.</p>
+              } @else {
+                <ul class="mes-devis__liste">
+                  @for (sinistre of t.sinistres; track $index) {
+                    <li class="devis-ligne">
+                      <h3 class="serif">{{ libelleSinistre(sinistre.type) }}</h3>
+                      @if (sinistre.numero) {
+                        <p>Sinistre {{ sinistre.numero }}</p>
+                      }
+                      <p>Contrat {{ sinistre.numeroContrat }} · survenu le {{ formaterDate(sinistre.dateSurvenance) }}</p>
+                    </li>
+                  }
+                </ul>
+              }
+            </section>
+          }
+        }
       }
     }
-  </section>
+  </div>
 </main>

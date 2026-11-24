@@ -74,6 +74,11 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    @ExceptionHandler(ContratInconnuException.class)
+    public ProblemDetail contratInconnu(ContratInconnuException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
     @ExceptionHandler(MandatNonSigneException.class)
     public ProblemDetail mandatNonSigne(MandatNonSigneException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());

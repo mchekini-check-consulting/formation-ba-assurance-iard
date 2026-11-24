@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
+import net.checkconsulting.assuranceiard.api.dto.FicheContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
@@ -15,6 +16,7 @@ import net.checkconsulting.assuranceiard.api.model.Rubrique;
 import net.checkconsulting.assuranceiard.api.securite.Acces;
 import net.checkconsulting.assuranceiard.api.securite.TypeRessource;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
+import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -28,6 +30,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class ContratResource {
 
     private final ContratService contratService;
+    private final EspaceClientService espaceClientService;
 
     @PostMapping("/devis/contrat")
     @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CREER,
@@ -39,13 +42,22 @@ public class ContratResource {
         return contratService.generer(authorization, demande);
     }
 
-    /** US-04, AC1 : les contrats du client connecté, et seulement les siens. */
+    /** US-04, AC1 / US-18 : les contrats habitation et auto du client connecté, et seulement les siens. */
     @GetMapping("/contrats")
     @Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER)
     @LogMetier(champs = {"resultat.taille"})
     public List<ContratResumeResponse> lister(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
-        return contratService.lister(authorization);
+        return espaceClientService.contrats(authorization);
+    }
+
+    /** US-18, AC3 : fiche d'un contrat par son numéro ; le contrat d'un autre client est refusé (AC7). */
+    @GetMapping("/contrats/{numero}")
+    @Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER,
+            ressource = TypeRessource.CONTRAT_NUMERO, identifiant = "numero")
+    @LogMetier(champs = {"resultat.produit", "resultat.statut"})
+    public FicheContratResponse fiche(@PathVariable String numero) {
+        return espaceClientService.fiche(numero);
     }
 
     @GetMapping("/devis/contrat/{referenceDevis}")

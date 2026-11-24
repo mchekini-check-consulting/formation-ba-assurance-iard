@@ -18,6 +18,6 @@ class ConservationDevisServiceTest {
 
         new ConservationDevisService(repository, horloge).supprimerDevisTropAnciens();
 
-        verify(repository).deleteByDateDernierContactBefore(Instant.parse("2023-11-05T10:00:00Z"));
+        verify(repository).supprimerHabitationsSansContactDepuis(Instant.parse("2023-11-05T10:00:00Z"));
     }
 }

@@ -45,6 +45,19 @@ class ProprietairesTest {
     }
 
     @Test
+    void us18ContratParNumero() {
+        ContratRepository repository = mock(ContratRepository.class);
+        when(repository.proprietairesParNumero("AE-RECETTE-A03")).thenReturn(List.of(5L, 5L));
+        ProprietairesContratNumero contrat = new ProprietairesContratNumero(repository);
+
+        assertThat(contrat.type()).isEqualTo(TypeRessource.CONTRAT_NUMERO);
+        assertThat(contrat.proprietaires("AE-RECETTE-A03")).containsExactly(5L);
+        assertThat(contrat.proprietaires("AE-INCONNU")).isEmpty();
+        assertThat(contrat.proprietaires(" ")).isEmpty();
+        assertThat(contrat.proprietaires(null)).isEmpty();
+    }
+
+    @Test
     void document() {
         JustificatifRepository repository = mock(JustificatifRepository.class);
         when(repository.proprietaires(42L)).thenReturn(List.of(4L));

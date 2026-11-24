@@ -16,13 +16,31 @@ public interface ContratRepository extends JpaRepository<Contrat, Long> {
     @LogMetier
     Optional<Contrat> findByDossier(DossierSouscription dossier);
 
-    /** US-04 : contrats d'un client, les plus récents d'abord. */
+    /** US-04 : contrats d'un client passés par un dossier de souscription (back-office du sprint 1). */
     @LogMetier
     List<Contrat> findByDossierCompteOrderByDateCreationDesc(Compte compte);
 
-    /** US-04 : comptes propriétaires du contrat de ce devis. */
-    @Query("SELECT c.dossier.compte.id FROM Contrat c WHERE c.dossier.referenceDevis = :referenceDevis")
+    /** US-18 : tous les contrats du client, habitation et auto, rattachés par contrat.compte_id. */
+    @LogMetier
+    @Query("""
+            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier
+            WHERE c.compte = :compte ORDER BY c.dateCreation DESC, c.id DESC""")
+    List<Contrat> duClient(@Param("compte") Compte compte);
+
+    /** US-18 : fiche contrat, identifiée par son numéro. */
+    @LogMetier
+    @Query("""
+            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier
+            WHERE c.numero = :numero""")
+    Optional<Contrat> parNumero(@Param("numero") String numero);
+
+    /** US-04 / US-18 : comptes propriétaires du contrat de ce devis (par contrat.compte_id). */
+    @Query("SELECT c.compte.id FROM Contrat c WHERE c.dossier.referenceDevis = :referenceDevis")
     List<Long> proprietaires(@Param("referenceDevis") UUID referenceDevis);
+
+    /** US-18 : comptes propriétaires du contrat de ce numéro. */
+    @Query("SELECT c.compte.id FROM Contrat c WHERE c.numero = :numero")
+    List<Long> proprietairesParNumero(@Param("numero") String numero);
 
     /** RG1 : prochain numéro de séquence pour l'année donnée. */
     @LogMetier

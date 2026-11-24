@@ -2,7 +2,7 @@ import { RECO_CONFORT } from '../../core/model/tarif.exemples';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { DevisService } from '../../core/service/devis.service';
 import { DevisContrat } from './devis-contrat';
 
@@ -255,5 +255,65 @@ describe('DevisContrat', () => {
 
     expect(page.querySelector<HTMLInputElement>('#code-signature')!.value).toBe('');
     expect(page.querySelector<HTMLInputElement>('#code-signature')!.disabled).toBe(false);
+  });
+});
+
+describe('DevisContrat : reprise de la signature depuis le tableau de bord (US-18, AC2)', () => {
+  const REFERENCE = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
+  let fixture: ComponentFixture<DevisContrat>;
+  let page: HTMLElement;
+  let http: HttpTestingController;
+  let devis: DevisService;
+
+  beforeEach(() => {
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        { provide: ActivatedRoute, useValue: { snapshot: { queryParamMap: convertToParamMap({ reference: REFERENCE }) } } },
+      ],
+    });
+    devis = TestBed.inject(DevisService);
+    http = TestBed.inject(HttpTestingController);
+    fixture = TestBed.createComponent(DevisContrat);
+    fixture.detectChanges();
+    page = fixture.nativeElement as HTMLElement;
+  });
+
+  afterEach(() => http.verify());
+
+  it('relit le contrat déjà généré par la référence de son devis, sans le régénérer', () => {
+    const requete = http.expectOne(`/api/assurance-iard-api/devis/contrat/${REFERENCE}`);
+    expect(requete.request.method).toBe('GET');
+    requete.flush(UN_CONTRAT);
+    fixture.detectChanges();
+
+    expect(devis.reference()).toBe(REFERENCE);
+    expect(page.querySelector('.badge')?.textContent?.trim()).toBe('En attente de signature');
+    expect(page.textContent).toContain('Signer en ligne');
+  });
+
+  it('affiche le libellé exact du statut, sans la valeur SIGNE', () => {
+    http.expectOne(`/api/assurance-iard-api/devis/contrat/${REFERENCE}`).flush({ ...UN_CONTRAT, statut: 'EN_ATTENTE_EFFET' });
+    fixture.detectChanges();
+
+    expect(page.querySelector('.badge')?.textContent?.trim()).toBe("En attente d'effet");
+    expect(page.textContent).toContain('Votre contrat est signé.');
+  });
+
+  it('affiche une erreur si le contrat ne peut pas être relu', () => {
+    http.expectOne(`/api/assurance-iard-api/devis/contrat/${REFERENCE}`).flush({}, { status: 500, statusText: 'x' });
+    fixture.detectChanges();
+
+    expect(page.querySelector('[role="alert"]')).not.toBeNull();
+  });
+
+  it('session expirée : retour à la connexion', () => {
+    const router = TestBed.inject(Router);
+    vi.spyOn(router, 'navigate').mockResolvedValue(true);
+    http.expectOne(`/api/assurance-iard-api/devis/contrat/${REFERENCE}`).flush({}, { status: 401, statusText: 'x' });
+
+    expect(router.navigate).toHaveBeenCalledWith(['/connexion'], { queryParams: { retour: '/espace-client' } });
   });
 });

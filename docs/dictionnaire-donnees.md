@@ -165,16 +165,27 @@ remplacer par les éléments du PO.
 
 ## Points pour le sprint 2
 
-- **US-18** : « Mes contrats » et le contrôle d'accès retrouvent encore les contrats par le dossier ; les contrats
-  sans dossier (auto) n'y apparaissent pas tant qu'ils ne passent pas à `contrat.compte_id`.
-- L'entité `DevisEnregistre` ne lit que les devis HABITATION (`@SQLRestriction`) : à lever avec les écrans de devis auto.
-- L'entité `Contrat` n'expose pas encore les colonnes T-05 (seule la franchise a changé) : à ajouter avec les
-  fonctionnalités qui les utilisent.
+- ~~**US-18** : « Mes contrats » et le contrôle d'accès retrouvent encore les contrats par le dossier.~~ Fait en
+  US-18 : contrats rattachés au client par `contrat.compte_id` (Mes contrats, tableau de bord, contrôle d'accès,
+  habitation et auto). Aucune migration : seule la lecture par le code a changé.
+- ~~L'entité `DevisEnregistre` ne lit que les devis HABITATION (`@SQLRestriction`).~~ Filtre levé en US-18 : l'entité
+  lit les deux produits (champs logement, formule et prix facultatifs côté code). Mes devis, la reprise, la
+  suppression, le PDF et la purge RGPD restent limités à l'habitation par leurs requêtes
+  (`DevisEnregistreRepository`). Le tableau de bord affiche les devis en cours des deux produits.
+- **Purge RGPD des devis auto** : pas encore faite (lignes liées `devis_auto`, `devis_option`) ; à traiter avec les
+  écrans de devis auto (AC4 auto d'US-18 reporté au backlog).
+- L'entité `Contrat` lit en US-18 les colonnes T-05 `compte_id`, `produit`, `formule`, `date_fin`, `vehicule_id`,
+  **en lecture seule** : la souscription habitation du sprint 1 enregistre ses contrats comme avant, et le
+  déclencheur `tg_contrat_completer` les complète. À rendre modifiables avec la souscription auto (US-33).
 - Lien entre les justificatifs d'US-04 (`justificatif`) et la nouvelle table `document` : à faire.
 - **T-03** : les contrats créés après V27 (nouvelles souscriptions) n'ont pas encore de ligne « conditions
   particulières » : US-21 / US-33 appellent le service de documents à la signature.
-- L'écran `devis-contrat` teste une valeur de statut `SIGNE` que la base n'accepte pas et que le backend n'écrit
-  jamais (non corrigé, hors périmètre T-05).
+- ~~L'écran `devis-contrat` teste une valeur de statut `SIGNE`.~~ Retiré en US-18 (10 statuts de RG3).
+- **Données de test** : le contrat auto `AE-RECETTE-A10` est au statut `RENONCE`, alors que la renonciation ne
+  s'applique pas à l'assurance auto obligatoire (art. L112-2-1 du Code des assurances). Affiché tel quel par US-18,
+  à corriger dans le jeu de données de test (à valider PO).
+- **Factures** : aucun modèle ne produit encore le PDF d'une facture (T-03 : conditions particulières et générales
+  seulement). Le tableau de bord affiche la facture sans lien de téléchargement tant que son PDF n'est pas stocké.
 
 ---
 

@@ -18,17 +18,16 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.JdbcTypeCode;
-import org.hibernate.annotations.SQLRestriction;
 import org.hibernate.type.SqlTypes;
 
 /**
  * US-12 : devis enregistré par un client, avec son prix garanti et sa date de fin de validité.
- * T-05 : la table accueille aussi les devis auto (colonnes logement vides). Le code du sprint 1 ne connaît que
- * l'habitation : les devis auto lui restent invisibles jusqu'aux fonctionnalités auto du sprint 2.
+ * T-05 : la table accueille aussi les devis auto (colonnes logement, formule et prix vides selon l'étape).
+ * US-18 : l'entité lit les deux produits ; les parcours habitation du sprint 1 (reprise, suppression, PDF, purge)
+ * filtrent sur le produit dans {@link net.checkconsulting.assuranceiard.api.repository.DevisEnregistreRepository}.
  */
 @Entity
 @Table(name = "devis_enregistre")
-@SQLRestriction("produit = 'HABITATION'")
 @Getter
 @Setter
 @NoArgsConstructor
@@ -44,7 +43,8 @@ public class DevisEnregistre {
     @JoinColumn(name = "compte_id", nullable = false)
     private Compte compte;
 
-    @Column(nullable = false)
+    /** Vide pour un devis auto (T-05). */
+    @Column
     private UUID reference;
 
     @Column(length = 30)
@@ -53,20 +53,19 @@ public class DevisEnregistre {
     @Column(length = 12)
     private String residence;
 
-    @Column(name = "type_logement", nullable = false, length = 12)
+    @Column(name = "type_logement", length = 12)
     private String typeLogement;
 
-    @Column(nullable = false)
+    @Column
     private String adresse;
 
-    @Column(name = "code_postal", nullable = false, length = 5)
+    @Column(name = "code_postal", length = 5)
     private String codePostal;
 
-    @Column(nullable = false, length = 100)
+    @Column(length = 100)
     private String ville;
 
-    @Column(nullable = false)
-    private int surface;
+    private Integer surface;
 
     @Column(name = "nombre_pieces", length = 5)
     private String nombrePieces;
@@ -95,17 +94,17 @@ public class DevisEnregistre {
     @Column(name = "nombre_sinistres", length = 5)
     private String nombreSinistres;
 
-    @Column(nullable = false, length = 12)
+    @Column(length = 12)
     private String formule;
 
     @JdbcTypeCode(SqlTypes.ARRAY)
-    @Column(nullable = false, columnDefinition = "text[]")
+    @Column(columnDefinition = "text[]")
     private List<String> options;
 
-    @Column(nullable = false, length = 3)
+    @Column(length = 3)
     private String franchise;
 
-    @Column(name = "prix_mensuel", nullable = false, precision = 10, scale = 2)
+    @Column(name = "prix_mensuel", precision = 10, scale = 2)
     private BigDecimal prixMensuel;
 
     @Column(name = "date_creation", nullable = false)

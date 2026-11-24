@@ -1,0 +1,33 @@
+@let c = contrat();
+<article class="devis-ligne" [attr.aria-labelledby]="'contrat-' + c.numero">
+  <div class="devis-ligne__entete">
+    <h3 class="serif" [id]="'contrat-' + c.numero">{{ LIBELLES_PRODUIT[c.produit] }} · {{ c.numero }}</h3>
+    <iard-badge-statut [statut]="c.statut" />
+  </div>
+  @if (c.bienAssure) {
+    <p>{{ c.bienAssure }}</p>
+  }
+  <p><strong>{{ formaterPrix(c.cotisationMensuelle) }}&#160;€/mois</strong></p>
+  @if (c.dateEcheance) {
+    <p>Échéance : {{ formaterDate(c.dateEcheance) }}</p>
+  } @else if (c.dateFin) {
+    <p>Fin du contrat : {{ formaterDate(c.dateFin) }}</p>
+  }
+  @if (message()) {
+    <p class="carte-contrat__message">{{ message() }}</p>
+  }
+  @if (raccourcis().length) {
+    <div class="devis-ligne__actions">
+      @for (raccourci of raccourcis(); track raccourci.action) {
+        <a
+          class="btn"
+          [class.btn--contour]="raccourci.action !== 'detail'"
+          [routerLink]="raccourci.lien.commandes"
+          [queryParams]="raccourci.lien.parametres"
+          [attr.aria-label]="raccourci.libelle + ' ' + c.numero"
+          >{{ raccourci.libelle }}</a
+        >
+      }
+    </div>
+  }
+</article>
