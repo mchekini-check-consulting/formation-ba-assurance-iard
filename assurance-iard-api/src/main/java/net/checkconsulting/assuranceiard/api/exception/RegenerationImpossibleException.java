@@ -1,6 +1,6 @@
 package net.checkconsulting.assuranceiard.api.exception;
 
-/** US-21, RG2 : le statut du contrat ne permet pas de régénérer ses conditions particulières (RG3 d'US-18). */
+/** US-21, RG2 : contrat Suspendu, pas encore signé ou plus en vigueur (Résilié, Renoncé) : pas de nouvelle version. */
 public class RegenerationImpossibleException extends RuntimeException {
 
     private static final long serialVersionUID = 1L;

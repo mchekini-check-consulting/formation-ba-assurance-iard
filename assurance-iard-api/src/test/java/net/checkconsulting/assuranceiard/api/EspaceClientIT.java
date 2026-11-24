@@ -259,8 +259,9 @@ class EspaceClientIT {
                 .andExpect(jsonPath("$.logement").doesNotExist())
                 .andExpect(jsonPath("$.garanties[0].code").value("RC"))
                 .andExpect(jsonPath("$.paiement.ibanMasque").value("•••• 7788"))
-                .andExpect(jsonPath("$.documents[*].type")
-                        .value(containsInAnyOrder("CONDITIONS_PARTICULIERES", "CONDITIONS_GENERALES")))
+                // US-21 : les conditions particulières sont dans « Versions », plus dans « Documents ».
+                .andExpect(jsonPath("$.documents[*].type").value(containsInAnyOrder("CONDITIONS_GENERALES")))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].id").value((int) conditionsParticulieres))
                 .andReturn().getResponse().getContentAsString();
         // RGPD : ni IBAN complet, ni données du conducteur.
         assertThat(fiche).doesNotContain("FR76", "bonus", "dateNaissance", "1988");
@@ -271,14 +272,16 @@ class EspaceClientIT {
     }
 
     @Test
-    void ac3LaFicheNAfficheQueLaVersionEnVigueurDesConditionsParticulieres() throws Exception {
+    void us21LesConditionsParticulieresSontDansVersionsEtPlusDansDocuments() throws Exception {
         lire(alice, "/contrats/{numero}", "AE-RECETTE-1")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.logement.ville").value("Paris"))
                 .andExpect(jsonPath("$.vehicule").doesNotExist())
-                .andExpect(jsonPath("$.documents[?(@.type == 'CONDITIONS_PARTICULIERES')].version").value(hasItem(2)))
-                .andExpect(jsonPath("$.documents[?(@.type == 'CONDITIONS_PARTICULIERES')].version")
-                        .value(not(hasItem(1))));
+                .andExpect(jsonPath("$.documents[?(@.type == 'CONDITIONS_PARTICULIERES')]").isEmpty())
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].version").value(2))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].statut").value("EN_VIGUEUR"))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[1].version").value(1))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[1].statut").value("REMPLACE"));
     }
 
     @Test

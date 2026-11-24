@@ -102,6 +102,8 @@ export interface FicheContrat {
   documents: DocumentContrat[];
   /** US-21, AC2 : versions des conditions particulières, la plus récente d'abord. */
   versionsConditionsParticulieres: VersionDocument[];
+  /** US-21 : vrai si aucune donnée des conditions particulières n'a changé depuis la version en vigueur. */
+  conditionsParticulieresAJour: boolean;
 }
 
 /** US-21, AC2 : une version des conditions particulières. */
@@ -111,9 +113,30 @@ export interface VersionDocument {
   /** EN_VIGUEUR ou REMPLACE. */
   statut: string;
   dateCreation: string | null;
+  /** Code du motif (DEMANDE_CLIENT, AVENANT, COORDONNEES, CONDITIONS_GENERALES, SIGNATURE). */
   motif: string | null;
+  /** Date de production du PDF ; null tant qu'il n'est pas produit. */
+  genereLe: string | null;
   /** Faux tant que son PDF n'est pas produit (téléchargement « en préparation »). */
   disponible: boolean;
+}
+
+/** US-21 : motif d'une version, en français. Un motif inconnu (version antérieure) n'est pas affiché. */
+const LIBELLES_MOTIF: Record<string, string> = {
+  DEMANDE_CLIENT: 'À votre demande',
+  AVENANT: 'Suite à un avenant',
+  COORDONNEES: 'Suite au changement de vos coordonnées',
+  CONDITIONS_GENERALES: 'Nouvelles conditions générales',
+  SIGNATURE: 'À la signature de votre contrat',
+};
+
+export function libelleMotif(motif: string | null): string | null {
+  return motif ? (LIBELLES_MOTIF[motif] ?? null) : null;
+}
+
+/** Date d'un horodatage, au format JJ/MM/AAAA (heure de Paris). */
+export function dateFrancaise(instant: string | null): string {
+  return instant ? new Date(instant).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
 }
 
 /** US-21 : résultat d'une régénération des conditions particulières. */

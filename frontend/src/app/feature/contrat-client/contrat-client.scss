@@ -97,9 +97,15 @@
     }
   }
 
-  &__date {
-    margin-left: 6px;
+  &__date,
+  &__motif {
     color: var(--texte-discret);
     font-size: 14px;
+  }
+
+  // Recette US-21 : à la place du bouton quand rien n'a changé.
+  &__a-jour {
+    margin: 0;
+    color: var(--texte-doux);
   }
 }

@@ -30,6 +30,7 @@ import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
 import net.checkconsulting.assuranceiard.api.service.document.RegenerationContratService;
 import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationImpossibleException;
+import net.checkconsulting.assuranceiard.api.exception.RegenerationInutileException;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationTropRapprocheeException;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -246,7 +247,7 @@ class ContratResourceTest {
                 new FicheContratResponse.Paiement("MENSUEL", 5, "•••• 7788", "AE-RUM-RECETTE-A"),
                 List.of(new FicheContratResponse.Document(12L, "CONDITIONS_PARTICULIERES",
                         "Conditions particulières", 1, null)),
-                List.of(new FicheContratResponse.Version(12L, 1, "EN_VIGUEUR", null, "Signature du contrat", true))));
+                List.of(new FicheContratResponse.Version(12L, 1, "EN_VIGUEUR", null, "SIGNATURE", null, true)), true));
 
         mockMvc.perform(get("/contrats/AE-RECETTE-A03").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isOk())
@@ -272,7 +273,7 @@ class ContratResourceTest {
 
     @Test
     void us21RegenereLesConditionsParticulieres() throws Exception {
-        when(regenerationService.regenerer("AE-RECETTE-A03"))
+        when(regenerationService.regenererALaDemandeDuClient("AE-RECETTE-A03"))
                 .thenReturn(new RegenerationResponse(55L, 3, java.time.Instant.parse("2026-11-24T10:00:00Z"), true,
                         true));
 
@@ -285,7 +286,7 @@ class ContratResourceTest {
 
     @Test
     void us21Rg2StatutQuiNePermetPasLaRegenerationEst422() throws Exception {
-        when(regenerationService.regenerer("AE-RECETTE-A07")).thenThrow(new RegenerationImpossibleException());
+        when(regenerationService.regenererALaDemandeDuClient("AE-RECETTE-A07")).thenThrow(new RegenerationImpossibleException());
 
         regenerer("AE-RECETTE-A07")
                 .andExpect(status().is(422))
@@ -294,7 +295,7 @@ class ContratResourceTest {
 
     @Test
     void us21UneRegenerationParMinuteEst429() throws Exception {
-        when(regenerationService.regenerer("AE-RECETTE-A03")).thenThrow(new RegenerationTropRapprocheeException());
+        when(regenerationService.regenererALaDemandeDuClient("AE-RECETTE-A03")).thenThrow(new RegenerationTropRapprocheeException());
 
         regenerer("AE-RECETTE-A03")
                 .andExpect(status().isTooManyRequests())

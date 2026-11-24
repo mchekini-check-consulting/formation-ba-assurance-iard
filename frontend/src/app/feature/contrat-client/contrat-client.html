@@ -30,7 +30,7 @@
           <dd>{{ v.marque }} {{ v.modele }} {{ v.version }}</dd>
           @if (v.immatriculation) {
             <dt>Immatriculation</dt>
-            <dd>{{ v.immatriculation }}</dd>
+            <dd><iard-texte-plaque [texte]="v.immatriculation" /></dd>
           }
         </dl>
       }
@@ -137,7 +137,10 @@
       <div class="devis-ligne__entete">
         <h2 id="titre-versions" class="serif">Versions de mes conditions particulières</h2>
       </div>
-      @if (peutRegenerer()) {
+      <!-- Recette US-21 : bouton seulement si une donnée a changé depuis la version en vigueur -->
+      @if (messageAJour(); as aJour) {
+        <p class="versions__a-jour">{{ aJour }}</p>
+      } @else if (peutRegenerer()) {
         <div class="devis-ligne__actions">
           <button type="button" class="btn" [disabled]="regenerationEnCours()" (click)="regenerer()">
             {{ regenerationEnCours() ? 'Régénération en cours…' : 'Régénérer mes conditions particulières' }}
@@ -164,8 +167,13 @@
                 <span class="versions__statut" [class.versions__statut--en-vigueur]="version.statut === 'EN_VIGUEUR'">{{
                   LIBELLES_STATUT_VERSION[version.statut] ?? version.statut
                 }}</span>
-                @if (version.dateCreation) {
-                  <span class="versions__date"> du {{ dateDuJour(version.dateCreation) }}</span>
+                @if (version.genereLe) {
+                  <span class="versions__date"> · Générée le {{ dateFrancaise(version.genereLe) }}</span>
+                } @else if (!version.disponible) {
+                  <span class="versions__date"> · En préparation</span>
+                }
+                @if (libelleMotif(version.motif); as motif) {
+                  <span class="versions__motif"> · {{ motif }}</span>
                 }
               </span>
               <button

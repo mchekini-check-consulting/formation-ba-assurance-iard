@@ -11,9 +11,12 @@ export type ResultatRegeneration =
   | { statut: 'trop-tot'; message: string }
   /** 422 : le statut du contrat ne permet pas la régénération (RG2, RG3 d'US-18). */
   | { statut: 'impossible'; message: string }
+  /** 409 : aucune donnée n'a changé depuis la version en vigueur. */
+  | { statut: 'a-jour'; message: string }
   | { statut: 'erreur-technique' };
 
 export const MESSAGE_TROP_TOT = "Vos conditions particulières viennent d'être régénérées. Réessayez dans une minute.";
+export const MESSAGE_A_JOUR = "Vos conditions particulières sont déjà à jour : aucune information n'a changé.";
 export const MESSAGE_IMPOSSIBLE =
   "La régénération des conditions particulières n'est pas possible pour ce contrat dans son statut actuel.";
 
@@ -77,6 +80,9 @@ export class ContratService {
           }
           if (erreur.status === 422) {
             return of<ResultatRegeneration>({ statut: 'impossible', message: detail ?? MESSAGE_IMPOSSIBLE });
+          }
+          if (erreur.status === 409) {
+            return of<ResultatRegeneration>({ statut: 'a-jour', message: detail ?? MESSAGE_A_JOUR });
           }
           return of<ResultatRegeneration>({ statut: 'erreur-technique' });
         }),

@@ -9,8 +9,10 @@ import {
   LIBELLES_STATUT_VERSION,
   Regeneration,
   VersionDocument,
+  dateFrancaise,
   libelleFormule,
   libelleGarantie,
+  libelleMotif,
 } from '../../core/model/contrat';
 import { formaterDate } from '../../core/model/devis-enregistre';
 import { formaterPrix } from '../../core/model/recommandation';
@@ -23,6 +25,7 @@ import {
   enregistrerFichier,
 } from '../../core/service/documents-contrat.service';
 import { BadgeStatut } from '../badge-statut/badge-statut';
+import { TextePlaque } from '../texte-plaque/texte-plaque';
 
 /** Ancienne adresse de la fiche (US-04) : la référence du devis de souscription, un UUID. */
 const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -34,7 +37,7 @@ const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
  */
 @Component({
   selector: 'iard-contrat-client',
-  imports: [RouterLink, BadgeStatut],
+  imports: [RouterLink, BadgeStatut, TextePlaque],
   styleUrls: ['../mes-devis/mes-devis.scss', './contrat-client.scss'],
   templateUrl: './contrat-client.html',
 })
@@ -67,6 +70,21 @@ export class ContratClient {
   protected readonly peutRegenerer = computed(() => {
     const fiche = this.fiche();
     return !!fiche && raccourcisDuContrat(fiche).some((raccourci) => raccourci.action === 'regenerer');
+  });
+  /** US-21 : version en vigueur des conditions particulières. */
+  protected readonly versionEnVigueur = computed(
+    () => this.fiche()?.versionsConditionsParticulieres.find((version) => version.statut === 'EN_VIGUEUR') ?? null,
+  );
+  /**
+   * US-21 (recette) : le bouton n'est proposé que si une donnée a changé depuis la version en vigueur ; sinon un
+   * message indique que les conditions particulières sont à jour.
+   */
+  protected readonly aJour = computed(() => !!this.fiche()?.conditionsParticulieresAJour && !!this.versionEnVigueur());
+  protected readonly messageAJour = computed(() => {
+    const version = this.versionEnVigueur();
+    if (!version || !this.aJour()) return null;
+    const date = dateFrancaise(version.genereLe ?? version.dateCreation);
+    return `Vos conditions particulières sont à jour (version ${version.version}${date ? `, générée le ${date}` : ''}).`;
   });
   protected readonly regenerationEnCours = signal(false);
   /** US-21, AC3 : message après une demande de régénération. */
@@ -139,6 +157,10 @@ export class ContratClient {
       if (resultat.statut === 'regenere') {
         this.messageRegeneration.set({ succes: true, texte: messageDeConfirmation(resultat.regeneration) });
         this.charger(fiche.numero, false);
+      } else if (resultat.statut === 'a-jour') {
+        // Une donnée était revenue à l'identique entre-temps : on relit la fiche, qui affiche « à jour ».
+        this.messageRegeneration.set({ succes: true, texte: resultat.message });
+        this.charger(fiche.numero, false);
       } else if (resultat.statut === 'trop-tot' || resultat.statut === 'impossible') {
         this.messageRegeneration.set({ succes: false, texte: resultat.message });
       } else {
@@ -161,9 +183,8 @@ export class ContratClient {
     });
   }
 
-  protected dateDuJour(instant: string | null): string {
-    return instant ? new Date(instant).toLocaleDateString('fr-FR', { timeZone: 'Europe/Paris' }) : '';
-  }
+  protected readonly dateFrancaise = dateFrancaise;
+  protected readonly libelleMotif = libelleMotif;
 
   protected telecharger(document: DocumentContrat): void {
     const fiche = this.fiche();

@@ -10,8 +10,14 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import org.apache.pdfbox.Loader;
+import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.text.PDFTextStripper;
 import net.checkconsulting.assuranceiard.api.model.AccesRefuse;
 import net.checkconsulting.assuranceiard.api.repository.AccesRefuseRepository;
 import net.checkconsulting.assuranceiard.api.repository.CompteRepository;
@@ -45,6 +51,8 @@ import org.springframework.transaction.support.TransactionTemplate;
 @AutoConfigureMockMvc
 class RegenerationContratIT {
 
+    private static final ZoneId PARIS = ZoneId.of("Europe/Paris");
+    private static final DateTimeFormatter JJ_MM_AAAA = DateTimeFormatter.ofPattern("dd/MM/yyyy");
     private static final String ALICE = "recette.assure1@assureasy.fr";
     private static final String CAMILLE = "recette.auto@assureasy.fr";
 
@@ -114,20 +122,59 @@ class RegenerationContratIT {
                 .andExpect(jsonPath("$.versionsConditionsParticulieres.length()").value(2))
                 .andExpect(jsonPath("$.versionsConditionsParticulieres[0].version").value(2))
                 .andExpect(jsonPath("$.versionsConditionsParticulieres[0].statut").value("EN_VIGUEUR"))
-                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].motif")
-                        .value("Régénération à la demande du client"))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].motif").value("DEMANDE_CLIENT"))
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[0].genereLe").isNotEmpty())
                 .andExpect(jsonPath("$.versionsConditionsParticulieres[1].version").value(1))
-                .andExpect(jsonPath("$.versionsConditionsParticulieres[1].statut").value("REMPLACE"));
+                .andExpect(jsonPath("$.versionsConditionsParticulieres[1].statut").value("REMPLACE"))
+                // Rien n'a changé depuis : le bouton n'est plus proposé.
+                .andExpect(jsonPath("$.conditionsParticulieresAJour").value(true));
 
         // Téléchargement par la route de T-03 (empreinte vérifiée).
-        mockMvc.perform(get("/documents-contrat/{id}", v2).header(HttpHeaders.AUTHORIZATION, camille))
+        byte[] pdf = mockMvc.perform(get("/documents-contrat/{id}", v2).header(HttpHeaders.AUTHORIZATION, camille))
                 .andExpect(status().isOk())
-                .andExpect(content().contentType(MediaType.APPLICATION_PDF));
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andReturn().getResponse().getContentAsByteArray();
+
+        // La date d'effet du PDF régénéré est celle du contrat, jamais la date du jour.
+        LocalDate dateEffet = jdbc.queryForObject(
+                "SELECT date_effet FROM contrat WHERE numero = 'AE-RECETTE-A03'", LocalDate.class);
+        assertThat(dateEffet).isNotEqualTo(LocalDate.now(PARIS));
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            assertThat(new PDFTextStripper().getText(document))
+                    .contains("Date d'effet : " + dateEffet.format(JJ_MM_AAAA))
+                    .doesNotContain("Date d'effet : " + LocalDate.now(PARIS).format(JJ_MM_AAAA));
+        }
 
         // Une seule régénération par minute.
         regenerer(camille, "AE-RECETTE-A03")
                 .andExpect(status().isTooManyRequests())
                 .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("une minute")));
+    }
+
+    @Test
+    void sansChangementDeDonneesLaRegenerationEstRefuseePuisAutoriseeDesQuUneDonneeChange() throws Exception {
+        // Contrat habitation de Camille (Avenant en attente), sans conditions particulières : la V1 est créée.
+        regenerer(camille, "AE-RECETTE-H01").andExpect(status().isOk()).andExpect(jsonPath("$.version").value(1));
+        // La dernière régénération date de plus d'une minute : seule la règle « données inchangées » joue.
+        jdbc.update("""
+                UPDATE document SET date_creation = date_creation - INTERVAL '2 minutes'
+                WHERE contrat_id = (SELECT id FROM contrat WHERE numero = 'AE-RECETTE-H01')""");
+
+        regenerer(camille, "AE-RECETTE-H01")
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.detail").value(org.hamcrest.Matchers.containsString("déjà à jour")));
+
+        // Une donnée imprimée dans les conditions particulières change (le prénom du souscripteur).
+        jdbc.update("UPDATE compte SET prenom = 'Camille-Marie' WHERE email = ?", CAMILLE);
+        try {
+            mockMvc.perform(get("/contrats/{numero}", "AE-RECETTE-H01").header(HttpHeaders.AUTHORIZATION, camille))
+                    .andExpect(jsonPath("$.conditionsParticulieresAJour").value(false));
+            regenerer(camille, "AE-RECETTE-H01")
+                    .andExpect(status().isOk())
+                    .andExpect(jsonPath("$.version").value(2));
+        } finally {
+            jdbc.update("UPDATE compte SET prenom = 'Camille' WHERE email = ?", CAMILLE);
+        }
     }
 
     @Test
@@ -154,6 +201,23 @@ class RegenerationContratIT {
                 SELECT COUNT(*) FROM document d JOIN contrat c ON c.id = d.contrat_id
                 WHERE c.numero = 'AE-RECETTE-A07' AND d.type = 'CONDITIONS_PARTICULIERES'""", Integer.class))
                 .isEqualTo(1);
+    }
+
+    @Test
+    void rg2UnContratImpayePeutEtreRegenereMaisPasUnContratResilieOuRenonce() throws Exception {
+        regenerer(camille, "AE-RECETTE-A06").andExpect(status().isOk());
+        regenerer(camille, "AE-RECETTE-A09").andExpect(status().is(422));
+        regenerer(camille, "AE-RECETTE-A10").andExpect(status().is(422));
+        // Les anciennes versions restent téléchargeables (aucune nouvelle version créée).
+        assertThat(jdbc.queryForObject("""
+                SELECT COUNT(*) FROM document d JOIN contrat c ON c.id = d.contrat_id
+                WHERE c.numero IN ('AE-RECETTE-A09', 'AE-RECETTE-A10') AND d.type = 'CONDITIONS_PARTICULIERES'""",
+                Integer.class)).isEqualTo(2);
+    }
+
+    @Test
+    void rg2UnContratEnAttenteDeSignatureNePeutPasEtreRegenere() throws Exception {
+        regenerer(camille, "AE-RECETTE-A01").andExpect(status().is(422));
     }
 
     @Test

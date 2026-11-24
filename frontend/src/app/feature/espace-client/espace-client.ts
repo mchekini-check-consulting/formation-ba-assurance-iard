@@ -20,6 +20,7 @@ import {
 } from '../../core/service/documents-contrat.service';
 import { EspaceClientService } from '../../core/service/espace-client.service';
 import { CarteContrat } from '../carte-contrat/carte-contrat';
+import { TextePlaque } from '../texte-plaque/texte-plaque';
 
 type Etat = 'chargement' | 'affiche' | 'erreur' | 'sans-droit';
 
@@ -40,7 +41,7 @@ export const STATUTS_A_TRAITER: readonly StatutContrat[] = [
  */
 @Component({
   selector: 'iard-espace-client',
-  imports: [RouterLink, CarteContrat],
+  imports: [RouterLink, CarteContrat, TextePlaque],
   styleUrl: './espace-client.scss',
   templateUrl: './espace-client.html',
 })

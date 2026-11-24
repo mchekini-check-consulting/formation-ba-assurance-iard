@@ -21,7 +21,7 @@ import org.springframework.transaction.support.TransactionTemplate;
 @Component
 public class ConditionsParticulieresALaSignature {
 
-    static final String MOTIF = "Signature du contrat";
+    static final String MOTIF = MotifRegeneration.SIGNATURE.name();
     private static final String CONDITIONS_PARTICULIERES = TypeDocument.CONDITIONS_PARTICULIERES.name();
 
     private final DocumentRepository documents;
