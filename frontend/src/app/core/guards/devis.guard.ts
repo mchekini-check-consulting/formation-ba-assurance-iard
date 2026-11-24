@@ -27,8 +27,17 @@ export const informationsEnregistreesGuard: CanActivateFn = () => {
   return enregistre ? true : inject(Router).parseUrl('/devis/informations');
 };
 
-/** L'étape 6 suppose le mandat signé à l'étape 5. */
-export const mandatSigneGuard: CanActivateFn = () => {
+/**
+ * L'étape 6 suppose le mandat signé à l'étape 5. US-18 : depuis le tableau de bord, le raccourci « Signer » rouvre
+ * l'étape 6 avec la référence du devis (?reference=) ; le serveur vérifie que le contrat existe et appartient au
+ * client (un contrat n'existe qu'une fois le mandat signé).
+ */
+export const mandatSigneGuard: CanActivateFn = (route) => {
   const devis = inject(DevisService);
-  return devis.mandatSigne() ? true : inject(Router).parseUrl('/devis/paiement');
+  if (devis.mandatSigne() || REFERENCE_DEVIS.test(route?.queryParamMap?.get('reference') ?? '')) {
+    return true;
+  }
+  return inject(Router).parseUrl('/devis/paiement');
 };
+
+const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

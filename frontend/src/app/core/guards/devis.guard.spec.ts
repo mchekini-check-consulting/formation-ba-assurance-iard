@@ -1,10 +1,18 @@
 import { RECO_CONFORT, tarifEstime } from '../model/tarif.exemples';
 import { TestBed } from '@angular/core/testing';
-import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
+import {
+  ActivatedRouteSnapshot,
+  Router,
+  RouterStateSnapshot,
+  UrlTree,
+  convertToParamMap,
+  provideRouter,
+} from '@angular/router';
 import { DevisService } from '../service/devis.service';
 import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
+  mandatSigneGuard,
   logementRenseigneGuard,
   recommandationEnregistreeGuard,
 } from './devis.guard';
@@ -82,5 +90,29 @@ describe('gardes du devis', () => {
     devis.validerRecommandation('ref-1', RECO_CONFORT);
     devis.referenceDossier.set('ref-1');
     expect(TestBed.runInInjectionContext(() => informationsEnregistreesGuard(route, etat))).toBe(true);
+  });
+
+  describe('étape 6 (signature)', () => {
+    const avecReference = (reference: string): ActivatedRouteSnapshot =>
+      ({ queryParamMap: convertToParamMap({ reference }) }) as ActivatedRouteSnapshot;
+
+    it('renvoie vers l’étape 5 sans mandat signé', () => {
+      expect(adresse(TestBed.runInInjectionContext(() => mandatSigneGuard(route, etat)))).toBe('/devis/paiement');
+    });
+
+    it('laisse passer une fois le mandat signé', () => {
+      devis.mandatSigne.set(true);
+      expect(TestBed.runInInjectionContext(() => mandatSigneGuard(route, etat))).toBe(true);
+    });
+
+    it('US-18 : laisse passer le raccourci « Signer » du tableau de bord (référence de devis)', () => {
+      const route = avecReference('7c9e6679-7425-40de-944b-e07fc1f90ae7');
+      expect(TestBed.runInInjectionContext(() => mandatSigneGuard(route, etat))).toBe(true);
+    });
+
+    it('US-18 : refuse une référence mal formée', () => {
+      const route = avecReference('pas-une-reference');
+      expect(adresse(TestBed.runInInjectionContext(() => mandatSigneGuard(route, etat)))).toBe('/devis/paiement');
+    });
   });
 });

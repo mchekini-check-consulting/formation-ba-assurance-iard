@@ -94,7 +94,9 @@ class DonneesTestT05IT {
     void lesDevisAutoRestentInvisiblesPourLeCodeHabitationDuSprint1() {
         Compte clientAuto = comptes.findByEmail(CLIENT_AUTO).orElseThrow();
 
-        assertThat(devis.findByCompteOrderByDateCreationDesc(clientAuto)).isEmpty();
+        // US-18 : l'entité lit les deux produits, mais les requêtes de « Mes devis » restent sur l'habitation.
+        assertThat(devis.habitationsDuClient(clientAuto)).isEmpty();
+        assertThat(devis.findAll()).anyMatch(lu -> "AUTO".equals(lu.getProduit()) && lu.getSurface() == null);
         assertThat(compter("SELECT COUNT(*) FROM devis_enregistre WHERE compte_id = " + clientAuto.getId()))
                 .isEqualTo(4);
     }

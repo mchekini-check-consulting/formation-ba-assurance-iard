@@ -13,6 +13,8 @@ public enum TypeRessource {
     SOUSCRIPTION,
     /** Contrat (US-15), identifié par la référence du devis. */
     CONTRAT,
+    /** Contrat habitation ou auto (US-18), identifié par son numéro. */
+    CONTRAT_NUMERO,
     /** Document déposé (US-13), identifié par son numéro. */
     DOCUMENT,
     /** Document PDF généré (T-03 : conditions particulières...), identifié par son numéro dans la table document. */

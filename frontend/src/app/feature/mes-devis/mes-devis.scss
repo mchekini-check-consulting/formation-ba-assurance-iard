@@ -41,11 +41,13 @@
   overflow-wrap: anywhere;
 
   p,
-  h2 {
+  h2,
+  h3 {
     margin: 0;
   }
 
-  h2 {
+  h2,
+  h3 {
     font-size: 20px;
   }
 
@@ -84,4 +86,10 @@
     background: #a82b27;
     color: #fff;
   }
+}
+
+// US-18 : message du statut d'un contrat (RG3).
+.carte-contrat__message {
+  color: var(--texte-doux);
+  font-size: 15px;
 }

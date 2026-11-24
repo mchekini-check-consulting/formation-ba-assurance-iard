@@ -53,8 +53,8 @@
           </div>
           <span class="badge"
             [class.badge--attente]="c.statut === 'EN_ATTENTE_DE_SIGNATURE'"
-            [class.badge--signe]="c.statut === 'ACTIF' || c.statut === 'SIGNE'">
-            {{ c.statut === 'ACTIF' || c.statut === 'SIGNE' ? 'Actif' : 'En attente de signature' }}
+            [class.badge--signe]="c.statut !== 'EN_ATTENTE_DE_SIGNATURE'">
+            {{ libelleStatut(c.statut) }}
           </span>
         </div>
 
@@ -195,10 +195,12 @@
 
       <aside class="panneau-signature" aria-label="Signature en ligne">
 
-        @if (c.statut === 'ACTIF' || c.statut === 'SIGNE') {
+        @if (c.statut !== 'EN_ATTENTE_DE_SIGNATURE') {
           <div class="signature-ok">
             <span class="signature-ok__icone" aria-hidden="true">✓</span>
-            <p class="signature-ok__texte">Votre contrat est actif.</p>
+            <p class="signature-ok__texte">
+              {{ c.statut === 'ACTIF' ? 'Votre contrat est actif.' : 'Votre contrat est signé.' }}
+            </p>
           </div>
         } @else {
           <h2 class="panneau-signature__titre">Signer en ligne</h2>

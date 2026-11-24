@@ -73,4 +73,12 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             JOIN devis_enregistre de ON de.id = d.devis_id
             WHERE d.id = :id AND d.contrat_id IS NULL AND d.sinistre_id IS NULL""", nativeQuery = true)
     List<Long> proprietaires(@Param("id") long id);
+
+    /** US-18, AC3 : documents en vigueur d'un contrat, de ces types (un document pas encore créé n'apparaît pas). */
+    @LogMetier
+    @Query("""
+            SELECT d FROM Document d
+            WHERE d.contratId = :contratId AND d.statut = 'EN_VIGUEUR' AND d.type IN :types
+            ORDER BY d.type, d.id""")
+    List<Document> enVigueurDuContrat(@Param("contratId") long contratId, @Param("types") Collection<String> types);
 }

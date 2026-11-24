@@ -52,7 +52,7 @@ public class DevisEnregistreService {
     public DevisEnregistreResponse enregistrer(String authorization, DevisRequest demande) {
         Compte compte = sessionService.compteConnecte(authorization);
         RecommandationDevis recommandation = recommandation(demande.reference());
-        DevisEnregistre devis = repository.findByCompteAndReference(compte, demande.reference())
+        DevisEnregistre devis = repository.habitationDuClient(compte, demande.reference())
                 .map(existant -> estExpire(existant) ? renouveler(existant) : existant)
                 .orElseGet(() -> nouveau(compte, recommandation));
 
@@ -70,7 +70,7 @@ public class DevisEnregistreService {
     @Transactional
     public List<DevisEnregistreResponse> lister(String authorization) {
         Compte compte = sessionService.compteConnecte(authorization);
-        return repository.findByCompteOrderByDateCreationDesc(compte).stream().map(this::versReponse).toList();
+        return repository.habitationsDuClient(compte).stream().map(this::versReponse).toList();
     }
 
     @LogMetier(champs = {"resultat.formule", "resultat.prixMensuel"})
@@ -104,7 +104,7 @@ public class DevisEnregistreService {
     public byte[] telecharger(DevisRequest demande) {
         RecommandationDevis recommandation = recommandation(demande.reference());
         Optional<DevisEnregistre> enregistre = repository
-                .findFirstByReferenceOrderByDateCreationDesc(demande.reference())
+                .derniereHabitation(demande.reference())
                 .filter(devis -> !estExpire(devis));
         BigDecimal prix = enregistre.flatMap(devis -> garantiPour(devis, demande)).orElseGet(() -> baremeDe(demande, recommandation));
         LocalDate finValidite = enregistre.map(DevisEnregistre::getDateFinValidite)
@@ -116,7 +116,7 @@ public class DevisEnregistreService {
 
     private DevisEnregistre duClient(String authorization, UUID reference) {
         Compte compte = sessionService.compteConnecte(authorization);
-        return repository.findByCompteAndReference(compte, reference).orElseThrow(DevisInconnuException::new);
+        return repository.habitationDuClient(compte, reference).orElseThrow(DevisInconnuException::new);
     }
 
     private RecommandationDevis recommandation(UUID reference) {

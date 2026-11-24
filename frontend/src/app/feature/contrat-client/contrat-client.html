@@ -11,19 +11,136 @@
 <main class="page">
   <section class="mes-devis" aria-labelledby="contrat-titre">
     <a routerLink="/espace-client/contrats">← Mes contrats</a>
-    @if (contrat(); as c) {
-      <h1 id="contrat-titre" class="serif">Contrat {{ c.numero }}</h1>
+    @if (fiche(); as f) {
+      <h1 id="contrat-titre" class="serif">Contrat {{ LIBELLES_PRODUIT[f.produit] }} {{ f.numero }}</h1>
+
       <div class="devis-ligne">
         <div class="devis-ligne__entete">
-          <h2 class="serif">Habitation</h2>
-          <span class="badge">{{ LIBELLES_STATUT[c.statut] }}</span>
+          <h2 class="serif">Statut</h2>
+          <iard-badge-statut [statut]="f.statut" />
         </div>
-        <p>{{ c.adresseLogement }}, {{ c.codePostal }} {{ c.ville }}</p>
-        <p><strong>{{ formaterPrix(c.cotisationMensuelle) }}&#160;€/mois</strong> ({{ formaterPrix(c.cotisationAnnuelle) }}&#160;€/an)</p>
-        <p>Date d'effet : {{ formaterDate(c.dateEffet) }}</p>
-        <p>Prélèvement le {{ c.jourPrelevement }} de chaque mois</p>
-        <p>IBAN : <span class="iban">{{ iban(c.ibanFin) }}</span></p>
-        <p>Référence mandat (RUM) : {{ c.rum }}</p>
+        @if (statut()?.message; as message) {
+          <p class="carte-contrat__message">{{ message }}</p>
+        }
+        @if (raccourcis().length) {
+          <div class="devis-ligne__actions">
+            @for (raccourci of raccourcis(); track raccourci.action) {
+              <a class="btn" [routerLink]="raccourci.lien.commandes" [queryParams]="raccourci.lien.parametres">{{
+                raccourci.libelle
+              }}</a>
+            }
+          </div>
+        }
+      </div>
+
+      <div class="devis-ligne">
+        <h2 class="serif">{{ f.produit === 'AUTO' ? 'Véhicule assuré' : 'Logement assuré' }}</h2>
+        @if (f.vehicule; as v) {
+          <dl class="fiche">
+            <dt>Véhicule</dt>
+            <dd>{{ v.marque }} {{ v.modele }} {{ v.version }}</dd>
+            @if (v.immatriculation) {
+              <dt>Immatriculation</dt>
+              <dd>{{ v.immatriculation }}</dd>
+            }
+          </dl>
+        }
+        @if (f.logement; as l) {
+          <dl class="fiche">
+            @if (l.type) {
+              <dt>Type</dt>
+              <dd class="fiche__majuscule">{{ l.type }}@if (l.surface) { · {{ l.surface }}&#160;m²}</dd>
+            }
+            <dt>Adresse</dt>
+            <dd>{{ l.adresse }}, {{ l.codePostal }} {{ l.ville }}</dd>
+          </dl>
+        }
+      </div>
+
+      <div class="devis-ligne">
+        <h2 class="serif">Garanties</h2>
+        <dl class="fiche">
+          <dt>Formule</dt>
+          <dd>{{ libelleFormule(f.formule) }}</dd>
+          <dt>Garanties et options</dt>
+          <dd>
+            @if (f.garanties.length === 0) {
+              Aucune option
+            } @else {
+              <ul class="fiche__garanties">
+                @for (garantie of f.garanties; track garantie.code) {
+                  <li>
+                    {{ libelleGarantie(garantie.code) }}
+                    @if (garantie.prixMensuelTtc !== null) {
+                      ({{ formaterPrix(garantie.prixMensuelTtc) }}&#160;€/mois)
+                    }
+                  </li>
+                }
+              </ul>
+            }
+          </dd>
+          <dt>Franchise</dt>
+          <dd>{{ formaterPrix(f.franchise) }}&#160;€</dd>
+          <dt>Cotisation</dt>
+          <dd>
+            <strong>{{ formaterPrix(f.cotisationMensuelle) }}&#160;€/mois</strong>
+            ({{ formaterPrix(f.cotisationAnnuelle) }}&#160;€/an)
+          </dd>
+          <dt>Date d'effet</dt>
+          <dd>{{ formaterDate(f.dateEffet) }}</dd>
+          @if (f.dateEcheance) {
+            <dt>Échéance</dt>
+            <dd>{{ formaterDate(f.dateEcheance) }}</dd>
+          }
+          @if (f.dateFin) {
+            <dt>Fin du contrat</dt>
+            <dd>{{ formaterDate(f.dateFin) }}</dd>
+          }
+        </dl>
+      </div>
+
+      <div class="devis-ligne">
+        <h2 class="serif">Paiement</h2>
+        <dl class="fiche">
+          @if (f.paiement.jourPrelevement) {
+            <dt>Prélèvement</dt>
+            <dd>le {{ f.paiement.jourPrelevement }} de chaque mois</dd>
+          }
+          @if (f.paiement.ibanMasque) {
+            <dt>IBAN</dt>
+            <dd class="iban">{{ f.paiement.ibanMasque }}</dd>
+          }
+          @if (f.paiement.rum) {
+            <dt>Référence mandat (RUM)</dt>
+            <dd>{{ f.paiement.rum }}</dd>
+          }
+        </dl>
+      </div>
+
+      <div class="devis-ligne">
+        <h2 class="serif">Documents</h2>
+        @if (f.documents.length === 0) {
+          <p>Vos documents seront disponibles ici dès leur création.</p>
+        } @else {
+          <ul class="fiche__documents">
+            @for (document of f.documents; track document.id) {
+              <li>
+                <span>{{ document.libelle }} (version {{ document.version }})</span>
+                <button
+                  type="button"
+                  class="btn btn--contour"
+                  [attr.aria-label]="'Télécharger : ' + document.libelle"
+                  (click)="telecharger(document)"
+                >
+                  Télécharger
+                </button>
+                @if (messages()[document.id]; as message) {
+                  <p class="mes-devis__erreur fiche__message" role="status">{{ message }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
       </div>
     } @else if (erreur()) {
       <h1 id="contrat-titre" class="serif">Contrat</h1>

@@ -11,7 +11,6 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
-import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.SignatureContratRequest;
@@ -104,18 +103,6 @@ public class ContratService {
         contrat = contratRepository.save(contrat);
         devenirAssure(dossier.getCompte());
         return construireReponse(contrat, dossier);
-    }
-
-    /** US-04, AC1 : contrats du client connecté uniquement. */
-    @Transactional
-    public List<ContratResumeResponse> lister(String authorization) {
-        Compte compte = sessionService.compteConnecte(authorization);
-        return contratRepository.findByDossierCompteOrderByDateCreationDesc(compte).stream()
-                .map(contrat -> new ContratResumeResponse(contrat.getDossier().getReferenceDevis(),
-                        contrat.getNumero(), contrat.getStatut(), contrat.getAdresseLogement(),
-                        contrat.getCodePostal(), contrat.getVille(), contrat.getCotisationMensuelle(),
-                        contrat.getDateEffet()))
-                .toList();
     }
 
     /** US-04 : un prospect qui signe son contrat devient assuré (les droits de l'US-02 suivent son nouveau profil). */

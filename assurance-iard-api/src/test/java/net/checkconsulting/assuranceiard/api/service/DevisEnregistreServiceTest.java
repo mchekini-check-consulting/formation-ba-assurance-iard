@@ -68,8 +68,8 @@ class DevisEnregistreServiceTest {
         when(tarifDevis.prixMensuel(any(), any(), any(), any(), any())).thenAnswer(appel -> prixDuMoteur(appel.getArgument(3), appel.getArgument(4)));
         when(recommandations.findByReference(REFERENCE)).thenReturn(Optional.of(recommandation));
         when(repository.save(any(DevisEnregistre.class))).thenAnswer(appel -> appel.getArgument(0));
-        when(repository.findByCompteAndReference(compte, REFERENCE)).thenReturn(Optional.empty());
-        when(repository.findFirstByReferenceOrderByDateCreationDesc(REFERENCE)).thenReturn(Optional.empty());
+        when(repository.habitationDuClient(compte, REFERENCE)).thenReturn(Optional.empty());
+        when(repository.derniereHabitation(REFERENCE)).thenReturn(Optional.empty());
     }
 
     private static BigDecimal prixDuMoteur(List<String> options, String franchise) {
@@ -107,7 +107,7 @@ class DevisEnregistreServiceTest {
     }
 
     private void enBase(DevisEnregistre devis) {
-        when(repository.findByCompteAndReference(compte, REFERENCE)).thenReturn(Optional.of(devis));
+        when(repository.habitationDuClient(compte, REFERENCE)).thenReturn(Optional.of(devis));
     }
 
     @Test
@@ -192,7 +192,7 @@ class DevisEnregistreServiceTest {
 
     @Test
     void ac1ListeLesDevisDuClient() {
-        when(repository.findByCompteOrderByDateCreationDesc(compte)).thenReturn(
+        when(repository.habitationsDuClient(compte)).thenReturn(
                 List.of(existant(AUJOURDHUI), existant(AUJOURDHUI.minusDays(1))));
 
         List<DevisEnregistreResponse> liste = service.lister(JETON);
@@ -269,7 +269,7 @@ class DevisEnregistreServiceTest {
     @Test
     void lePdfDUnDevisEnregistreReprendSonPrixGarantiEtSaDate() {
         LocalDate fin = AUJOURDHUI.plusDays(10);
-        when(repository.findFirstByReferenceOrderByDateCreationDesc(REFERENCE))
+        when(repository.derniereHabitation(REFERENCE))
                 .thenReturn(Optional.of(existant(fin)));
 
         DonneesDevisPdf donnees = donneesPdf(demande());
@@ -280,7 +280,7 @@ class DevisEnregistreServiceTest {
 
     @Test
     void lePdfIgnoreUnPrixGarantiPourDAutresChoix() {
-        when(repository.findFirstByReferenceOrderByDateCreationDesc(REFERENCE))
+        when(repository.derniereHabitation(REFERENCE))
                 .thenReturn(Optional.of(existant(AUJOURDHUI)));
 
         assertThat(donneesPdf(demande("confort", "500", List.of())).prixMensuel()).isEqualByComparingTo("11.22");
@@ -288,7 +288,7 @@ class DevisEnregistreServiceTest {
 
     @Test
     void lePdfNeReprendPasUnDevisExpire() {
-        when(repository.findFirstByReferenceOrderByDateCreationDesc(REFERENCE))
+        when(repository.derniereHabitation(REFERENCE))
                 .thenReturn(Optional.of(existant(AUJOURDHUI.minusDays(1))));
 
         assertThat(donneesPdf(demande()).prixMensuel()).isEqualByComparingTo(PRIX_BAREME);

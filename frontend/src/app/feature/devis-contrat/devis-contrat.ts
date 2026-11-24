@@ -1,8 +1,9 @@
 import { TitleCasePipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { Contrat, DemandeContrat } from '../../core/model/contrat';
 import { ibanMasqueDepuisFin } from '../../core/model/iban';
+import { decrireStatut } from '../../core/model/statut-contrat';
 import { FORMULES, LIBELLES_OPTIONS, Formule, OptionConseillee, formaterPrix } from '../../core/model/recommandation';
 import { DevisService } from '../../core/service/devis.service';
 import { ContratService } from '../../core/service/contrat.service';
@@ -22,6 +23,7 @@ export class DevisContrat {
   private readonly contrats = inject(ContratService);
   private readonly connexion = inject(ConnexionService);
   private readonly router = inject(Router);
+  private readonly route = inject(ActivatedRoute);
 
   protected readonly etat = signal<EtatPage>('chargement');
   protected readonly contrat = signal<Contrat | null>(null);
@@ -88,6 +90,8 @@ export class DevisContrat {
   });
 
   protected readonly formaterPrix = formaterPrix;
+  /** US-18 : libellé exact des 10 statuts (RG3) ; la valeur SIGNE n'existe pas en base. */
+  protected readonly libelleStatut = (statut: string): string => decrireStatut(statut).libelle;
 
   constructor() {
     this.genererOuCharger();
@@ -195,6 +199,11 @@ export class DevisContrat {
   }
 
   private genererOuCharger(): void {
+    const referenceReprise = this.route.snapshot.queryParamMap.get('reference');
+    if (referenceReprise) {
+      this.reprendreSignature(referenceReprise);
+      return;
+    }
     const demande = this.construireDemande();
     if (demande) {
       this.contrats.generer(demande).subscribe((resultat) => {
@@ -212,6 +221,24 @@ export class DevisContrat {
     } else {
       this.etat.set('erreur-technique');
     }
+  }
+
+  /**
+   * US-18, AC2 : raccourci « Signer » du tableau de bord. Le contrat déjà généré est relu par la référence de son
+   * devis (le serveur vérifie qu'il appartient au client), puis la signature se déroule comme à l'étape 6.
+   */
+  private reprendreSignature(reference: string): void {
+    this.devis.reference.set(reference);
+    this.contrats.obtenir(reference).subscribe((resultat) => {
+      if (resultat.statut === 'obtenu') {
+        this.contrat.set(resultat.contrat);
+        this.etat.set('affiche');
+      } else if (resultat.statut === 'session-expiree') {
+        void this.router.navigate(['/connexion'], { queryParams: { retour: '/espace-client' } });
+      } else {
+        this.etat.set('erreur-technique');
+      }
+    });
   }
 
   private construireDemande(): DemandeContrat | null {

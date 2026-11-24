@@ -131,7 +131,7 @@ class DevisEnregistreIT {
     }
 
     private DevisEnregistre devisEnBase() {
-        return devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(reference).orElseThrow();
+        return devisEnregistres.derniereHabitation(reference).orElseThrow();
     }
 
     @Test
@@ -207,7 +207,7 @@ class DevisEnregistreIT {
         mockMvc.perform(delete("/devis/enregistres/{ref}", reference).header(HttpHeaders.AUTHORIZATION, autre))
                 .andExpect(status().isForbidden());
 
-        assertThat(devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(reference)).isPresent();
+        assertThat(devisEnregistres.derniereHabitation(reference)).isPresent();
     }
 
     @Test
@@ -245,7 +245,7 @@ class DevisEnregistreIT {
         mockMvc.perform(delete("/devis/enregistres/{ref}", reference).header(HttpHeaders.AUTHORIZATION, jeton))
                 .andExpect(status().isNoContent());
 
-        assertThat(devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(reference)).isEmpty();
+        assertThat(devisEnregistres.derniereHabitation(reference)).isEmpty();
     }
 
     @Test
@@ -260,7 +260,7 @@ class DevisEnregistreIT {
 
         conservation.supprimerDevisTropAnciens();
 
-        assertThat(devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(reference)).isEmpty();
-        assertThat(devisEnregistres.findFirstByReferenceOrderByDateCreationDesc(recent)).isPresent();
+        assertThat(devisEnregistres.derniereHabitation(reference)).isEmpty();
+        assertThat(devisEnregistres.derniereHabitation(recent)).isPresent();
     }
 }

@@ -1,0 +1,68 @@
+// US-18, AC3 : fiche contrat. Libellés au-dessus des valeurs sur mobile (RG5 : pas de défilement horizontal).
+.fiche {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 4px;
+
+  dt {
+    color: var(--texte-discret);
+    font-size: 14px;
+  }
+
+  dd {
+    margin: 0 0 8px;
+    overflow-wrap: anywhere;
+  }
+
+  @media (width >= 600px) {
+    grid-template-columns: minmax(140px, 200px) minmax(0, 1fr);
+    column-gap: 16px;
+
+    dd {
+      margin-bottom: 4px;
+    }
+  }
+
+  &__majuscule::first-letter {
+    text-transform: uppercase;
+  }
+
+  &__garanties,
+  &__documents {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__garanties li + li {
+    margin-top: 4px;
+  }
+
+  &__documents {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+    }
+  }
+
+  &__message {
+    flex-basis: 100%;
+  }
+}
+
+.carte-contrat__message {
+  color: var(--texte-doux);
+}
+
+.iban {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}

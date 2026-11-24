@@ -20,7 +20,6 @@ import { DevisInformations } from './feature/devis-informations/devis-informatio
 import { DevisLogement } from './feature/devis-logement/devis-logement';
 import { DevisPaiement } from './feature/devis-paiement/devis-paiement';
 import { DoubleAuthentification } from './feature/double-authentification/double-authentification';
-import { EspaceClient } from './feature/espace-client/espace-client';
 import { Inscription } from './feature/inscription/inscription';
 import { Landing } from './feature/landing/landing';
 import { GestionProfils } from './feature/gestion-profils/gestion-profils';
@@ -60,7 +59,8 @@ export const routes: Routes = [
   },
   {
     path: 'espace-client',
-    component: EspaceClient,
+    // US-18 : tableau de bord chargé à la demande (comme les autres pages de l'espace client).
+    loadComponent: () => import('./feature/espace-client/espace-client').then((m) => m.EspaceClient),
     canActivate: [sessionGuard],
     title: "Mon espace – Assur'Easy",
   },
@@ -90,7 +90,8 @@ export const routes: Routes = [
     title: "Mes contrats – Assur'Easy",
   },
   {
-    path: 'espace-client/contrats/:reference',
+    // US-18 : fiche par numéro ; une ancienne adresse par référence de devis redirige vers le numéro.
+    path: 'espace-client/contrats/:numero',
     loadComponent: () => import('./feature/contrat-client/contrat-client').then((m) => m.ContratClient),
     canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
     title: "Mon contrat – Assur'Easy",

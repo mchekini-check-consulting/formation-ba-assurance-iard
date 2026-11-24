@@ -1,7 +1,13 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { ContratService, ResultatGeneration, ResultatObtention, ResultatSignature } from './contrat.service';
+import {
+  ContratService,
+  ResultatFiche,
+  ResultatGeneration,
+  ResultatObtention,
+  ResultatSignature,
+} from './contrat.service';
 import { DemandeContrat } from '../model/contrat';
 
 const UNE_DEMANDE: DemandeContrat = {
@@ -98,7 +104,7 @@ describe('ContratService', () => {
     service.signer('7c9e6679-7425-40de-944b-e07fc1f90ae7', '123456').subscribe((r) => resultats.push(r));
     http
       .expectOne((req) => req.method === 'POST' && req.url.includes('/signature'))
-      .flush({ ...UN_CONTRAT, statut: 'SIGNE' });
+      .flush({ ...UN_CONTRAT, statut: 'ACTIF' });
     expect(resultats[0].statut).toBe('signe');
   });
 
@@ -115,5 +121,24 @@ describe('ContratService', () => {
       .expectOne((req) => req.method === 'POST' && req.url.includes('/signature'))
       .flush({}, { status: status as number, statusText: 'Erreur' });
     expect(resultats).toEqual([attendu]);
+  });
+
+  describe('US-18 : fiche par numéro', () => {
+    it('lit la fiche du contrat', () => {
+      const resultats: ResultatFiche[] = [];
+      service.obtenirFiche('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne('/api/assurance-iard-api/contrats/AE-RECETTE-A03').flush({ numero: 'AE-RECETTE-A03' });
+      expect(resultats[0]).toEqual({ statut: 'obtenu', fiche: { numero: 'AE-RECETTE-A03' } });
+    });
+
+    it.each([
+      [404, 'introuvable'],
+      [500, 'erreur-technique'],
+    ])('erreur %i', (status, statut) => {
+      const resultats: ResultatFiche[] = [];
+      service.obtenirFiche('AE-X').subscribe((r) => resultats.push(r));
+      http.expectOne('/api/assurance-iard-api/contrats/AE-X').flush({}, { status, statusText: 'Erreur' });
+      expect(resultats).toEqual([{ statut }]);
+    });
   });
 });
