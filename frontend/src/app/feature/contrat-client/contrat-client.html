@@ -30,7 +30,7 @@
           <dd>{{ v.marque }} {{ v.modele }} {{ v.version }}</dd>
           @if (v.immatriculation) {
             <dt>Immatriculation</dt>
-            <dd>{{ v.immatriculation }}</dd>
+            <dd><iard-texte-plaque [texte]="v.immatriculation" /></dd>
           }
         </dl>
       }

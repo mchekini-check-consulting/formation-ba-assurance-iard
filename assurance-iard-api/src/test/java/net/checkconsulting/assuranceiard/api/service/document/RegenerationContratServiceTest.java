@@ -107,17 +107,17 @@ class RegenerationContratServiceTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"ACTIF_JUSTIFICATIFS_ATTENDUS", "AVENANT_EN_ATTENTE"})
-    void lesAutresStatutsPermisParRg3(String statut) {
+    @ValueSource(strings = {"EN_ATTENTE_EFFET", "ACTIF_JUSTIFICATIFS_ATTENDUS", "AVENANT_EN_ATTENTE", "IMPAYE",
+        "RESILIATION_EN_COURS", "RESILIE", "RENONCE"})
+    void rg2ToutContratSigneSaufSuspenduPeutEtreRegenere(String statut) {
         contrat.setStatut(statut);
 
         assertThat(service.regenererALaDemandeDuClient(NUMERO).version()).isEqualTo(2);
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"SUSPENDU", "EN_ATTENTE_DE_SIGNATURE", "EN_ATTENTE_EFFET", "IMPAYE",
-        "RESILIATION_EN_COURS", "RESILIE", "RENONCE"})
-    void rg2EtRg3LeClientNePeutPasRegenererDansCesStatuts(String statut) {
+    @ValueSource(strings = {"SUSPENDU", "EN_ATTENTE_DE_SIGNATURE"})
+    void rg2PasDeRegenerationSurUnContratSuspenduOuPasEncoreSigne(String statut) {
         contrat.setStatut(statut);
 
         assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))

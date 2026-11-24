@@ -6,6 +6,7 @@ import { formaterNomPropre } from '../../core/model/identite';
 import { formaterPrix } from '../../core/model/recommandation';
 import { decrireStatut } from '../../core/model/statut-contrat';
 import { BadgeStatut } from '../badge-statut/badge-statut';
+import { TextePlaque } from '../texte-plaque/texte-plaque';
 
 /**
  * US-18 : un contrat sur le tableau de bord et dans Mes contrats (maquette) : produit et statut, bien assuré en titre,
@@ -13,7 +14,7 @@ import { BadgeStatut } from '../badge-statut/badge-statut';
  */
 @Component({
   selector: 'iard-carte-contrat',
-  imports: [RouterLink, BadgeStatut],
+  imports: [RouterLink, BadgeStatut, TextePlaque],
   templateUrl: './carte-contrat.html',
   styleUrl: './carte-contrat.scss',
 })

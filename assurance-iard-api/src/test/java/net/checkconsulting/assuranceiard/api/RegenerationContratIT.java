@@ -204,6 +204,17 @@ class RegenerationContratIT {
     }
 
     @Test
+    void rg2UnContratImpayeOuResiliePeutEtreRegenere() throws Exception {
+        regenerer(camille, "AE-RECETTE-A06").andExpect(status().isOk());
+        regenerer(camille, "AE-RECETTE-A09").andExpect(status().isOk());
+    }
+
+    @Test
+    void rg2UnContratEnAttenteDeSignatureNePeutPasEtreRegenere() throws Exception {
+        regenerer(camille, "AE-RECETTE-A01").andExpect(status().is(422));
+    }
+
+    @Test
     void us04UnClientNeRegenerePasLeContratDUnAutreEtLeRefusEstTrace() throws Exception {
         int avant = refusDe(ALICE).size();
 

@@ -99,7 +99,7 @@
               <h2 id="titre-devis" class="bloc__titre">Devis en cours</h2>
               @if (devisRecent(); as devis) {
                 <p class="bloc__valeur">
-                  {{ LIBELLES_PRODUIT[devis.produit] }}@if (devis.description) { · {{ devis.description }}}
+                  {{ LIBELLES_PRODUIT[devis.produit] }}@if (devis.description) { · <iard-texte-plaque [texte]="devis.description" />}
                 </p>
                 <p>Formule {{ libelleFormule(devis.formule) }}</p>
                 <p><strong>{{ formaterPrix(devis.prixMensuel) }}&#160;€/mois TTC</strong></p>

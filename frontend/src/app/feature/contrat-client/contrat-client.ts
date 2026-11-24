@@ -25,6 +25,7 @@ import {
   enregistrerFichier,
 } from '../../core/service/documents-contrat.service';
 import { BadgeStatut } from '../badge-statut/badge-statut';
+import { TextePlaque } from '../texte-plaque/texte-plaque';
 
 /** Ancienne adresse de la fiche (US-04) : la référence du devis de souscription, un UUID. */
 const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -36,7 +37,7 @@ const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
  */
 @Component({
   selector: 'iard-contrat-client',
-  imports: [RouterLink, BadgeStatut],
+  imports: [RouterLink, BadgeStatut, TextePlaque],
   styleUrls: ['../mes-devis/mes-devis.scss', './contrat-client.scss'],
   templateUrl: './contrat-client.html',
 })

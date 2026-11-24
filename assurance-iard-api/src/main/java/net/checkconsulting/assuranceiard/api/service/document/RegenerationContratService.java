@@ -31,7 +31,7 @@ import org.springframework.transaction.support.TransactionOperations;
  * enregistré dans document.motif ({@link MotifRegeneration}).
  *
  * <p>Point d'entrée unique, réutilisable par les autres US : {@link #regenerer(long, MotifRegeneration)}. Seule la
- * demande du client (DEMANDE_CLIENT) est soumise à ses règles : RG2 / RG3 d'US-18 (statut), une par minute, et
+ * demande du client (DEMANDE_CLIENT) est soumise à ses règles : RG2 (statut : pas Suspendu, contrat signé), une par minute, et
  * « données inchangées ». Un déclenchement automatique (AVENANT, COORDONNEES, CONDITIONS_GENERALES) n'est jamais
  * bloqué. RG1 : ni les garanties ni la cotisation ne changent (seul un document est créé).
  */
@@ -40,9 +40,11 @@ import org.springframework.transaction.support.TransactionOperations;
 @RequiredArgsConstructor
 public class RegenerationContratService {
 
-    /** RG3 d'US-18 (statut-contrat.ts) : statuts qui permettent au client de régénérer son contrat. */
-    public static final Set<String> STATUTS_PERMIS = Set.of("ACTIF", "ACTIF_JUSTIFICATIFS_ATTENDUS",
-            "AVENANT_EN_ATTENTE");
+    /**
+     * RG2 d'US-21 (recette) : le client peut régénérer tout contrat signé, sauf Suspendu ; jamais avant la signature.
+     * Même règle à l'écran (statut-contrat.ts). Elle prime sur RG3 d'US-18 (interprétation à valider par le PO).
+     */
+    public static final Set<String> STATUTS_EXCLUS = Set.of("SUSPENDU", "EN_ATTENTE_DE_SIGNATURE");
     static final Duration DELAI_MINIMUM = Duration.ofMinutes(1);
     private static final String CONDITIONS_PARTICULIERES = TypeDocument.CONDITIONS_PARTICULIERES.name();
 
@@ -97,9 +99,9 @@ public class RegenerationContratService {
         return new Generation(document, contrat.getNumero(), compte.getEmail(), compte.getPrenom());
     }
 
-    /** Règles du bouton : statut (RG2, RG3 d'US-18), une régénération par minute, données changées. */
+    /** Règles du bouton : statut (RG2 : contrat signé, pas Suspendu), une régénération par minute, données changées. */
     private void verifierLaDemandeDuClient(Contrat contrat, Optional<Document> actuelle) {
-        if (!STATUTS_PERMIS.contains(contrat.getStatut())) {
+        if (STATUTS_EXCLUS.contains(contrat.getStatut())) {
             throw new RegenerationImpossibleException();
         }
         if (actuelle.isEmpty()) {

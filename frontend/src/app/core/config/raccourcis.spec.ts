@@ -27,7 +27,7 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
       declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true, lien: () => ({ commandes: ['/sinistres'] }) },
     };
     expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'declarerSinistre']);
-    expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail']);
+    expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail', 'regenerer']);
   });
 
   it('une fonction livrée sans adresse reste masquée', () => {
@@ -61,12 +61,15 @@ describe('US-21 : raccourci « Régénérer mon contrat »', () => {
     expect(regenerer?.lien).toEqual({ commandes: ['/espace-client/contrats', 'AE-1'], fragment: 'versions' });
   });
 
-  it('RG2 / RG3 : jamais proposé sur un contrat Suspendu, Impayé, résilié ou en attente', () => {
-    for (const statut of ['SUSPENDU', 'IMPAYE', 'RESILIE', 'RESILIATION_EN_COURS', 'RENONCE', 'EN_ATTENTE_EFFET', 'EN_ATTENTE_DE_SIGNATURE'] as const) {
-      expect(actions(contrat(statut))).not.toContain('regenerer');
+  it('RG2 : jamais proposé sur un contrat Suspendu ni avant la signature', () => {
+    expect(actions(contrat('SUSPENDU'))).not.toContain('regenerer');
+    expect(actions(contrat('EN_ATTENTE_DE_SIGNATURE'))).not.toContain('regenerer');
+  });
+
+  it('RG2 : proposé pour tout autre contrat signé (Impayé, résilié, renoncé, en attente d’effet…)', () => {
+    for (const statut of ['EN_ATTENTE_EFFET', 'ACTIF', 'ACTIF_JUSTIFICATIFS_ATTENDUS', 'AVENANT_EN_ATTENTE', 'IMPAYE', 'RESILIATION_EN_COURS', 'RESILIE', 'RENONCE'] as const) {
+      expect(actions(contrat(statut))).toContain('regenerer');
     }
-    expect(actions(contrat('AVENANT_EN_ATTENTE'))).toContain('regenerer');
-    expect(actions(contrat('ACTIF_JUSTIFICATIFS_ATTENDUS'))).toContain('regenerer');
   });
 });
 
