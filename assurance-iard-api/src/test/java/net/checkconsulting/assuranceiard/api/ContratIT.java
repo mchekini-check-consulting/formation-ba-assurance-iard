@@ -173,7 +173,7 @@ class ContratIT {
         assertThat(documents.enVigueur(contratId, "CONDITIONS_PARTICULIERES", ""))
                 .hasValueSatisfying(v1 -> {
                     assertThat(v1.getVersion()).isEqualTo(1);
-                    assertThat(v1.getMotif()).isEqualTo("Signature du contrat");
+                    assertThat(v1.getMotif()).isEqualTo("SIGNATURE");
                     assertThat(v1.getStocke()).isTrue();
                 });
     }

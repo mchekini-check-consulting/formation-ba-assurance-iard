@@ -46,6 +46,8 @@ import net.checkconsulting.assuranceiard.api.repository.FactureRepository;
 import net.checkconsulting.assuranceiard.api.repository.PermissionRepository;
 import net.checkconsulting.assuranceiard.api.repository.SinistreRepository;
 import net.checkconsulting.assuranceiard.api.repository.VehiculeRepository;
+import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
+import net.checkconsulting.assuranceiard.api.service.document.GabaritPdf;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -67,8 +69,9 @@ class EspaceClientServiceTest {
     private final DonneesContratRepository donnees = mock(DonneesContratRepository.class);
     private final Clock horloge = Clock.fixed(Instant.parse("2026-11-24T09:00:00Z"), ZoneOffset.UTC);
 
+    private final DocumentsGeneresService documentsGeneres = mock(DocumentsGeneresService.class);
     private final EspaceClientService service = new EspaceClientService(sessions, permissions, contrats, devis,
-            devisAuto, vehicules, factures, sinistres, documents, donnees, horloge);
+            devisAuto, vehicules, factures, sinistres, documents, donnees, documentsGeneres, horloge);
 
     private Compte compte;
 
@@ -269,10 +272,22 @@ class EspaceClientServiceTest {
         when(contrats.parNumero("AE-RECETTE-A03")).thenReturn(Optional.of(contrat));
         when(donnees.lire(3L)).thenReturn(Optional.of(donnees(contrat, new DonneesContrat.Logement(null, null, null,
                 null, null), new DonneesContrat.Vehicule("AB-003-CD", "Renault", "Clio", "V TCe 90"))));
-        when(documents.enVigueurDuContrat(eq(3L), anyCollection())).thenReturn(List.of(unDocument(200L, true,
-                "CONDITIONS_PARTICULIERES")));
+        when(documents.enVigueurDuContrat(eq(3L), anyCollection())).thenReturn(List.of());
         when(documents.enVigueur(0, "CONDITIONS_GENERALES", "AUTO")).thenReturn(Optional.of(unDocument(201L, true,
                 "CONDITIONS_GENERALES")));
+        Document v2 = unDocument(200L, true, "CONDITIONS_PARTICULIERES");
+        v2.setVersion(2);
+        v2.setStatut("EN_VIGUEUR");
+        v2.setMotif("DEMANDE_CLIENT");
+        Document v1 = unDocument(199L, false, "CONDITIONS_PARTICULIERES");
+        v1.setVersion(1);
+        v1.setStatut("REMPLACE");
+        v1.setMotif("SIGNATURE");
+        when(documents.versionsDuContrat(3L, "CONDITIONS_PARTICULIERES")).thenReturn(List.of(v2, v1));
+        Instant produitLe = Instant.parse("2026-11-24T09:30:00Z");
+        when(documentsGeneres.production(v2)).thenReturn(Optional.of(new GabaritPdf.Production(produitLe, "abc")));
+        when(documentsGeneres.production(v1)).thenReturn(Optional.empty());
+        when(documentsGeneres.contenuAJour(v2)).thenReturn(true);
 
         FicheContratResponse fiche = service.fiche("AE-RECETTE-A03");
 
@@ -284,10 +299,30 @@ class EspaceClientServiceTest {
         assertThat(fiche.paiement().ibanMasque()).isEqualTo("•••• 7788");
         assertThat(fiche.dateEcheance()).isEqualTo(LocalDate.of(2027, 9, 25));
         assertThat(fiche.referenceDevis()).isNull();
+        // US-21 : les conditions particulières ne sont plus dans « Documents », mais dans « Versions ».
         assertThat(fiche.documents()).extracting(FicheContratResponse.Document::id,
                         FicheContratResponse.Document::libelle)
-                .containsExactly(org.assertj.core.groups.Tuple.tuple(200L, "Conditions particulières"),
-                        org.assertj.core.groups.Tuple.tuple(201L, "Conditions générales"));
+                .containsExactly(org.assertj.core.groups.Tuple.tuple(201L, "Conditions générales"));
+        assertThat(fiche.versionsConditionsParticulieres()).containsExactly(
+                new FicheContratResponse.Version(200L, 2, "EN_VIGUEUR", null, "DEMANDE_CLIENT", produitLe, true),
+                new FicheContratResponse.Version(199L, 1, "REMPLACE", null, "SIGNATURE", null, false));
+        assertThat(fiche.conditionsParticulieresAJour()).isTrue();
+    }
+
+    @Test
+    void us21SansVersionEnVigueurLesConditionsParticulieresNeSontPasAJour() {
+        Contrat contrat = habitation();
+        when(contrats.parNumero("AE-RECETTE-1")).thenReturn(Optional.of(contrat));
+        when(donnees.lire(1L)).thenReturn(Optional.of(donnees(contrat, new DonneesContrat.Logement("appartement",
+                45, "1 rue de la Recette", "75011", "Paris"), new DonneesContrat.Vehicule(null, null, null, null))));
+        Document remplacee = unDocument(150L, true, "CONDITIONS_PARTICULIERES");
+        remplacee.setStatut("REMPLACE");
+        when(documents.versionsDuContrat(1L, "CONDITIONS_PARTICULIERES")).thenReturn(List.of(remplacee));
+
+        FicheContratResponse fiche = service.fiche("AE-RECETTE-1");
+
+        assertThat(fiche.conditionsParticulieresAJour()).isFalse();
+        verify(documentsGeneres, never()).contenuAJour(any());
     }
 
     @Test
@@ -316,9 +351,10 @@ class EspaceClientServiceTest {
     }
 
     @Test
-    void lesDocumentsDeLaFicheNeComprennentNiFacturesNiAvenants() {
+    void lesDocumentsDeLaFicheNeComprennentNiFacturesNiAvenantsNiConditionsParticulieres() {
         assertThat(EspaceClientService.DOCUMENTS_FICHE).extracting(Enum::name)
-                .doesNotContain("FACTURE", "AVENANT", "DEVIS", "DECLARATION_SINISTRE", "ECHEANCIER");
+                .doesNotContain("FACTURE", "AVENANT", "DEVIS", "DECLARATION_SINISTRE", "ECHEANCIER",
+                        "CONDITIONS_PARTICULIERES");
     }
 
     private static DonneesContrat donnees(Contrat contrat, DonneesContrat.Logement logement,

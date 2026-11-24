@@ -52,11 +52,11 @@ export const FICHE_AUTO: FicheContrat = {
   dateFin: null,
   paiement: { frequence: 'MENSUEL', jourPrelevement: 5, ibanMasque: '•••• 7788', rum: 'AE-RUM-RECETTE-A' },
   documents: [
-    { id: 12, type: 'CONDITIONS_PARTICULIERES', libelle: 'Conditions particulières', version: 1, dateCreation: null },
     { id: 13, type: 'CONDITIONS_GENERALES', libelle: 'Conditions générales', version: 1, dateCreation: null },
   ],
   versionsConditionsParticulieres: [
-    { id: 14, version: 2, statut: 'EN_VIGUEUR', dateCreation: '2026-11-24T10:00:00Z', motif: 'Régénération à la demande du client', disponible: true },
-    { id: 12, version: 1, statut: 'REMPLACE', dateCreation: '2026-09-25T08:00:00Z', motif: 'Signature du contrat', disponible: true },
+    { id: 14, version: 2, statut: 'EN_VIGUEUR', dateCreation: '2026-11-24T10:00:00Z', motif: 'DEMANDE_CLIENT', genereLe: '2026-11-24T10:00:05Z', disponible: true },
+    { id: 12, version: 1, statut: 'REMPLACE', dateCreation: '2026-09-25T08:00:00Z', motif: 'SIGNATURE', genereLe: '2026-09-25T08:00:05Z', disponible: true },
   ],
+  conditionsParticulieresAJour: false,
 };

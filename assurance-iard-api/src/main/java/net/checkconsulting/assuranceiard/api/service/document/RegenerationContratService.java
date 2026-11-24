@@ -3,12 +3,14 @@ package net.checkconsulting.assuranceiard.api.service.document;
 import java.time.Clock;
 import java.time.Duration;
 import java.time.Instant;
+import java.util.Optional;
 import java.util.Set;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
 import net.checkconsulting.assuranceiard.api.exception.ContratInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationImpossibleException;
+import net.checkconsulting.assuranceiard.api.exception.RegenerationInutileException;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationTropRapprocheeException;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.model.Compte;
@@ -25,21 +27,23 @@ import org.springframework.transaction.support.TransactionOperations;
 
 /**
  * US-21 : régénère les conditions particulières d'un contrat avec le service de documents de T-03 (version N+1
- * EN_VIGUEUR, version N REMPLACE, PDF stocké avec son empreinte), puis les envoie par e-mail (AC3).
- * RG1 : ne modifie ni les garanties ni la cotisation (seul un document est créé). RG2 : impossible sur un contrat
- * Suspendu, et plus généralement dans les statuts où RG3 d'US-18 bloque la régénération. Une régénération par
- * minute et par contrat. Le contrôle d'accès (propriétaire du contrat) est fait avant, par la route (US-04).
+ * EN_VIGUEUR, version N REMPLACE, PDF stocké avec son empreinte), puis les envoie par e-mail (AC3). Le motif est
+ * enregistré dans document.motif ({@link MotifRegeneration}).
+ *
+ * <p>Point d'entrée unique, réutilisable par les autres US : {@link #regenerer(long, MotifRegeneration)}. Seule la
+ * demande du client (DEMANDE_CLIENT) est soumise à ses règles : RG2 / RG3 d'US-18 (statut), une par minute, et
+ * « données inchangées ». Un déclenchement automatique (AVENANT, COORDONNEES, CONDITIONS_GENERALES) n'est jamais
+ * bloqué. RG1 : ni les garanties ni la cotisation ne changent (seul un document est créé).
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class RegenerationContratService {
 
-    /** RG3 d'US-18 (statut-contrat.ts) : statuts qui permettent de régénérer le contrat. */
+    /** RG3 d'US-18 (statut-contrat.ts) : statuts qui permettent au client de régénérer son contrat. */
     public static final Set<String> STATUTS_PERMIS = Set.of("ACTIF", "ACTIF_JUSTIFICATIFS_ATTENDUS",
             "AVENANT_EN_ATTENTE");
     static final Duration DELAI_MINIMUM = Duration.ofMinutes(1);
-    static final String MOTIF = "Régénération à la demande du client";
     private static final String CONDITIONS_PARTICULIERES = TypeDocument.CONDITIONS_PARTICULIERES.name();
 
     private final ContratRepository contrats;
@@ -53,11 +57,22 @@ public class RegenerationContratService {
     private record Generation(Document document, String numero, String email, String prenom) {
     }
 
+    /** Bouton du client (route POST /contrats/{numero}/conditions-particulieres). */
     @LogMetier(champs = {"resultat.version", "resultat.disponible"})
-    public RegenerationResponse regenerer(String numero) {
+    public RegenerationResponse regenererALaDemandeDuClient(String numero) {
+        long contratId = contrats.parNumero(numero).map(Contrat::getId).orElseThrow(ContratInconnuException::new);
+        return regenerer(contratId, MotifRegeneration.DEMANDE_CLIENT);
+    }
+
+    /**
+     * Méthode réutilisable : régénère les conditions particulières du contrat pour ce motif, puis les envoie par
+     * e-mail. Si elle est appelée dans une transaction en cours, elle s'y joint.
+     */
+    @LogMetier(champs = {"motif", "resultat.version", "resultat.disponible"})
+    public RegenerationResponse regenerer(long contratId, MotifRegeneration motif) {
         Generation generation;
         try {
-            generation = transaction.execute(etat -> generer(numero));
+            generation = transaction.execute(etat -> generer(contratId, motif));
         } catch (DataIntegrityViolationException demandeSimultanee) {
             // Deux demandes en même temps : la seconde se heurte à la version créée par la première.
             throw new RegenerationTropRapprocheeException();
@@ -69,24 +84,35 @@ public class RegenerationContratService {
                 disponible, emailEnvoye);
     }
 
-    private Generation generer(String numero) {
-        Contrat contrat = contrats.parNumero(numero).orElseThrow(ContratInconnuException::new);
+    private Generation generer(long contratId, MotifRegeneration motif) {
+        Contrat contrat = contrats.findById(contratId).orElseThrow(ContratInconnuException::new);
+        // Verrou sur la version en vigueur : deux demandes simultanées ne se croisent pas.
+        Optional<Document> actuelle = documents.enVigueurVerrouille(contratId, CONDITIONS_PARTICULIERES, "");
+        if (motif.demandeDuClient()) {
+            verifierLaDemandeDuClient(contrat, actuelle);
+        }
+        Document document = service.generer(
+                DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, contratId, motif.name()));
+        Compte compte = contrat.getCompte();
+        return new Generation(document, contrat.getNumero(), compte.getEmail(), compte.getPrenom());
+    }
+
+    /** Règles du bouton : statut (RG2, RG3 d'US-18), une régénération par minute, données changées. */
+    private void verifierLaDemandeDuClient(Contrat contrat, Optional<Document> actuelle) {
         if (!STATUTS_PERMIS.contains(contrat.getStatut())) {
             throw new RegenerationImpossibleException();
         }
-        // Verrou sur la version en vigueur : deux demandes simultanées ne se croisent pas. Seule une régénération
-        // récente bloque (une V1 créée à la signature ou par les données de test ne compte pas).
-        documents.enVigueurVerrouille(contrat.getId(), CONDITIONS_PARTICULIERES, "")
-                .filter(actuelle -> MOTIF.equals(actuelle.getMotif()))
-                .map(Document::getDateCreation)
-                .filter(this::tropRecente)
-                .ifPresent(date -> {
-                    throw new RegenerationTropRapprocheeException();
-                });
-        Document document = service.generer(
-                DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, contrat.getId(), MOTIF));
-        Compte compte = contrat.getCompte();
-        return new Generation(document, contrat.getNumero(), compte.getEmail(), compte.getPrenom());
+        if (actuelle.isEmpty()) {
+            return;
+        }
+        Document enVigueur = actuelle.get();
+        if (MotifRegeneration.DEMANDE_CLIENT.name().equals(enVigueur.getMotif())
+                && tropRecente(enVigueur.getDateCreation())) {
+            throw new RegenerationTropRapprocheeException();
+        }
+        if (service.contenuAJour(enVigueur)) {
+            throw new RegenerationInutileException(enVigueur.getVersion());
+        }
     }
 
     private boolean tropRecente(Instant creation) {

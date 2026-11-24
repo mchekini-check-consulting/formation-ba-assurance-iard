@@ -66,15 +66,15 @@ public class ContratResource {
     /**
      * US-21, AC1 : régénère les conditions particulières (nouvelle version, PDF envoyé par e-mail). Droit
      * DOCUMENTS/CREER ; seul le propriétaire du contrat peut le faire, un refus est tracé dans acces_refuse (US-04).
-     * 422 si le statut du contrat ne le permet pas (RG2, RG3 d'US-18), 429 si une régénération date de moins d'une
-     * minute.
+     * 422 si le statut du contrat ne le permet pas (RG2, RG3 d'US-18), 409 si aucune donnée n'a changé depuis la
+     * version en vigueur, 429 si une régénération date de moins d'une minute.
      */
     @PostMapping("/contrats/{numero}/conditions-particulieres")
     @Acces(rubrique = Rubrique.DOCUMENTS, droit = Droit.CREER,
             ressource = TypeRessource.CONTRAT_NUMERO, identifiant = "numero")
     @LogMetier(champs = {"resultat.version", "resultat.disponible"})
     public RegenerationResponse regenerer(@PathVariable String numero) {
-        return regenerationService.regenerer(numero);
+        return regenerationService.regenererALaDemandeDuClient(numero);
     }
 
     @GetMapping("/devis/contrat/{referenceDevis}")

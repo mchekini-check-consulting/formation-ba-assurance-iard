@@ -3,9 +3,20 @@ package net.checkconsulting.assuranceiard.api.service.document;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Calendar;
+import java.util.GregorianCalendar;
+import java.util.HexFormat;
 import java.util.List;
+import java.util.Optional;
+import org.apache.pdfbox.Loader;
 import org.apache.pdfbox.pdmodel.PDDocument;
+import org.apache.pdfbox.pdmodel.PDDocumentInformation;
 import org.apache.pdfbox.pdmodel.PDPage;
 import org.apache.pdfbox.pdmodel.PDPageContentStream;
 import org.apache.pdfbox.pdmodel.PDPageContentStream.AppendMode;
@@ -32,14 +43,62 @@ public class GabaritPdf {
     public record Pied(String type, String numero, int version, LocalDate dateGeneration) {
     }
 
+    /**
+     * US-21 : ce que le PDF retient dans ses propriétés (pas de colonne en base) : la date de sa production et
+     * l'empreinte de son contenu, hors pied de page (version et date de génération).
+     *
+     * @param empreinteContenu vide pour un PDF produit avant US-21
+     */
+    public record Production(Instant produitLe, String empreinteContenu) {
+    }
+
+    static final String CLE_EMPREINTE = "AssurEasy-Empreinte-Contenu";
+
     public byte[] rendre(ContenuDocument contenu, Pied pied) {
+        return rendre(contenu, pied, Instant.now());
+    }
+
+    /** Met en page et range dans les propriétés du PDF sa date de production et l'empreinte de son contenu. */
+    public byte[] rendre(ContenuDocument contenu, Pied pied, Instant produitLe) {
         try (PDDocument pdf = new PDDocument(); ByteArrayOutputStream sortie = new ByteArrayOutputStream()) {
             new Redaction(pdf, contenu.provisoire()).ecrire(contenu);
             piedsDePage(pdf, pied);
+            PDDocumentInformation proprietes = pdf.getDocumentInformation();
+            proprietes.setCreationDate(GregorianCalendar.from(produitLe.atZone(ZoneOffset.UTC)));
+            proprietes.setCustomMetadataValue(CLE_EMPREINTE, empreinte(contenu));
             pdf.save(sortie);
             return sortie.toByteArray();
         } catch (IOException erreur) {
             throw new UncheckedIOException(erreur);
+        }
+    }
+
+    /** US-21 : relit la date de production et l'empreinte du contenu d'un PDF ; vide si illisible ou sans date. */
+    public Optional<Production> production(byte[] pdf) {
+        try (PDDocument document = Loader.loadPDF(pdf)) {
+            PDDocumentInformation proprietes = document.getDocumentInformation();
+            Calendar creation = proprietes.getCreationDate();
+            if (creation == null) {
+                return Optional.empty();
+            }
+            return Optional.of(new Production(creation.toInstant(),
+                    proprietes.getCustomMetadataValue(CLE_EMPREINTE)));
+        } catch (IOException illisible) {
+            return Optional.empty();
+        }
+    }
+
+    /**
+     * US-21 : empreinte SHA-256 du contenu rédigé (titre, numéro, sections). Deux contenus identiques, rédigés avec les
+     * mêmes données, ont la même empreinte ; le pied de page (version, date de génération) n'en fait pas partie.
+     */
+    public static String empreinte(ContenuDocument contenu) {
+        try {
+            byte[] hache = MessageDigest.getInstance("SHA-256")
+                    .digest(contenu.toString().getBytes(StandardCharsets.UTF_8));
+            return HexFormat.of().formatHex(hache);
+        } catch (NoSuchAlgorithmException impossible) {
+            throw new IllegalStateException(impossible);
         }
     }
 

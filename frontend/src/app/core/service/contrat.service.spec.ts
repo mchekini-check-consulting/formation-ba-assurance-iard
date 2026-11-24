@@ -3,6 +3,7 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {
   ContratService,
+  MESSAGE_A_JOUR,
   MESSAGE_IMPOSSIBLE,
   MESSAGE_TROP_TOT,
   ResultatFiche,
@@ -170,6 +171,12 @@ describe('ContratService', () => {
       service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
       http.expectOne(URL).flush(null, { status: 422, statusText: 'x' });
       expect(resultats).toEqual([{ statut: 'impossible', message: MESSAGE_IMPOSSIBLE }]);
+    });
+
+    it('409 : aucune donnée n’a changé', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush(null, { status: 409, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'a-jour', message: MESSAGE_A_JOUR }]);
     });
 
     it('429 sans détail : message par défaut', () => {

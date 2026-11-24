@@ -19,6 +19,7 @@ import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
 import net.checkconsulting.assuranceiard.api.exception.ContratInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationImpossibleException;
+import net.checkconsulting.assuranceiard.api.exception.RegenerationInutileException;
 import net.checkconsulting.assuranceiard.api.exception.RegenerationTropRapprocheeException;
 import net.checkconsulting.assuranceiard.api.model.Compte;
 import net.checkconsulting.assuranceiard.api.model.Contrat;
@@ -31,6 +32,7 @@ import net.checkconsulting.assuranceiard.api.service.EnvoiConditionsParticuliere
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -63,105 +65,140 @@ class RegenerationContratServiceTest {
         contrat.setStatut("ACTIF");
         contrat.setCompte(compte);
         when(contrats.parNumero(NUMERO)).thenReturn(Optional.of(contrat));
+        when(contrats.findById(3L)).thenReturn(Optional.of(contrat));
         when(documents.enVigueurVerrouille(3L, "CONDITIONS_PARTICULIERES", "")).thenReturn(Optional.empty());
+        when(generation.generer(any())).thenReturn(version(2, true, MAINTENANT, null));
+        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp-v2.pdf", "pdf", PDF));
     }
 
-    private static Document version(int numero, boolean stocke, Instant creation) {
+    private static Document version(int numero, boolean stocke, Instant creation, String motif) {
         Document document = new Document();
         document.setId(100L + numero);
         document.setVersion(numero);
         document.setStocke(stocke);
         document.setDateCreation(creation);
+        document.setMotif(motif);
         return document;
     }
 
-    @Test
-    void ac1EtAc3RegenereLaVersionSuivanteEtLEnvoieParEmail() {
-        Document v2 = version(2, true, MAINTENANT);
-        when(generation.generer(any())).thenReturn(v2);
-        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp-v2.pdf", "pdf", PDF));
+    private void enVigueur(Document document) {
+        when(documents.enVigueurVerrouille(3L, "CONDITIONS_PARTICULIERES", "")).thenReturn(Optional.of(document));
+    }
 
-        RegenerationResponse reponse = service.regenerer(NUMERO);
+    @Test
+    void ac1EtAc3LaDemandeDuClientRegenereAvecLeMotifDemandeClientEtEnvoieLePdf() {
+        RegenerationResponse reponse = service.regenererALaDemandeDuClient(NUMERO);
 
         assertThat(reponse).isEqualTo(new RegenerationResponse(102L, 2, MAINTENANT, true, true));
         ArgumentCaptor<DemandeDocument> demande = ArgumentCaptor.forClass(DemandeDocument.class);
         verify(generation).generer(demande.capture());
-        assertThat(demande.getValue()).isEqualTo(DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, 3L,
-                RegenerationContratService.MOTIF));
+        assertThat(demande.getValue()).isEqualTo(
+                DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, 3L, "DEMANDE_CLIENT"));
         verify(envoi).envoyer("camille@exemple.fr", "Camille", NUMERO, 2, "cp-v2.pdf", PDF);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = MotifRegeneration.class, names = {"AVENANT", "COORDONNEES", "CONDITIONS_GENERALES"})
+    void laMethodeReutilisableEnregistreLeMotifDuDeclencheur(MotifRegeneration motif) {
+        service.regenerer(3L, motif);
+
+        verify(generation).generer(DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, 3L,
+                motif.name()));
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"ACTIF_JUSTIFICATIFS_ATTENDUS", "AVENANT_EN_ATTENTE"})
     void lesAutresStatutsPermisParRg3(String statut) {
         contrat.setStatut(statut);
-        when(generation.generer(any())).thenReturn(version(2, true, MAINTENANT));
-        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp.pdf", "pdf", PDF));
 
-        assertThat(service.regenerer(NUMERO).version()).isEqualTo(2);
+        assertThat(service.regenererALaDemandeDuClient(NUMERO).version()).isEqualTo(2);
     }
 
     @ParameterizedTest
     @ValueSource(strings = {"SUSPENDU", "EN_ATTENTE_DE_SIGNATURE", "EN_ATTENTE_EFFET", "IMPAYE",
         "RESILIATION_EN_COURS", "RESILIE", "RENONCE"})
-    void rg2EtRg3RefuseLesStatutsQuiBloquentLaRegeneration(String statut) {
+    void rg2EtRg3LeClientNePeutPasRegenererDansCesStatuts(String statut) {
         contrat.setStatut(statut);
 
-        assertThatThrownBy(() -> service.regenerer(NUMERO)).isInstanceOf(RegenerationImpossibleException.class);
-        verifyNoInteractions(generation, envoi);
+        assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))
+                .isInstanceOf(RegenerationImpossibleException.class);
+        verify(generation, never()).generer(any());
+        verifyNoInteractions(envoi);
     }
 
     @Test
-    void uneRegenerationParMinuteAuPlus() {
-        Document regenereeIlYA30s = version(2, true, MAINTENANT.minusSeconds(30));
-        regenereeIlYA30s.setMotif(RegenerationContratService.MOTIF);
-        when(documents.enVigueurVerrouille(3L, "CONDITIONS_PARTICULIERES", ""))
-                .thenReturn(Optional.of(regenereeIlYA30s));
+    void uneRegenerationDuClientParMinuteAuPlus() {
+        enVigueur(version(2, true, MAINTENANT.minusSeconds(30), "DEMANDE_CLIENT"));
 
-        assertThatThrownBy(() -> service.regenerer(NUMERO)).isInstanceOf(RegenerationTropRapprocheeException.class);
+        assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))
+                .isInstanceOf(RegenerationTropRapprocheeException.class);
         verify(generation, never()).generer(any());
     }
 
     @Test
-    void uneV1RecenteCreeeALaSignatureNeBloquePasLaPremiereRegeneration() {
-        Document v1 = version(1, true, MAINTENANT.minusSeconds(10));
-        v1.setMotif(ConditionsParticulieresALaSignature.MOTIF);
-        when(documents.enVigueurVerrouille(3L, "CONDITIONS_PARTICULIERES", "")).thenReturn(Optional.of(v1));
-        when(generation.generer(any())).thenReturn(version(2, true, MAINTENANT));
-        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp.pdf", "pdf", PDF));
+    void uneV1RecenteCreeeALaSignatureNeBloquePasLaPremiereDemande() {
+        enVigueur(version(1, true, MAINTENANT.minusSeconds(10), "SIGNATURE"));
 
-        assertThat(service.regenerer(NUMERO).version()).isEqualTo(2);
+        assertThat(service.regenererALaDemandeDuClient(NUMERO).version()).isEqualTo(2);
     }
 
     @Test
-    void uneVersionDePlusDUneMinutePermetDeRegenerer() {
-        when(documents.enVigueurVerrouille(3L, "CONDITIONS_PARTICULIERES", ""))
-                .thenReturn(Optional.of(version(1, true, MAINTENANT.minusSeconds(61))));
-        when(generation.generer(any())).thenReturn(version(2, true, MAINTENANT));
-        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp.pdf", "pdf", PDF));
+    void sansChangementDeDonneesLaDemandeDuClientEstRefusee() {
+        Document v1 = version(1, true, MAINTENANT.minusSeconds(3600), "DEMANDE_CLIENT");
+        enVigueur(v1);
+        when(generation.contenuAJour(v1)).thenReturn(true);
 
-        assertThat(service.regenerer(NUMERO).version()).isEqualTo(2);
+        assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))
+                .isInstanceOf(RegenerationInutileException.class)
+                .hasMessageContaining("version 1");
+        verify(generation, never()).generer(any());
+    }
+
+    @Test
+    void desQuUneDonneeAChangeLaDemandeDuClientEstAcceptee() {
+        Document v1 = version(1, true, MAINTENANT.minusSeconds(3600), "DEMANDE_CLIENT");
+        enVigueur(v1);
+        when(generation.contenuAJour(v1)).thenReturn(false);
+
+        assertThat(service.regenererALaDemandeDuClient(NUMERO).version()).isEqualTo(2);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = MotifRegeneration.class, names = {"AVENANT", "COORDONNEES", "CONDITIONS_GENERALES"})
+    void unDeclenchementAutomatiqueNEstBloqueNiParLaMinuteNiParLesDonneesInchangees(MotifRegeneration motif) {
+        Document recente = version(1, true, MAINTENANT.minusSeconds(5), "DEMANDE_CLIENT");
+        enVigueur(recente);
+        when(generation.contenuAJour(recente)).thenReturn(true);
+        contrat.setStatut("SUSPENDU");
+
+        assertThat(service.regenerer(3L, motif).version()).isEqualTo(2);
+        verify(generation, never()).contenuAJour(any());
     }
 
     @Test
     void deuxDemandesSimultaneesLaSecondeEstRefuseeClairement() {
         when(generation.generer(any())).thenThrow(new DataIntegrityViolationException("uk_document_en_vigueur"));
 
-        assertThatThrownBy(() -> service.regenerer(NUMERO)).isInstanceOf(RegenerationTropRapprocheeException.class);
+        assertThatThrownBy(() -> service.regenererALaDemandeDuClient(NUMERO))
+                .isInstanceOf(RegenerationTropRapprocheeException.class);
     }
 
     @Test
     void unContratInconnuRepondIntrouvable() {
         when(contrats.parNumero("AE-X")).thenReturn(Optional.empty());
+        when(contrats.findById(99L)).thenReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.regenerer("AE-X")).isInstanceOf(ContratInconnuException.class);
+        assertThatThrownBy(() -> service.regenererALaDemandeDuClient("AE-X"))
+                .isInstanceOf(ContratInconnuException.class);
+        assertThatThrownBy(() -> service.regenerer(99L, MotifRegeneration.AVENANT))
+                .isInstanceOf(ContratInconnuException.class);
     }
 
     @Test
     void pdfPasEncoreProduitPasDEmailLaVersionResteCreee() {
-        when(generation.generer(any())).thenReturn(version(2, false, MAINTENANT));
+        when(generation.generer(any())).thenReturn(version(2, false, MAINTENANT, null));
 
-        RegenerationResponse reponse = service.regenerer(NUMERO);
+        RegenerationResponse reponse = service.regenererALaDemandeDuClient(NUMERO);
 
         assertThat(reponse.disponible()).isFalse();
         assertThat(reponse.emailEnvoye()).isFalse();
@@ -170,15 +207,20 @@ class RegenerationContratServiceTest {
 
     @Test
     void ac3UnEchecDEnvoiNeRemetPasEnCauseLaNouvelleVersion() {
-        when(generation.generer(any())).thenReturn(version(2, true, MAINTENANT));
-        when(generation.telecharger(102L)).thenReturn(new DocumentService.Fichier("cp.pdf", "pdf", PDF));
         doThrow(new MailSendException("SMTP indisponible")).when(envoi)
                 .envoyer(anyString(), anyString(), anyString(), anyInt(), anyString(), any());
 
-        RegenerationResponse reponse = service.regenerer(NUMERO);
+        RegenerationResponse reponse = service.regenererALaDemandeDuClient(NUMERO);
 
         assertThat(reponse.version()).isEqualTo(2);
         assertThat(reponse.disponible()).isTrue();
         assertThat(reponse.emailEnvoye()).isFalse();
+    }
+
+    @Test
+    void seulLeMotifDemandeClientEstSoumisAuxReglesDuClient() {
+        assertThat(MotifRegeneration.DEMANDE_CLIENT.demandeDuClient()).isTrue();
+        assertThat(MotifRegeneration.AVENANT.demandeDuClient()).isFalse();
+        assertThat(MotifRegeneration.SIGNATURE.demandeDuClient()).isFalse();
     }
 }

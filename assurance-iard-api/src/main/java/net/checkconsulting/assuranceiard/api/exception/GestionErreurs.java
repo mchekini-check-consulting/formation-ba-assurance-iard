@@ -85,6 +85,12 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
     }
 
+    /** US-21 : régénération demandée alors qu'aucune donnée n'a changé. */
+    @ExceptionHandler(RegenerationInutileException.class)
+    public ProblemDetail regenerationInutile(RegenerationInutileException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
     /** US-21 : une régénération par minute et par contrat. */
     @ExceptionHandler(RegenerationTropRapprocheeException.class)
     public ProblemDetail regenerationTropRapprochee(RegenerationTropRapprocheeException exception) {
