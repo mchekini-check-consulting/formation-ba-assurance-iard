@@ -81,4 +81,12 @@ public interface DocumentRepository extends JpaRepository<Document, Long> {
             WHERE d.contratId = :contratId AND d.statut = 'EN_VIGUEUR' AND d.type IN :types
             ORDER BY d.type, d.id""")
     List<Document> enVigueurDuContrat(@Param("contratId") long contratId, @Param("types") Collection<String> types);
+
+    /** US-21, AC2 : toutes les versions d'un document du contrat (en vigueur et remplacées), la plus récente d'abord. */
+    @LogMetier
+    @Query("""
+            SELECT d FROM Document d
+            WHERE d.contratId = :contratId AND d.type = :type
+            ORDER BY d.version DESC, d.id DESC""")
+    List<Document> versionsDuContrat(@Param("contratId") long contratId, @Param("type") String type);
 }

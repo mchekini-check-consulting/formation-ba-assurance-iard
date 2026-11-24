@@ -35,6 +35,7 @@ import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepos
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
 import net.checkconsulting.assuranceiard.api.repository.TarifDevisRepository;
+import net.checkconsulting.assuranceiard.api.service.document.ConditionsParticulieresALaSignature;
 import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
 import net.checkconsulting.assuranceiard.api.model.TarifDevis;
 import org.junit.jupiter.api.BeforeEach;
@@ -54,9 +55,11 @@ class ContratServiceTest {
     private final TarifDevisService tarifDevis = mock(TarifDevisService.class);
     private final TarifDevisRepository tarifsRetenus = mock(TarifDevisRepository.class);
     private final CodeSignatureContratService codeSignatureService = mock(CodeSignatureContratService.class);
+    private final ConditionsParticulieresALaSignature conditionsParticulieres =
+            mock(ConditionsParticulieresALaSignature.class);
     private final ContratService service = new ContratService(
             sessionService, dossiers, contrats, mandats, recommandations, tarifDevis, tarifsRetenus,
-            codeSignatureService,
+            codeSignatureService, conditionsParticulieres,
             Clock.fixed(MAINTENANT, ZoneOffset.UTC));
 
     private final Compte compte = new Compte();
@@ -198,6 +201,7 @@ class ContratServiceTest {
         assertThat(reponse.statut()).isEqualTo("ACTIF");
         verify(codeSignatureService).verifier(existant, "123456");
         assertThat(dossier.getCompte().getProfil()).as("US-04 : le prospect devient assuré").isEqualTo(Profil.ASSURE);
+        verify(conditionsParticulieres).creerApresSignature(existant.getId());
     }
 
     @Test
@@ -209,6 +213,8 @@ class ContratServiceTest {
 
         assertThatThrownBy(() -> service.signer(JETON, REFERENCE, new SignatureContratRequest("999999")))
                 .isInstanceOf(CodeSignatureIncorrectException.class);
+        // US-21, AC4 : pas de conditions particulières sans signature validée.
+        verify(conditionsParticulieres, never()).creerApresSignature(org.mockito.ArgumentMatchers.anyLong());
     }
 
     @Test
@@ -242,6 +248,7 @@ class ContratServiceTest {
 
     private Contrat unContratExistant() {
         Contrat contrat = new Contrat();
+        contrat.setId(42L);
         contrat.setNumero("AE-2026-000001");
         contrat.setStatut("EN_ATTENTE_DE_SIGNATURE");
         contrat.setDossier(dossier);

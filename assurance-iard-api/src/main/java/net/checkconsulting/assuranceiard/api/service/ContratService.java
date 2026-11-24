@@ -32,6 +32,7 @@ import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepos
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
 import net.checkconsulting.assuranceiard.api.repository.TarifDevisRepository;
+import net.checkconsulting.assuranceiard.api.service.document.ConditionsParticulieresALaSignature;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,6 +54,7 @@ public class ContratService {
     private final TarifDevisService tarifDevisService;
     private final TarifDevisRepository tarifDevisRepository;
     private final CodeSignatureContratService codeSignatureService;
+    private final ConditionsParticulieresALaSignature conditionsParticulieres;
     private final Clock horloge;
 
     /** Idempotent : renvoie le contrat existant si déjà généré pour ce dossier. */
@@ -102,6 +104,8 @@ public class ContratService {
         contrat.setStatut(STATUT_ACTIF);
         contrat = contratRepository.save(contrat);
         devenirAssure(dossier.getCompte());
+        // US-21, AC4 : V1 des conditions particulières, créée après l'enregistrement de la signature (sans la bloquer).
+        conditionsParticulieres.creerApresSignature(contrat.getId());
         return construireReponse(contrat, dossier);
     }
 

@@ -52,9 +52,26 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
     afficher(CONTRAT_AUTO);
 
     const liens = Array.from(carte.querySelectorAll('a'));
-    expect(liens.map((lien) => lien.textContent?.trim())).toEqual(['Voir mon contrat']);
+    // US-21 livrée : « Régénérer mon contrat » ; garanties, factures et sinistres pas encore livrés.
+    expect(liens.map((lien) => lien.textContent?.trim())).toEqual(['Voir mon contrat', 'Régénérer mon contrat']);
     expect(liens[0].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03');
     expect(liens[0].classList).not.toContain('btn--contour');
+  });
+
+  it('US-21 : « Régénérer mon contrat » (contour) ouvre la section « Versions » de la fiche', () => {
+    afficher(CONTRAT_AUTO);
+
+    const regenerer = Array.from(carte.querySelectorAll('a')).find((lien) => lien.textContent?.includes('Régénérer'));
+    expect(regenerer?.getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03#versions');
+    expect(regenerer?.classList).toContain('btn--contour');
+  });
+
+  it('US-21, RG2 : pas de « Régénérer mon contrat » sur un contrat suspendu', () => {
+    afficher({ ...CONTRAT_AUTO, statut: 'SUSPENDU' });
+
+    expect(Array.from(carte.querySelectorAll('a')).map((lien) => lien.textContent?.trim())).toEqual([
+      'Voir mon contrat',
+    ]);
   });
 
   it('« Signer » (contour) pour un contrat habitation en attente de signature', () => {

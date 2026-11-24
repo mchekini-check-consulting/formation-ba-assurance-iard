@@ -55,4 +55,8 @@ export const FICHE_AUTO: FicheContrat = {
     { id: 12, type: 'CONDITIONS_PARTICULIERES', libelle: 'Conditions particulières', version: 1, dateCreation: null },
     { id: 13, type: 'CONDITIONS_GENERALES', libelle: 'Conditions générales', version: 1, dateCreation: null },
   ],
+  versionsConditionsParticulieres: [
+    { id: 14, version: 2, statut: 'EN_VIGUEUR', dateCreation: '2026-11-24T10:00:00Z', motif: 'Régénération à la demande du client', disponible: true },
+    { id: 12, version: 1, statut: 'REMPLACE', dateCreation: '2026-09-25T08:00:00Z', motif: 'Signature du contrat', disponible: true },
+  ],
 };

@@ -15,9 +15,8 @@ const actions = (c: ContratResume, reglage = RACCOURCIS): string[] =>
 
 describe('raccourcis du contrat (US-18, AC2)', () => {
   it('masque les fonctions pas encore livrées', () => {
-    expect(actions(contrat('ACTIF'))).toEqual(['detail']);
+    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'regenerer']);
     expect(RACCOURCIS.modifierGaranties.livre).toBe(false);
-    expect(RACCOURCIS.regenerer.livre).toBe(false);
     expect(RACCOURCIS.genererFacture.livre).toBe(false);
     expect(RACCOURCIS.declarerSinistre.livre).toBe(false);
   });
@@ -27,13 +26,13 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
       ...RACCOURCIS,
       declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true, lien: () => ({ commandes: ['/sinistres'] }) },
     };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'declarerSinistre']);
+    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'declarerSinistre']);
     expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail']);
   });
 
   it('une fonction livrée sans adresse reste masquée', () => {
-    const reglage = { ...RACCOURCIS, regenerer: { ...RACCOURCIS.regenerer, livre: true } };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail']);
+    const reglage = { ...RACCOURCIS, genererFacture: { ...RACCOURCIS.genererFacture, livre: true } };
+    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer']);
   });
 
   it('« Voir le détail » ouvre la fiche par numéro', () => {
@@ -51,6 +50,23 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
   it('« Signer » est masqué en auto (US-33 pas livrée) et sans référence de devis', () => {
     expect(actions(contrat('EN_ATTENTE_DE_SIGNATURE', 'AUTO'))).toEqual(['detail']);
     expect(actions({ ...contrat('EN_ATTENTE_DE_SIGNATURE'), referenceDevis: null })).toEqual(['detail']);
+  });
+});
+
+describe('US-21 : raccourci « Régénérer mon contrat »', () => {
+  it('est livré et ouvre la fiche du contrat sur sa section « Versions »', () => {
+    expect(LIVRAISONS.regenerer).toBe(true);
+    const regenerer = raccourcisDuContrat(contrat('ACTIF', 'AUTO')).find((r) => r.action === 'regenerer');
+    expect(regenerer?.libelle).toBe('Régénérer mon contrat');
+    expect(regenerer?.lien).toEqual({ commandes: ['/espace-client/contrats', 'AE-1'], fragment: 'versions' });
+  });
+
+  it('RG2 / RG3 : jamais proposé sur un contrat Suspendu, Impayé, résilié ou en attente', () => {
+    for (const statut of ['SUSPENDU', 'IMPAYE', 'RESILIE', 'RESILIATION_EN_COURS', 'RENONCE', 'EN_ATTENTE_EFFET', 'EN_ATTENTE_DE_SIGNATURE'] as const) {
+      expect(actions(contrat(statut))).not.toContain('regenerer');
+    }
+    expect(actions(contrat('AVENANT_EN_ATTENTE'))).toContain('regenerer');
+    expect(actions(contrat('ACTIF_JUSTIFICATIFS_ATTENDUS'))).toContain('regenerer');
   });
 });
 
