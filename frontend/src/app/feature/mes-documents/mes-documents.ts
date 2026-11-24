@@ -7,7 +7,7 @@ import { DocumentsService } from '../../core/service/documents.service';
 @Component({
   selector: 'iard-mes-documents',
   imports: [RouterLink],
-  styleUrls: ['../compte-cree/compte-cree.scss', '../mes-devis/mes-devis.scss'],
+  styleUrls: ['../mes-devis/mes-devis.scss'],
   templateUrl: './mes-documents.html',
 })
 export class MesDocuments {

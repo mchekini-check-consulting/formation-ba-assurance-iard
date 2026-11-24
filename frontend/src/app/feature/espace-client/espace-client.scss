@@ -1,53 +1,203 @@
-// US-18, RG5 : navigation au-dessus du contenu ; elle revient à la ligne sur mobile (pas de défilement horizontal).
-.navigation {
-  border-top: 1px solid var(--bordure-claire);
+.tableau-de-bord {
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
 
-  &__liste {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 8px 24px;
-    list-style: none;
+  p,
+  h1,
+  h2,
+  h3 {
+    margin: 0;
+  }
+
+  &__accueil {
     display: flex;
-    flex-wrap: wrap;
-    gap: 8px 20px;
+    flex-direction: column;
+    gap: 6px;
 
-    a {
-      display: inline-block;
-      padding: 6px 0;
-      color: var(--texte);
-      font-weight: 600;
-      text-decoration: none;
-
-      &:hover,
-      &:focus-visible {
-        color: var(--rouge);
-        text-decoration: underline;
-      }
+    h1 {
+      font-size: clamp(26px, 2vw + 18px, 34px);
     }
+  }
+
+  &__sous-titre {
+    color: var(--texte-doux);
   }
 }
 
-.tableau-de-bord {
-  min-width: 0;
+.section {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
 
-  &__connexion {
-    margin: 0;
-    color: var(--texte-doux);
-    overflow-wrap: anywhere;
+  h2 {
+    font-size: 22px;
   }
 
-  &__section {
+  &__entete {
     display: flex;
-    flex-direction: column;
-    gap: 12px;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px;
+  }
 
-    h2 {
-      margin: 8px 0 0;
-      font-size: 22px;
-    }
+  &__lien {
+    color: var(--rouge);
+    font-weight: 600;
+  }
+}
 
-    > p {
-      margin: 0;
-    }
+.grille {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 16px;
+
+  // Contrats : 2 colonnes sur ordinateur, 1 sur mobile.
+  &--contrats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  // Échéance, devis, sinistres : une ligne de 3 cartes (celles qui s'affichent).
+  &--resume {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+
+  &--tuiles {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+.bloc {
+  padding: 20px;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 8px 28px rgb(20 20 30 / 8%);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  overflow-wrap: break-word;
+
+  &__titre {
+    color: var(--texte-discret);
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  // Classe doublée : plus précise que la remise à zéro des marges de .tableau-de-bord h3.
+  &__sous-titre.bloc__sous-titre {
+    margin-top: 8px;
+    font-size: 15px;
+  }
+
+  &__valeur {
+    font-family: var(--police-titre);
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  &__discret {
+    color: var(--texte-discret);
+    font-size: 14px;
+  }
+
+  &__actions {
+    margin-top: auto;
+    padding-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+}
+
+.factures,
+.sinistres {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  li {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px 8px;
+  }
+}
+
+.sinistres li {
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.factures__message {
+  flex-basis: 100%;
+}
+
+.lien-bouton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--rouge);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.badge-sinistre {
+  padding: 2px 10px;
+  border: 1px solid currentcolor;
+  border-radius: 999px;
+  background: #e8f0fb;
+  color: #1d4f91;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.tuile {
+  min-height: 72px;
+  height: 100%;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid var(--bordure);
+  background: #fff;
+  display: flex;
+  align-items: center;
+  color: var(--texte);
+  font-weight: 600;
+  text-decoration: none;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--rouge);
+    color: var(--rouge);
+  }
+}
+
+.sans-contrat p {
+  color: var(--texte-doux);
+}
+
+.erreur {
+  color: #a82b27;
+  font-weight: 600;
+}
+
+.iban {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.04em;
+}
+
+@media (width < 700px) {
+  .grille--contrats {
+    grid-template-columns: minmax(0, 1fr);
   }
 }

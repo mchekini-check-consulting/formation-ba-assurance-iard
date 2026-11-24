@@ -26,7 +26,7 @@ const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 @Component({
   selector: 'iard-contrat-client',
   imports: [RouterLink, BadgeStatut],
-  styleUrls: ['../compte-cree/compte-cree.scss', '../mes-devis/mes-devis.scss', './contrat-client.scss'],
+  styleUrls: ['../mes-devis/mes-devis.scss', './contrat-client.scss'],
   templateUrl: './contrat-client.html',
 })
 export class ContratClient {

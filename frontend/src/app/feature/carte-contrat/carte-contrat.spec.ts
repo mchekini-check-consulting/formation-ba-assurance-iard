@@ -1,11 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
 import { ContratResume } from '../../core/model/contrat';
-import { CONTRAT_AUTO } from '../../core/model/contrat.exemples';
+import { CONTRAT_AUTO, CONTRAT_HABITATION } from '../../core/model/contrat.exemples';
 import { BadgeStatut } from '../badge-statut/badge-statut';
 import { CarteContrat } from './carte-contrat';
 
-describe('CarteContrat (US-18, AC1, AC2, AC5)', () => {
+describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
   let fixture: ComponentFixture<CarteContrat>;
   let carte: HTMLElement;
 
@@ -14,48 +14,62 @@ describe('CarteContrat (US-18, AC1, AC2, AC5)', () => {
     fixture.detectChanges();
     carte = fixture.nativeElement as HTMLElement;
   };
+  const texte = (selecteur: string): string =>
+    (carte.querySelector(selecteur)?.textContent ?? '').replace(/\s+/g, ' ').trim();
 
   beforeEach(() => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     fixture = TestBed.createComponent(CarteContrat);
   });
 
-  it('affiche numéro, produit, bien assuré, prime, échéance et statut en texte', () => {
-    afficher(CONTRAT_AUTO);
+  it('habitation : produit et statut en haut, « Appartement · Créteil » en titre, formule, numéro et prime', () => {
+    afficher(CONTRAT_HABITATION);
 
-    expect(carte.querySelector('h3')?.textContent).toContain('Auto · AE-RECETTE-A03');
-    expect(carte.textContent).toContain('Renault Clio · AB-003-CD');
-    expect(carte.textContent).toContain('45,00');
-    expect(carte.textContent).toContain('Échéance : 25/09/2027');
-    expect(carte.querySelector('.badge-statut')?.textContent?.trim()).toBe('Actif');
-    expect(carte.textContent).toContain('Votre contrat est actif.');
+    expect(texte('.carte__produit')).toBe('Habitation');
+    expect(texte('.badge-statut')).toBe('Actif');
+    expect(texte('h3')).toBe('Appartement · Créteil');
+    expect(texte('.carte__detail')).toBe('Formule Confort · N° AE-2026-000001');
+    expect(texte('.carte__prime')).toBe('14,90 €/mois TTC');
+    expect(texte('.carte__message')).toBe('Votre contrat est actif.');
   });
 
-  it('montre seulement les raccourcis livrés : « Voir le détail » vers la fiche par numéro', () => {
+  it('auto : le véhicule en titre', () => {
+    afficher(CONTRAT_AUTO);
+
+    expect(texte('.carte__produit')).toBe('Auto');
+    expect(texte('h3')).toBe('Renault Clio · AB-003-CD');
+    expect(texte('.carte__detail')).toBe('Formule Tous risques · N° AE-RECETTE-A03');
+  });
+
+  it('sans type de logement ni ville, le bien assuré sert de titre', () => {
+    afficher({ ...CONTRAT_HABITATION, typeLogement: null, ville: null, formule: null });
+
+    expect(texte('h3')).toBe('12 rue des Lilas, 94000 Créteil');
+    expect(texte('.carte__detail')).toBe('N° AE-2026-000001');
+  });
+
+  it('« Voir mon contrat » (plein) ouvre la fiche par numéro ; les fonctions non livrées sont masquées', () => {
     afficher(CONTRAT_AUTO);
 
     const liens = Array.from(carte.querySelectorAll('a'));
-    expect(liens.map((lien) => lien.textContent?.trim())).toEqual(['Voir le détail']);
+    expect(liens.map((lien) => lien.textContent?.trim())).toEqual(['Voir mon contrat']);
     expect(liens[0].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03');
+    expect(liens[0].classList).not.toContain('btn--contour');
   });
 
-  it('propose « Signer » pour un contrat habitation en attente de signature', () => {
-    afficher({
-      ...CONTRAT_AUTO,
-      produit: 'HABITATION',
-      statut: 'EN_ATTENTE_DE_SIGNATURE',
-      referenceDevis: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
-    });
+  it('« Signer » (contour) pour un contrat habitation en attente de signature', () => {
+    afficher({ ...CONTRAT_HABITATION, statut: 'EN_ATTENTE_DE_SIGNATURE' });
 
     const signer = Array.from(carte.querySelectorAll('a')).find((lien) => lien.textContent?.includes('Signer'));
     expect(signer?.getAttribute('href')).toBe('/devis/contrat?reference=7c9e6679-7425-40de-944b-e07fc1f90ae7');
+    expect(signer?.classList).toContain('btn--contour');
   });
 
-  it('affiche la date de fin à la place de l’échéance pour un contrat qui se termine', () => {
+  it('contrat résilié : badge gris avec le texte du statut', () => {
     afficher({ ...CONTRAT_AUTO, statut: 'RESILIE', dateEcheance: null, dateFin: '2026-11-19', bienAssure: null });
 
-    expect(carte.textContent).toContain('Fin du contrat : 19/11/2026');
-    expect(carte.querySelector('.badge-statut--gris')?.textContent?.trim()).toBe('Résilié');
+    expect(texte('.badge-statut--gris')).toBe('Résilié');
+    expect(texte('h3')).toBe('Contrat AE-RECETTE-A03');
   });
 });
 

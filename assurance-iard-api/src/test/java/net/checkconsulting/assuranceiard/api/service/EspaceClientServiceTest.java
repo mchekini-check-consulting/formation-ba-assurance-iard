@@ -32,6 +32,7 @@ import net.checkconsulting.assuranceiard.api.model.Document;
 import net.checkconsulting.assuranceiard.api.model.DossierSouscription;
 import net.checkconsulting.assuranceiard.api.model.Droit;
 import net.checkconsulting.assuranceiard.api.model.Facture;
+import net.checkconsulting.assuranceiard.api.model.MandatSepa;
 import net.checkconsulting.assuranceiard.api.model.Profil;
 import net.checkconsulting.assuranceiard.api.model.Rubrique;
 import net.checkconsulting.assuranceiard.api.model.Sinistre;
@@ -76,6 +77,7 @@ class EspaceClientServiceTest {
         compte = new Compte();
         compte.setId(7L);
         compte.setPrenom("Camille");
+        compte.setNom("Durand");
         compte.setProfil(Profil.ASSURE);
         when(sessions.compteConnecte(JETON)).thenReturn(compte);
         autoriser(Rubrique.CONTRATS, Rubrique.DEVIS, Rubrique.SINISTRES);
@@ -98,6 +100,10 @@ class EspaceClientServiceTest {
         contrat.setAdresseLogement("1 rue de la Recette");
         contrat.setCodePostal("75011");
         contrat.setVille("Paris");
+        contrat.setTypeLogement("appartement");
+        MandatSepa mandat = new MandatSepa();
+        mandat.setIbanMasque("•••• 0189");
+        contrat.setMandatSepa(mandat);
         contrat.setFranchise(new BigDecimal("300.00"));
         contrat.setCotisationMensuelle(new BigDecimal("18.50"));
         contrat.setCotisationAnnuelle(new BigDecimal("222.00"));
@@ -139,13 +145,15 @@ class EspaceClientServiceTest {
         when(contrats.duClient(compte)).thenReturn(List.of(habitation(), auto(3L, "AE-RECETTE-A03", "ACTIF"), resilie));
 
         assertThat(service.contrats(JETON)).containsExactly(
-                new ContratResumeResponse(REFERENCE, "AE-RECETTE-1", "HABITATION", "ACTIF",
-                        "1 rue de la Recette, 75011 Paris", new BigDecimal("18.50"), LocalDate.of(2026, 1, 10),
-                        LocalDate.of(2027, 1, 10), null),
-                new ContratResumeResponse(null, "AE-RECETTE-A03", "AUTO", "ACTIF", "Renault Clio · AB-003-CD",
-                        new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), LocalDate.of(2027, 9, 25), null),
-                new ContratResumeResponse(null, "AE-RECETTE-A09", "AUTO", "RESILIE", "Renault Clio · AB-003-CD",
-                        new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), null, LocalDate.of(2026, 11, 19)));
+                new ContratResumeResponse(REFERENCE, "AE-RECETTE-1", "HABITATION", "ACTIF", "confort",
+                        "1 rue de la Recette, 75011 Paris", "appartement", "Paris", new BigDecimal("18.50"),
+                        LocalDate.of(2026, 1, 10), LocalDate.of(2027, 1, 10), null, "•••• 0189"),
+                new ContratResumeResponse(null, "AE-RECETTE-A03", "AUTO", "ACTIF", "TR", "Renault Clio · AB-003-CD", null,
+                        null, new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), LocalDate.of(2027, 9, 25), null,
+                        null),
+                new ContratResumeResponse(null, "AE-RECETTE-A09", "AUTO", "RESILIE", "TR", "Renault Clio · AB-003-CD", null,
+                        null, new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), null, LocalDate.of(2026, 11, 19),
+                        null));
     }
 
     @Test
@@ -195,6 +203,7 @@ class EspaceClientServiceTest {
         TableauDeBordResponse tableau = service.tableauDeBord(JETON);
 
         assertThat(tableau.prenom()).isEqualTo("Camille");
+        assertThat(tableau.nom()).isEqualTo("Durand");
         assertThat(tableau.contrats()).extracting(ContratResumeResponse::numero)
                 .containsExactly("AE-RECETTE-1", "AE-RECETTE-A03");
         assertThat(tableau.devisVisibles()).isTrue();

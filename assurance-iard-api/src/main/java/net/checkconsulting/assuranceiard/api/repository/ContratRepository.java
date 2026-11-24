@@ -23,14 +23,14 @@ public interface ContratRepository extends JpaRepository<Contrat, Long> {
     /** US-18 : tous les contrats du client, habitation et auto, rattachés par contrat.compte_id. */
     @LogMetier
     @Query("""
-            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier
+            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier LEFT JOIN FETCH c.mandatSepa
             WHERE c.compte = :compte ORDER BY c.dateCreation DESC, c.id DESC""")
     List<Contrat> duClient(@Param("compte") Compte compte);
 
     /** US-18 : fiche contrat, identifiée par son numéro. */
     @LogMetier
     @Query("""
-            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier
+            SELECT c FROM Contrat c LEFT JOIN FETCH c.vehicule LEFT JOIN FETCH c.dossier LEFT JOIN FETCH c.mandatSepa
             WHERE c.numero = :numero""")
     Optional<Contrat> parNumero(@Param("numero") String numero);
 

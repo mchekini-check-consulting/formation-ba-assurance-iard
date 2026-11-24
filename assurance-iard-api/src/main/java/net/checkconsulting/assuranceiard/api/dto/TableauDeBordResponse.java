@@ -11,6 +11,7 @@ import java.util.List;
  */
 public record TableauDeBordResponse(
         String prenom,
+        String nom,
         List<ContratResumeResponse> contrats,
         boolean devisVisibles,
         List<Devis> devisEnCours,

@@ -213,11 +213,12 @@ class ContratResourceTest {
     @Test
     void us04EtUs18ListeMesContratsHabitationEtAuto() throws Exception {
         when(espaceClientService.contrats(JETON)).thenReturn(List.of(
-                new ContratResumeResponse(REFERENCE, "AE-2026-000001", "HABITATION", "ACTIF",
-                        "12 rue des Lilas, 75001 Paris", new BigDecimal("18.50"), LocalDate.of(2026, 12, 1),
-                        LocalDate.of(2027, 12, 1), null),
-                new ContratResumeResponse(null, "AE-RECETTE-A03", "AUTO", "ACTIF", "Renault Clio · AB-003-CD",
-                        new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), LocalDate.of(2027, 9, 25), null)));
+                new ContratResumeResponse(REFERENCE, "AE-2026-000001", "HABITATION", "ACTIF", "confort",
+                        "12 rue des Lilas, 75001 Paris", "appartement", "Paris", new BigDecimal("18.50"),
+                        LocalDate.of(2026, 12, 1), LocalDate.of(2027, 12, 1), null, "•••• 0189"),
+                new ContratResumeResponse(null, "AE-RECETTE-A03", "AUTO", "ACTIF", "TR", "Renault Clio · AB-003-CD", null,
+                        null, new BigDecimal("45.00"), LocalDate.of(2026, 9, 25), LocalDate.of(2027, 9, 25), null,
+                        "•••• 7788")));
 
         mockMvc.perform(get("/contrats").header(HttpHeaders.AUTHORIZATION, JETON))
                 .andExpect(status().isOk())

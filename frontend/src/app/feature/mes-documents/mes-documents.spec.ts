@@ -24,6 +24,13 @@ describe('MesDocuments (US-04, AC1)', () => {
     fixture.detectChanges();
   };
 
+  it('US-18 : n’a plus son propre en-tête (le cadre commun est apporté par la route)', () => {
+    repondre([]);
+    expect(page.querySelector('header')).toBeNull();
+    expect(page.querySelector('main')).toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('liste mes documents avec un lien pour les ouvrir', () => {
     expect(page.textContent).toContain('Chargement de vos documents');
     repondre([{ id: 5, referenceDevis: 'r', categorie: 'identite', typeDocument: 'passeport', nomFichier: 'p.pdf', typeFichier: 'pdf', taille: 3 }]);

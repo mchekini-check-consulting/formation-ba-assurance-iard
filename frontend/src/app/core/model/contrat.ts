@@ -58,13 +58,19 @@ export interface ContratResume {
   numero: string;
   produit: Produit;
   statut: StatutContrat;
+  formule: string | null;
   /** Logement (adresse) ou véhicule (marque, modèle, immatriculation), en une ligne. */
   bienAssure: string | null;
+  /** Habitation : type de logement et ville (titre « Appartement · Créteil ») ; null pour l'auto. */
+  typeLogement: string | null;
+  ville: string | null;
   cotisationMensuelle: number;
   dateEffet: string;
   /** Échéance annuelle ; null si le contrat se termine avant. */
   dateEcheance: string | null;
   dateFin: string | null;
+  /** IBAN du mandat, toujours masqué (« •••• 4821 »). */
+  ibanMasque: string | null;
 }
 
 /** US-18, AC3 : document téléchargeable par /documents-contrat/{id}. */
