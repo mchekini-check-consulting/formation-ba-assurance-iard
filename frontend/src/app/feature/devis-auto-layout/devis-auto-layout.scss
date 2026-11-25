@@ -1,0 +1,195 @@
+:host {
+  display: contents;
+}
+
+/* ─── SKIP LINK ───────────────────────────────────────────────── */
+.evitement {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--rouge);
+  color: #fff;
+  border-radius: 8px;
+
+  &:focus {
+    top: 1rem;
+  }
+}
+
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ─── EN-TÊTE ─────────────────────────────────────────────────── */
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid var(--bordure);
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 14px 1.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--texte);
+
+  &__icone {
+    display: block;
+  }
+
+  &__nom {
+    font-size: 20px;
+    font-weight: 700;
+  }
+}
+
+.texte-connexion {
+  font-size: 14px;
+  color: var(--texte-discret);
+}
+
+.lien-connexion {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+  margin-left: 4px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.lien-quitter {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+/* ─── STEPPER 6 ÉTAPES ────────────────────────────────────────── */
+.progression {
+  border-top: 1px solid var(--bordure-claire);
+
+  &__liste {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__etape {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 10px 16px 10px 0;
+    border-bottom: 3px solid var(--bordure);
+    color: var(--texte-discret);
+    text-align: left;
+
+    &--active {
+      border-color: var(--rouge);
+
+      .progression__libelle {
+        color: var(--rouge);
+        font-weight: 700;
+      }
+
+      .progression__nom {
+        color: var(--rouge-fonce);
+        font-weight: 700;
+      }
+    }
+  }
+
+  &__libelle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--texte-discret);
+  }
+
+  &__nom {
+    font-size: 12px;
+    color: var(--texte-discret);
+  }
+}
+
+/* ─── SOUS-ÉTAPES ─────────────────────────────────────────────── */
+.sous-etapes {
+  background: var(--beige);
+  padding: 10px 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  &__liste {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.sous-etape {
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #fff;
+  border: 1.5px solid var(--gris);
+  color: var(--texte-doux);
+  white-space: nowrap;
+  text-decoration: none;
+
+  &--active {
+    background: var(--rouge);
+    border-color: var(--rouge);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &--terminee {
+    background: #f6e9e9;
+    border-color: var(--rouge);
+    color: var(--rouge);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--rose);
+    }
+  }
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .progression__etape:nth-child(n + 4) {
+    display: none;
+  }
+}

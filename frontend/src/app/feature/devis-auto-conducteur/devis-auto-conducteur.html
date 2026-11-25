@@ -1,0 +1,373 @@
+<iard-devis-auto-layout sousEtape="1.4"></iard-devis-auto-layout>
+
+<!-- CORPS DE PAGE -->
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <!-- TITRE -->
+      <div class="titre-zone">
+        <h1 class="titre-page serif">Conducteurs et ant&#233;c&#233;dents</h1>
+        <p class="sous-titre-page">Quelques informations sur le conducteur habituel et l&#8217;historique du v&#233;hicule.</p>
+        <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+      </div>
+
+      <!-- GRILLE 2 COLONNES -->
+      <div class="grille-devis">
+
+        <!-- COLONNE FORMULAIRE -->
+        <div class="colonne-formulaire">
+          <form class="formulaire-conducteur" novalidate (submit)="continuer($event)">
+
+            <!-- ═══ CARTE 1 : CONDUCTEUR PRINCIPAL ═══ -->
+            <section class="carte" aria-labelledby="titre-conducteur">
+              <h2 id="titre-conducteur" class="carte-sous-titre serif">Le conducteur principal</h2>
+
+              <!-- Qui est le conducteur principal ? -->
+              <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurConducteurPrincipal()">
+                <span class="libelle-champ" id="label-conducteur">Qui est le conducteur principal&#160;?&#160;<span class="rouge">*</span></span>
+                <div class="choix-grille-4" role="group" aria-labelledby="label-conducteur">
+                  @for (opt of conducteurs; track opt.valeur) {
+                    <button
+                      type="button"
+                      class="choix-btn"
+                      [class.choix-btn--actif]="conducteurPrincipal() === opt.valeur"
+                      [attr.aria-pressed]="conducteurPrincipal() === opt.valeur"
+                      (click)="conducteurPrincipal.set(opt.valeur)"
+                    >{{ opt.libelle }}</button>
+                  }
+                </div>
+                @if (erreurConducteurPrincipal()) {
+                  <p class="erreur" role="alert">{{ erreurConducteurPrincipal() }}</p>
+                }
+              </div>
+
+              <!-- Message info selon le type de conducteur (non-moi) -->
+              @if (messageInfoConducteur()) {
+                <div class="message-info" role="note">
+                  <p class="message-info__texte">{{ messageInfoConducteur() }}</p>
+                </div>
+              }
+
+              <!-- Message mineur (bloquant) -->
+              @if (conducteurEstMineur()) {
+                <div class="message-info message-info--bloquant" role="alert">
+                  <p class="message-info__texte">
+                    Le conducteur principal est mineur&#160;: la souscription en ligne n&#8217;est pas possible.
+                    Il devra attendre ses 18&#160;ans ou vous devez choisir un autre conducteur principal.
+                  </p>
+                </div>
+              }
+
+              <!-- Champs identité (masqués si conducteur bloquant) -->
+              @if (!conducteurEstMineur()) {
+
+                <!-- Ligne : date de naissance + date permis + bonus-malus -->
+                <div class="champ-grille-3">
+
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurDateNaissance()">
+                    <label class="libelle-champ" for="date-naissance">Date de naissance&#160;<span class="rouge">*</span></label>
+                    <input
+                      id="date-naissance"
+                      type="text"
+                      class="saisie"
+                      placeholder="JJ/MM/AAAA"
+                      [value]="dateNaissance()"
+                      (input)="saisirDateNaissance($event)"
+                      maxlength="10"
+                      inputmode="numeric"
+                      [attr.aria-invalid]="!!erreurDateNaissance() || null"
+                    />
+                    @if (erreurDateNaissance()) {
+                      <p class="erreur" role="alert">{{ erreurDateNaissance() }}</p>
+                    }
+                  </div>
+
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurDatePermis()">
+                    <label class="libelle-champ" for="date-permis">Date du permis&#160;<span class="rouge">*</span></label>
+                    <input
+                      id="date-permis"
+                      type="text"
+                      class="saisie"
+                      placeholder="JJ/MM/AAAA"
+                      [value]="datePermis()"
+                      (input)="saisirDatePermis($event)"
+                      maxlength="10"
+                      inputmode="numeric"
+                      [attr.aria-invalid]="!!erreurDatePermis() || null"
+                    />
+                    @if (erreurDatePermis()) {
+                      <p class="erreur" role="alert">{{ erreurDatePermis() }}</p>
+                    }
+                  </div>
+
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurBonusMalus()">
+                    <label class="libelle-champ" for="bonus-malus">Coefficient bonus-malus&#160;<span class="rouge">*</span></label>
+                    <input
+                      id="bonus-malus"
+                      type="text"
+                      inputmode="decimal"
+                      class="saisie saisie--bm"
+                      placeholder="Ex.&#160;0,68"
+                      [value]="bonusMalus() ?? ''"
+                      (input)="saisirBonusMalus($event)"
+                      [attr.aria-invalid]="!!erreurBonusMalus() || null"
+                    />
+                    <span class="aide">1,00&#160;= sans bonus ni malus</span>
+                    @if (erreurBonusMalus()) {
+                      <p class="erreur" role="alert">{{ erreurBonusMalus() }}</p>
+                    }
+                  </div>
+
+                </div>
+
+                <!-- Années d'assurance continue -->
+                <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurAnneesAssurance()">
+                  <label class="libelle-champ" for="annees-assurance">Ann&#233;es d&#39;assurance continue&#160;<span class="rouge">*</span></label>
+                  <select
+                    id="annees-assurance"
+                    class="saisie saisie--select"
+                    (change)="choisirAnneesAssurance($event)"
+                    [attr.aria-invalid]="!!erreurAnneesAssurance() || null"
+                  >
+                    <option value="">S&#233;lectionnez</option>
+                    @for (t of tranchesAnnees; track t.valeur) {
+                      <option [value]="t.valeur" [selected]="anneesAssurance() === t.valeur">{{ t.libelle }}</option>
+                    }
+                  </select>
+                  @if (erreurAnneesAssurance()) {
+                    <p class="erreur" role="alert">{{ erreurAnneesAssurance() }}</p>
+                  }
+                </div>
+
+                <!-- Conduite accompagnée (conditionnel : permis < 3 ans) -->
+                @if (montrerConduiteAccompagnee()) {
+                  <div class="champ-formulaire champ-accompagnee">
+                    <label class="libelle-champ interrupteur-label" for="conduite-accompagnee">
+                      <input
+                        id="conduite-accompagnee"
+                        type="checkbox"
+                        class="interrupteur"
+                        [checked]="conduiteAccompagnee()"
+                        (change)="conduiteAccompagnee.set(!conduiteAccompagnee())"
+                      />
+                      <span>Permis obtenu en conduite accompagn&#233;e (AAC)</span>
+                    </label>
+                    <p class="aide">Une surprime peut s&#8217;appliquer selon votre historique.</p>
+                  </div>
+                }
+
+              }
+            </section>
+
+            <!-- ═══ CARTE 2 : ANTÉCÉDENTS ═══ -->
+            @if (!conducteurEstMineur()) {
+              <section class="carte" aria-labelledby="titre-antecedents">
+                <h2 id="titre-antecedents" class="carte-sous-titre serif">Vos ant&#233;c&#233;dents</h2>
+
+                <div class="grille-antecedents">
+
+                  <!-- Sinistres responsables -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurSinistresResponsables()">
+                    <label class="libelle-champ" for="sinistres-responsables">Sinistres responsables (3&#160;ans)&#160;<span class="rouge">*</span></label>
+                    <select id="sinistres-responsables" class="saisie" (change)="choisirSinistresResponsables($event)"
+                      [attr.aria-invalid]="!!erreurSinistresResponsables() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      <option value="0" [selected]="nbSinistresResponsables() === 0">Aucun</option>
+                      <option value="1" [selected]="nbSinistresResponsables() === 1">1</option>
+                      <option value="2" [selected]="nbSinistresResponsables() === 2">2</option>
+                      <option value="3" [selected]="nbSinistresResponsables() === 3">3 ou plus</option>
+                    </select>
+                    @if (erreurSinistresResponsables()) {
+                      <p class="erreur" role="alert">{{ erreurSinistresResponsables() }}</p>
+                    }
+                  </div>
+
+                  <!-- Sinistres non responsables -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurSinistresNonResponsables()">
+                    <label class="libelle-champ" for="sinistres-non-responsables">Sinistres non responsables (3&#160;ans)&#160;<span class="rouge">*</span></label>
+                    <select id="sinistres-non-responsables" class="saisie" (change)="choisirSinistresNonResponsables($event)"
+                      [attr.aria-invalid]="!!erreurSinistresNonResponsables() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      <option value="0" [selected]="nbSinistresNonResponsables() === 0">Aucun</option>
+                      <option value="1" [selected]="nbSinistresNonResponsables() === 1">1</option>
+                      <option value="2" [selected]="nbSinistresNonResponsables() === 2">2</option>
+                      <option value="3" [selected]="nbSinistresNonResponsables() === 3">3 ou plus</option>
+                    </select>
+                    @if (erreurSinistresNonResponsables()) {
+                      <p class="erreur" role="alert">{{ erreurSinistresNonResponsables() }}</p>
+                    }
+                  </div>
+
+                  <!-- Résiliation assureur -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurResiliationAssureur()">
+                    <label class="libelle-champ" for="resiliation-assureur">R&#233;siliation par un assureur&#160;?&#160;<span class="rouge">*</span></label>
+                    <select id="resiliation-assureur" class="saisie" (change)="choisirResiliation($event)"
+                      [attr.aria-invalid]="!!erreurResiliationAssureur() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      @for (opt of optsResiliation; track opt.valeur) {
+                        <option [value]="opt.valeur" [selected]="resiliationAssureur() === opt.valeur">{{ opt.libelle }}</option>
+                      }
+                    </select>
+                    @if (erreurResiliationAssureur()) {
+                      <p class="erreur" role="alert">{{ erreurResiliationAssureur() }}</p>
+                    }
+                  </div>
+
+                  <!-- Suspension / annulation permis -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurSuspensionAnnulation()">
+                    <label class="libelle-champ" for="suspension-annulation">Suspension ou annulation du permis&#160;?&#160;<span class="rouge">*</span></label>
+                    <select id="suspension-annulation" class="saisie" (change)="choisirSuspension($event)"
+                      [attr.aria-invalid]="!!erreurSuspensionAnnulation() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      <option value="NON" [selected]="suspensionAnnulation() === false">Non</option>
+                      <option value="OUI" [selected]="suspensionAnnulation() === true">Oui</option>
+                    </select>
+                    @if (erreurSuspensionAnnulation()) {
+                      <p class="erreur" role="alert">{{ erreurSuspensionAnnulation() }}</p>
+                    }
+                  </div>
+
+                  <!-- Condamnation alcool / stupéfiants -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurCondamnationAlcool()">
+                    <label class="libelle-champ" for="condamnation-alcool">Condamnation alcool&#160;/ stup&#233;fiants&#160;?&#160;<span class="rouge">*</span></label>
+                    <select id="condamnation-alcool" class="saisie" (change)="choisirCondamnation($event)"
+                      [attr.aria-invalid]="!!erreurCondamnationAlcool() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      <option value="NON" [selected]="condamnationAlcool() === false">Non</option>
+                      <option value="OUI" [selected]="condamnationAlcool() === true">Oui</option>
+                    </select>
+                    @if (erreurCondamnationAlcool()) {
+                      <p class="erreur" role="alert">{{ erreurCondamnationAlcool() }}</p>
+                    }
+                  </div>
+
+                  <!-- Assuré véhicule -->
+                  <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurAssureVehicule()">
+                    <label class="libelle-champ" for="assure-vehicule">&#201;tiez-vous assur&#233;(e) pour ce v&#233;hicule&#160;?&#160;<span class="rouge">*</span></label>
+                    <select id="assure-vehicule" class="saisie" (change)="choisirAssureVehicule($event)"
+                      [attr.aria-invalid]="!!erreurAssureVehicule() || null">
+                      <option value="">S&#233;lectionnez</option>
+                      @for (opt of optsAssureVehicule; track opt.valeur) {
+                        <option [value]="opt.valeur" [selected]="assureVehicule() === opt.valeur">{{ opt.libelle }}</option>
+                      }
+                    </select>
+                    @if (erreurAssureVehicule()) {
+                      <p class="erreur" role="alert">{{ erreurAssureVehicule() }}</p>
+                    }
+                  </div>
+
+                </div>
+
+                <!-- Bloc Hamon conditionnel (loi Hamon) -->
+                @if (assureVehicule() === 'OUI_PLUS_UN_AN') {
+                  <div class="bloc-hamon">
+                    <p class="aide-hamon">
+                      Gr&#226;ce &#224; la loi Hamon, nous nous chargeons de r&#233;silier votre contrat actuel.
+                      Indiquez les informations ci-dessous.
+                    </p>
+                    <div class="champ-grille-2">
+
+                      <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurAncienAssureur()">
+                        <label class="libelle-champ" for="assureur-actuel">Assureur actuel&#160;<span class="rouge">*</span></label>
+                        <input
+                          id="assureur-actuel"
+                          type="text"
+                          class="saisie"
+                          placeholder="Ex.&#160;AXA"
+                          [value]="ancienAssureur()"
+                          (input)="ancienAssureur.set($any($event.target).value)"
+                          [attr.aria-invalid]="!!erreurAncienAssureur() || null"
+                        />
+                        @if (erreurAncienAssureur()) {
+                          <p class="erreur" role="alert">{{ erreurAncienAssureur() }}</p>
+                        }
+                      </div>
+
+                      <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurAncienNumeroContrat()">
+                        <label class="libelle-champ" for="numero-contrat-actuel">Num&#233;ro de contrat actuel&#160;<span class="rouge">*</span></label>
+                        <input
+                          id="numero-contrat-actuel"
+                          type="text"
+                          class="saisie"
+                          placeholder="Ex.&#160;1234567"
+                          [value]="ancienNumeroContrat()"
+                          (input)="ancienNumeroContrat.set($any($event.target).value)"
+                          [attr.aria-invalid]="!!erreurAncienNumeroContrat() || null"
+                        />
+                        @if (erreurAncienNumeroContrat()) {
+                          <p class="erreur" role="alert">{{ erreurAncienNumeroContrat() }}</p>
+                        }
+                      </div>
+
+                    </div>
+                  </div>
+                }
+
+                <!-- Mention légale -->
+                <p class="mention-legale">
+                  Ces informations sont utilis&#233;es uniquement pour &#233;tablir votre devis. Elles ne seront
+                  transmises &#224; aucun tiers sans votre accord.
+                </p>
+
+              </section>
+            }
+
+            <!-- Alerte condition bloquante (hors mineur déjà affiché dans carte 1) -->
+            @if (conditionBloquante() && !conducteurEstMineur()) {
+              <div class="alerte-bloquante" role="alert">
+                <p class="alerte-bloquante__titre">Souscription impossible en ligne</p>
+                <p class="alerte-bloquante__texte">{{ conditionBloquante() }}</p>
+                <p class="alerte-bloquante__aide">Vous pouvez nous contacter pour &#233;tudier votre situation.</p>
+              </div>
+            }
+
+            <!-- Erreur serveur -->
+            @if (erreurServeur()) {
+              <div class="alerte-bloquante" role="alert">
+                <p class="alerte-bloquante__texte">{{ erreurServeur() }}</p>
+              </div>
+            }
+
+            <!-- BAS DE PAGE -->
+            <div class="bas-page">
+              <a class="lien-bas-retour" routerLink="/devis-auto/usage">&#8592; Retour &#224; l&#39;usage</a>
+              @if (conditionBloquante() || conducteurEstMineur()) {
+                <button type="button" class="btn-rappel">&#128222; &#202;tre rappel&#233;(e) par un conseiller</button>
+              } @else {
+                <button type="submit" class="btn-suivant" [disabled]="enregistrement()">
+                  @if (enregistrement()) { Enregistrement&#8230; } @else { Continuer vers mes besoins }
+                </button>
+              }
+            </div>
+
+          </form>
+        </div>
+
+        <!-- ENCART TARIF -->
+        <aside class="encart-tarif" aria-label="Tarif estim&#233;">
+          <div class="encart-tarif__conteneur">
+            <p class="encart-tarif__titre">Votre tarif</p>
+            <p class="encart-tarif__formule">Formule Tiers</p>
+
+            @if (conditionBloquante()) {
+              <p class="encart-tarif__conseiller">Un conseiller vous proposera un tarif adapt&#233;.</p>
+            } @else if (calculEnCours()) {
+              <p class="encart-tarif__prix-attente">&mdash;</p>
+            } @else if (tarif() && tarif()!.tarifable && tarif()!.prix.length > 0) {
+              <p class="encart-tarif__prix">
+                <span class="encart-tarif__des">d&#232;s</span>
+                <strong>{{ formaterPrix(tarif()!.prix[0].mensuel) }}&nbsp;&#8364;</strong>
+                <span>/&nbsp;mois</span>
+              </p>
+              <p class="encart-tarif__aide">Estimation mise &#224; jour en temps r&#233;el</p>
+            } @else {
+              <p class="encart-tarif__attente">Renseignez le formulaire pour voir votre tarif.</p>
+            }
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </div>
+</main>

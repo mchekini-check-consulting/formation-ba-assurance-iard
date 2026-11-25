@@ -34,6 +34,7 @@ describe('Landing', () => {
   const annonce = (): string | undefined => page.querySelector('[role="status"]')?.textContent?.trim();
 
   beforeEach(() => {
+    sessionStorage.removeItem('devis-auto-mode');
     TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
     router = TestBed.inject(Router);
     vi.spyOn(router, 'navigate').mockResolvedValue(true);
@@ -287,7 +288,7 @@ describe('Landing', () => {
       it('clic sans choix → message erreur, pas de navigation', () => {
         cliquer('Auto');
         cliquer('Commencer mon devis auto');
-        expect(page.querySelector('#erreur-mode-auto')?.textContent).toContain('Choisissez une option');
+        expect(page.querySelector('#erreur-mode-auto')?.textContent).toContain('Choisissez comment retrouver votre véhicule');
         expect(router.navigate).not.toHaveBeenCalled();
       });
 
@@ -346,6 +347,21 @@ describe('Landing', () => {
         const radiogroup = page.querySelector('[role="radiogroup"]')!;
         expect(radiogroup.getAttribute('aria-labelledby')).toBe('libelle-mode-auto');
         expect(page.querySelectorAll('#panneau-auto [role="radio"]')).toHaveLength(2);
+      });
+
+      it('la tuile choisie reste sélectionnée si l\'utilisateur revient à l\'accueil', () => {
+        sessionStorage.setItem('devis-auto-mode', 'marque');
+        TestBed.resetTestingModule();
+        TestBed.configureTestingModule({ providers: [provideRouter([]), provideHttpClient(), provideHttpClientTesting()] });
+        const accueil = TestBed.createComponent(Landing);
+        accueil.detectChanges();
+        const accueilPage = accueil.nativeElement as HTMLElement;
+
+        const btnMarque = Array.from(accueilPage.querySelectorAll('[role="radio"]')).find(
+          (b) => b.textContent?.includes('Je choisis par marque'),
+        );
+        expect(btnMarque?.getAttribute('aria-checked')).toBe('true');
+        sessionStorage.removeItem('devis-auto-mode');
       });
     });
   });

@@ -1,4 +1,8 @@
 {
+  "/api/moteurtarifaire": {
+    "target": "http://localhost:8081",
+    "pathRewrite": { "^/api/moteurtarifaire": "" }
+  },
   "/api/assurance-iard-api": {
     "target": "http://localhost:8080",
     "pathRewrite": { "^/api/assurance-iard-api": "" }

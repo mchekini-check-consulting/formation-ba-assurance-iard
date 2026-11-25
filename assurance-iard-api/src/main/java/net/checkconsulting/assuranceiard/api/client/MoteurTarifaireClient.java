@@ -3,6 +3,7 @@ package net.checkconsulting.assuranceiard.api.client;
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
+import net.checkconsulting.assuranceiard.api.dto.CriteresEligibiliteResponse;
 import net.checkconsulting.assuranceiard.api.dto.TarifAutoResponse;
 import net.checkconsulting.assuranceiard.api.dto.TarifRequest;
 import net.checkconsulting.assuranceiard.api.dto.TarifResponse;
@@ -26,6 +27,9 @@ public interface MoteurTarifaireClient {
 
     @PostMapping("/v1/tarifs/auto")
     TarifAutoResponse calculerAuto(@RequestBody DemandeMoteurAuto demande);
+
+    @GetMapping("/v1/tarifs/auto/eligibilite")
+    CriteresEligibiliteResponse criteresEligibiliteAuto();
 
     /** Corps envoyé à POST /v1/tarifs/auto du moteurtarifaire. */
     record DemandeMoteurAuto(
