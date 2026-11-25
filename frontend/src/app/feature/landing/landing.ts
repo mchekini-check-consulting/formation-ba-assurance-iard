@@ -74,7 +74,7 @@ export class Landing {
   protected readonly erreurChoix = computed(() => this.tentative() && (!this.statut() || !this.typeLogement()));
   protected readonly erreurCodePostal = computed(() => this.tentative() && !codePostalValide(this.codePostal()));
 
-  protected readonly modeAuto = signal<ModeAuto | null>(null);
+  protected readonly modeAuto = signal<ModeAuto | null>(Landing.getModeInitial());
   private readonly tentativeAuto = signal(false);
   protected readonly erreurModeAuto = computed(() => this.tentativeAuto() && !this.modeAuto());
 
@@ -226,10 +226,16 @@ export class Landing {
     event.preventDefault();
     this.tentativeAuto.set(true);
     if (this.erreurModeAuto()) return;
+    sessionStorage.setItem('devis-auto-mode', this.modeAuto()!);
     void this.router.navigate(['/devis-auto/vehicule'], {
       state: { mode: this.modeAuto() },
       queryParams: { mode: this.modeAuto() },
     });
+  }
+
+  private static getModeInitial(): ModeAuto | null {
+    const saved = sessionStorage.getItem('devis-auto-mode');
+    return saved === 'plaque' || saved === 'marque' ? saved : null;
   }
 
   protected gererToucheChoixAuto(event: KeyboardEvent): void {

@@ -199,4 +199,11 @@ public class GestionErreurs {
     public ProblemDetail accesNonAutorise(AccesNonAutoriseException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.FORBIDDEN, exception.getMessage());
     }
+
+    @ExceptionHandler(ProfilBloqueException.class)
+    public ProblemDetail profilBloque(ProfilBloqueException exception) {
+        ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
+        probleme.setProperty(PROP_MOTIF, exception.getMotif());
+        return probleme;
+    }
 }

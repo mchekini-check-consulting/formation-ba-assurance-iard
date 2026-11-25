@@ -1,0 +1,248 @@
+<iard-devis-auto-layout sousEtape="1.1"></iard-devis-auto-layout>
+
+<!-- CORPS DE PAGE -->
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+
+    <!-- CARTE UNIQUE -->
+    <div class="carte-principale">
+
+      <h1 class="carte-titre serif">Retrouvez votre véhicule</h1>
+      <p class="carte-sous-titre">Par sa plaque en quelques secondes, ou par sa marque.</p>
+      <p class="carte-note"><span style="color:var(--rouge)">*</span> Votre plaque ou votre marque est obligatoire</p>
+
+      @if (afficherBlocPlaque()) {
+
+        <!-- ═══════════════ MODE PLAQUE ═══════════════ -->
+        <form novalidate (submit)="chercherParPlaque($event)">
+          <div class="bloc-plaque">
+            <label class="label-plaque" for="plaque">Par immatriculation, c'est plus rapide</label>
+            <input
+              #champPlaque
+              id="plaque"
+              class="saisie saisie--plaque-large"
+              [class.saisie--erreur]="tentative() && !immatriculation().trim()"
+              type="text"
+              [value]="immatriculation()"
+              (input)="saisirPlaque($event)"
+              placeholder="AA-123-AA"
+              autocomplete="off"
+              [attr.aria-invalid]="(tentative() && !immatriculation().trim()) || null"
+            />
+            <p class="aide-plaque">Elle figure en case A de votre carte grise.</p>
+            @if (tentative() && !immatriculation().trim()) {
+              <p class="erreur" role="alert">Saisissez votre plaque d'immatriculation.</p>
+            }
+            <button type="submit" class="btn-rechercher" [disabled]="envoi()">
+              {{ envoi() ? 'Recherche…' : 'Rechercher' }}
+            </button>
+          </div>
+        </form>
+
+        <!-- Résultat SIV -->
+        @if (resultatSiv(); as siv) {
+          @if (siv.statut === 'TROUVE') {
+            <div class="alerte alerte--succes" role="status">
+              <p><strong>Véhicule trouvé ✓</strong></p>
+              <p>{{ siv.marque }} {{ siv.modele }}@if (siv.annee) { – {{ siv.annee }}}@if (siv.energie) { – {{ siv.energie }}}</p>
+              <div>
+                <button type="button" class="btn" (click)="confirmerVehiculeSiv(siv)">
+                  Continuer avec ce véhicule
+                </button>
+              </div>
+            </div>
+          }
+          @if (siv.statut === 'INCONNU') {
+            <div class="alerte alerte--info" role="alert">
+              <p>Ce numéro de plaque n'est pas reconnu. Sélectionnez votre véhicule par marque ci-dessous.</p>
+            </div>
+          }
+          @if (siv.statut === 'ERREUR' || siv.statut === 'DELAI') {
+            <div class="alerte alerte--info" role="alert">
+              <p>Le service de consultation de plaques est temporairement indisponible. Sélectionnez votre véhicule par marque ci-dessous.</p>
+            </div>
+          }
+        }
+
+        @if (erreurReseau()) {
+          <p class="erreur" role="alert">Une erreur est survenue. Veuillez réessayer.</p>
+        }
+
+        <p class="note-bas">Votre plaque sert uniquement à identifier votre véhicule (recherche simulée dans le référentiel des véhicules).</p>
+
+        <p class="note-bas">
+          <button type="button" class="lien-plaque" (click)="basculerVers('marque')">Je ne connais pas ma plaque →</button>
+        </p>
+
+      } @else {
+
+        <!-- ═══════════════ MODE MARQUE ═══════════════ -->
+        <div class="grille-marques">
+          @for (marque of MARQUES_VEDETTES; track marque) {
+            <button
+              type="button"
+              class="tuile-marque"
+              [class.tuile-marque--active]="marqueSelectionnee() === marque && !autreMarqueActif()"
+              (click)="selectionnerMarqueTile(marque)"
+            >
+              <span class="tuile-marque__initiale">{{ marque[0] }}</span>
+              <span class="tuile-marque__nom">{{ marque }}</span>
+            </button>
+          }
+          <button
+            type="button"
+            class="tuile-marque"
+            [class.tuile-marque--active]="autreMarqueActif()"
+            (click)="activerAutreMarque()"
+            aria-label="Autre marque"
+          >
+            <span class="tuile-marque__initiale tuile-marque__initiale--neutre">•••</span>
+            <span class="tuile-marque__nom">Autre marque</span>
+          </button>
+        </div>
+
+        <!-- RECHERCHE AUTRE MARQUE -->
+        @if (autreMarqueActif() && !marqueSelectionnee()) {
+          <div class="champ recherche-marque">
+            <label class="libelle" for="recherche-marque">Tapez votre marque</label>
+            <input
+              #champRecherche
+              id="recherche-marque"
+              type="text"
+              class="saisie"
+              placeholder="Tapez votre marque…"
+              [value]="rechercheMarque()"
+              (input)="saisirRecherche($event)"
+              (keydown)="naviguerSuggestions($event)"
+              autocomplete="off"
+              role="combobox"
+              aria-expanded="true"
+              aria-autocomplete="list"
+            />
+            @if (suggestionsVisibles().length > 0) {
+              <ul class="suggestions" role="listbox" aria-label="Marques disponibles">
+                @for (s of suggestionsVisibles(); track s; let i = $index) {
+                  <li
+                    role="option"
+                    class="suggestion"
+                    [class.suggestion--active]="i === indexSuggestion()"
+                    (click)="choisirSuggestion(s)"
+                  >{{ s }}</li>
+                }
+              </ul>
+            } @else if (rechercheMarque().length >= 2) {
+              <p class="erreur-marque" role="alert">
+                Marque introuvable.
+                <button type="button" class="lien-plaque" (click)="basculerVers('plaque')">Recherchez par plaque</button>
+                ou demandez à être rappelé.
+              </p>
+            }
+          </div>
+        }
+
+        @if (marqueSelectionnee() && nomModeles().length > 0) {
+
+          <!-- Modèle -->
+          <div class="champ">
+            <span class="libelle">Modèle&nbsp;<span style="color:var(--rouge)">*</span></span>
+            @if (nomModeles().length <= 8) {
+              <div class="pills-groupe" role="group" aria-label="Modèle">
+                @for (nom of nomModeles(); track nom) {
+                  <button type="button" class="pill" [class.pill--active]="modeleNomSelectionne() === nom" (click)="choisirModeleNomPill(nom)">{{ nom }}</button>
+                }
+              </div>
+            } @else {
+              <select id="modele-nom" class="saisie" (change)="choisirModeleNom($event)">
+                <option value="">Sélectionnez un modèle</option>
+                @for (nom of nomModeles(); track nom) {
+                  <option [value]="nom">{{ nom }}</option>
+                }
+              </select>
+            }
+          </div>
+
+          <!-- Énergie (après choix du modèle) -->
+          @if (modeleNomSelectionne() && energiesDisponibles().length > 0) {
+            <div class="champ">
+              <span class="libelle">Énergie&nbsp;<span style="color:var(--rouge)">*</span></span>
+              @if (energiesDisponibles().length <= 8) {
+                <div class="pills-groupe" role="group" aria-label="Énergie">
+                  @for (en of energiesDisponibles(); track en) {
+                    <button type="button" class="pill" [class.pill--active]="energieSelectionnee() === en" (click)="choisirEnergiePill(en)">{{ en }}</button>
+                  }
+                </div>
+              } @else {
+                <select id="energie" class="saisie" (change)="choisirEnergie($event)">
+                  <option value="">Sélectionnez une énergie</option>
+                  @for (en of energiesDisponibles(); track en) {
+                    <option [value]="en">{{ en }}</option>
+                  }
+                </select>
+              }
+            </div>
+          }
+
+          <!-- Version (après choix de l'énergie, si des versions existent) -->
+          @if (energieSelectionnee() && versionsDisponibles().length > 0) {
+            <div class="champ">
+              <span class="libelle">Version&nbsp;<span style="color:var(--rouge)">*</span></span>
+              @if (versionsDisponibles().length <= 8) {
+                <div class="pills-groupe" role="group" aria-label="Version">
+                  @for (v of versionsDisponibles(); track v) {
+                    <button type="button" class="pill" [class.pill--active]="versionSelectionnee() === v" (click)="choisirVersionPill(v)">{{ v }}</button>
+                  }
+                </div>
+              } @else {
+                <select id="version" class="saisie" (change)="choisirVersion($event)">
+                  <option value="">Sélectionnez une version</option>
+                  @for (v of versionsDisponibles(); track v) {
+                    <option [value]="v">{{ v }}</option>
+                  }
+                </select>
+              }
+            </div>
+          }
+
+          <!-- Année (toujours en liste déroulante) -->
+          @if (energieSelectionnee() && anneesDisponibles().length > 0) {
+            <div class="champ">
+              <label class="libelle" for="annee">Année&nbsp;<span style="color:var(--rouge)">*</span></label>
+              <select id="annee" class="saisie" (change)="choisirAnnee($event)">
+                <option value="">Sélectionnez une année</option>
+                @for (a of anneesDisponibles(); track a) {
+                  <option [value]="a">{{ a }}</option>
+                }
+              </select>
+            </div>
+          }
+
+          <label class="case-non-immat">
+            <input type="checkbox" [checked]="nonImmatricule()" (change)="nonImmatricule.set(!nonImmatricule())" />
+            Mon véhicule n'est pas encore immatriculé
+          </label>
+
+          @if (modeleVehiculeChoisi()) {
+            <button type="button" class="btn btn--large btn-continuer" (click)="confirmerVehiculeReferentiel()">
+              Continuer avec ce véhicule
+            </button>
+          }
+
+        } @else if (marqueSelectionnee() && nomModeles().length === 0 && !chargementReferentiel()) {
+          <p class="texte-discret">Aucun modèle disponible pour cette marque dans le référentiel.</p>
+        }
+
+        <p class="note-bas">
+          <button type="button" class="lien-plaque" (click)="basculerVers('plaque')">Je connais ma plaque →</button>
+        </p>
+
+      }
+
+    </div>
+
+  </div>
+</main>
+
+<!-- PIED DE PAGE -->
+<footer class="pied-de-page">
+  <a class="lien-retour" routerLink="/">← Retour à l'accueil</a>
+</footer>

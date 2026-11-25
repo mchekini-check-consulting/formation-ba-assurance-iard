@@ -1,6 +1,8 @@
 services:
   postgres:
     image: postgres:16
+
+
     container_name: assurance-iard-postgres
     environment:
       POSTGRES_DB: assurance_iard

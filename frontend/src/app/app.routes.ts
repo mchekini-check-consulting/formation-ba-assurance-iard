@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import { droitGuard } from './core/guards/droit.guard';
+import { achatRenseigneGuard, conducteurRenseigneGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './core/guards/devis-auto.guard';
 import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
@@ -12,6 +13,10 @@ import {
 import { sessionGuard, verificationGuard } from './core/guards/session.guard';
 import { CompteCree } from './feature/compte-cree/compte-cree';
 import { Connexion } from './feature/connexion/connexion';
+import { DevisAutoAchat } from './feature/devis-auto-achat/devis-auto-achat';
+import { DevisAutoConducteur } from './feature/devis-auto-conducteur/devis-auto-conducteur';
+import { DevisAutoBesoins } from './feature/devis-auto-besoins/devis-auto-besoins';
+import { DevisAutoUsage } from './feature/devis-auto-usage/devis-auto-usage';
 import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
 import { DevisFormule } from './feature/devis-formule/devis-formule';
@@ -153,6 +158,30 @@ export const routes: Routes = [
     title: "Accès non autorisé – Assur'Easy",
   },
   { path: 'devis-auto/vehicule', component: DevisAutoVehicule, title: "Étape 1.1 – Retrouver mon véhicule – Assur'Easy" },
+  {
+    path: 'devis-auto/achat',
+    component: DevisAutoAchat,
+    canActivate: [vehiculeRenseigneGuard],
+    title: "Étape 1.2 – Achat et carte grise – Assur'Easy",
+  },
+  {
+    path: 'devis-auto/usage',
+    component: DevisAutoUsage,
+    canActivate: [achatRenseigneGuard],
+    title: "Étape 1.3 – Usage et stationnement – Assur'Easy",
+  },
+  {
+    path: 'devis-auto/conducteur',
+    component: DevisAutoConducteur,
+    canActivate: [usageRenseigneGuard],
+    title: "Étape 1.4 – Le conducteur principal – Assur'Easy",
+  },
+  {
+    path: 'devis-auto/besoins',
+    component: DevisAutoBesoins,
+    canActivate: [conducteurRenseigneGuard],
+    title: "Étape 2 – Mes besoins – Assur'Easy",
+  },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {
     path: 'devis/besoins',

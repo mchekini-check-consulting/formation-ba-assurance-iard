@@ -12,8 +12,8 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: d127c9e
-      qualif: d127c9e
+      dev: "3091245"
+      qualif: "3091245"
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -105,8 +105,8 @@ applications:
     # Garder une valeur par ligne, sans commentaire en fin de ligne : Kargo
     # remplace tout jusqu'à la fin de la ligne.
     tag:
-      dev: d127c9e
-      qualif: d127c9e
+      dev: 3ba9488
+      qualif: 3ba9488
       preprod: ""
       prod: ""
     containerPort: 8080
@@ -145,8 +145,8 @@ applications:
     type: backend
     image: 205493924920.dkr.ecr.eu-west-3.amazonaws.com/formation-ba-assurance-iard/moteurtarifaire
     tag:
-      dev: fa233e6
-      qualif: fa233e6
+      dev: 3ba9488
+      qualif: 3ba9488
       preprod: ""
       prod: ""
     containerPort: 8080

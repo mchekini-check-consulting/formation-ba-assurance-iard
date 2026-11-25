@@ -1,0 +1,546 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ─── CORPS ───────────────────────────────────────────────────── */
+.fond-beige {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 60px;
+}
+
+.contenu-etape {
+  margin: 32px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── TITRE DE PAGE ───────────────────────────────────────────── */
+.titre-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 26px;
+  color: var(--texte);
+}
+
+.sous-titre-page {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+}
+
+.note-champs {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.rouge {
+  color: var(--rouge);
+}
+
+/* ─── GRILLE 2 COLONNES ───────────────────────────────────────── */
+.grille-devis {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.colonne-formulaire {
+  min-width: 0;
+}
+
+/* ─── FORMULAIRE ──────────────────────────────────────────────── */
+.formulaire-conducteur {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── CARTE ───────────────────────────────────────────────────── */
+.carte {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--bordure-claire);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.carte-sous-titre {
+  margin: 0;
+  font-size: 18px;
+  color: var(--texte);
+}
+
+/* ─── CHAMP DU FORMULAIRE ─────────────────────────────────────── */
+.champ-formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &--erreur {
+    .saisie {
+      border-color: var(--rouge);
+    }
+  }
+}
+
+.libelle-champ {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+.saisie {
+  height: 44px;
+  border: 1.5px solid var(--gris);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--texte);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+
+  &:focus {
+    border-color: var(--rouge);
+  }
+
+  &--select {
+    width: 300px;
+    cursor: pointer;
+    appearance: auto;
+  }
+
+  &--bm {
+    width: 140px;
+  }
+}
+
+.aide {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.erreur {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rouge);
+  font-weight: 500;
+}
+
+/* ─── GRILLES INTERNES ────────────────────────────────────────── */
+.champ-grille-3 {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 16px;
+}
+
+.champ-grille-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+
+.grille-antecedents {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+/* ─── BOUTONS DE CHOIX ────────────────────────────────────────── */
+.choix-grille-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+}
+
+.choix-oui-non {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.choix-btn {
+  min-height: 44px;
+  height: auto;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1.5px solid var(--gris);
+  background: #fff;
+  color: var(--texte);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: normal;
+  line-height: 1.3;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--rouge);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rouge);
+    outline-offset: 2px;
+  }
+
+  &--actif {
+    background: #f6e9e9;
+    border-color: var(--rouge);
+    color: var(--rouge-fonce);
+    font-weight: 600;
+  }
+
+  &--sm {
+    min-height: 36px;
+    font-size: 13px;
+    padding: 6px 10px;
+  }
+}
+
+/* ─── MESSAGE INFO CONDUCTEUR ─────────────────────────────────── */
+.message-info {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  background: #e8f4fd;
+  border: 1px solid #bde0f7;
+
+  &--bloquant {
+    background: #fdf2f2;
+    border-color: #f0c0bc;
+  }
+
+  &__icone {
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    line-height: 1.5;
+    color: var(--texte);
+  }
+}
+
+/* ─── CONDUITE ACCOMPAGNÉE ────────────────────────────────────── */
+.champ-accompagnee {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 12px 16px;
+  border: 1px solid var(--bordure-claire);
+}
+
+.interrupteur-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.interrupteur {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--rouge);
+  cursor: pointer;
+}
+
+/* ─── BLOC HAMON ──────────────────────────────────────────────── */
+.bloc-hamon {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  background: #fff8e1;
+  border: 1px solid #ffd54f;
+  border-radius: 10px;
+}
+
+.aide-hamon {
+  margin: 0;
+  font-size: 14px;
+  color: var(--texte-doux);
+  line-height: 1.5;
+}
+
+/* ─── ALERTE BLOQUANTE ────────────────────────────────────────── */
+.alerte-bloquante {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #fdf2f2;
+  border: 1px solid #f0c0bc;
+  border-radius: 12px;
+
+  &__titre {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: #7a1f1f;
+  }
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    color: #7a1f1f;
+    line-height: 1.5;
+  }
+
+  &__aide {
+    margin: 0;
+    font-size: 13px;
+    color: #a0392c;
+  }
+}
+
+/* ─── MENTION LÉGALE ──────────────────────────────────────────── */
+.mention-legale {
+  margin: 4px 0 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+  line-height: 1.5;
+}
+
+/* ─── BAS DE PAGE ─────────────────────────────────────────────── */
+.bas-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 16px;
+}
+
+.lien-bas-retour {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.btn-suivant {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--rouge);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--rouge-fonce);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.btn-rappel {
+  height: 48px;
+  padding: 0 28px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--rouge);
+  border: 2px solid var(--rouge);
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover {
+    background: #f6e9e9;
+  }
+}
+
+/* ─── ENCART TARIF ────────────────────────────────────────────── */
+.encart-tarif {
+  position: sticky;
+  top: 80px;
+
+  &__conteneur {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--bordure-claire);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &__titre {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texte-discret);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__formule {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-doux);
+  }
+
+  &__prix {
+    margin: 8px 0 0;
+    font-size: 15px;
+    color: var(--texte);
+
+    strong {
+      display: block;
+      font-size: 32px;
+      color: var(--rouge);
+      line-height: 1;
+    }
+  }
+
+  &__des {
+    display: block;
+    font-size: 13px;
+    color: var(--texte-doux);
+    margin-bottom: 2px;
+  }
+
+  &__aide {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-discret);
+  }
+
+  &__calcul {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--texte-doux);
+    padding: 8px 0;
+  }
+
+  &__non-tarifable {
+    margin: 0;
+    font-size: 13px;
+    color: var(--rouge-fonce);
+    line-height: 1.5;
+  }
+
+  &__conseiller {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-doux);
+    font-style: italic;
+    line-height: 1.5;
+  }
+
+  &__prix-attente {
+    margin: 8px 0 0;
+    font-size: 32px;
+    font-weight: 700;
+    color: var(--texte-discret);
+    line-height: 1;
+  }
+
+  &__attente {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-discret);
+    line-height: 1.5;
+  }
+}
+
+/* ─── SPINNER ─────────────────────────────────────────────────── */
+.spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e0e0e0;
+  border-top-color: var(--rouge);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  flex-shrink: 0;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 900px) {
+  .grille-devis {
+    grid-template-columns: 1fr;
+  }
+
+  .encart-tarif {
+    position: static;
+    order: -1;
+  }
+
+  .champ-grille-3 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 640px) {
+  .choix-grille-4 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .grille-antecedents {
+    grid-template-columns: 1fr;
+  }
+
+  .champ-grille-3,
+  .champ-grille-2 {
+    grid-template-columns: 1fr;
+  }
+
+  .saisie--select {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .carte {
+    padding: 20px 16px;
+  }
+
+  .contenu-etape {
+    margin-top: 20px;
+  }
+}
