@@ -6,6 +6,7 @@ import {
   ContratFactures,
   FactureClient,
   LIBELLES_STATUT_ECHEANCE,
+  MESSAGE_ANNEE_NON_REGLEE,
   MESSAGE_AUCUNE_COTISATION,
   MesFactures as DonneesFactures,
   PeriodeFacture,
@@ -70,6 +71,7 @@ export class MesFactures {
   protected readonly libellesProduit = LIBELLES_PRODUIT;
   protected readonly libellesStatut = LIBELLES_STATUT_ECHEANCE;
   protected readonly messageAucuneCotisation = MESSAGE_AUCUNE_COTISATION;
+  protected readonly messageAnneeNonReglee = MESSAGE_ANNEE_NON_REGLEE;
   protected readonly formaterDate = formaterDate;
   protected readonly formaterPrix = formaterPrix;
   protected readonly ancreContrat = ancreContrat;
@@ -86,6 +88,11 @@ export class MesFactures {
     });
   }
 
+  /** Recette point 3 : la facture (de la liste du contrat) qui couvre déjà une échéance ou une année. */
+  protected factureDe(contrat: ContratFactures, numero: string): FactureClient | null {
+    return contrat.factures.find((facture) => facture.numero === numero) ?? null;
+  }
+
   protected cle(contrat: ContratFactures, periode: PeriodeFacture, date: string): string {
     return `${contrat.numero}|${periode}|${date}`;
   }
@@ -98,7 +105,7 @@ export class MesFactures {
       this.enCours.set(null);
       if (resultat.statut === 'genere') {
         const { facture, existante, disponible } = resultat.generation;
-        this.ajouter(contrat.numero, facture);
+        this.ajouter(contrat.numero, facture, periode, date);
         this.messageContrat(contrat.numero, true, messageGeneration(facture.numero, existante, disponible));
         if (disponible) {
           this.telecharger(facture);
@@ -124,8 +131,11 @@ export class MesFactures {
     });
   }
 
-  /** AC2 : la facture apparaît dans la liste (une seule fois), la plus récente période d'abord. */
-  private ajouter(numeroContrat: string, facture: FactureClient): void {
+  /**
+   * AC2 : la facture apparaît dans la liste (une seule fois), la plus récente période d'abord, et l'échéance ou
+   * l'année propose désormais son téléchargement.
+   */
+  private ajouter(numeroContrat: string, facture: FactureClient, periode: PeriodeFacture, date: string): void {
     this.donnees.update((donnees) => {
       if (!donnees) return donnees;
       return {
@@ -134,7 +144,13 @@ export class MesFactures {
           if (contrat.numero !== numeroContrat) return contrat;
           const autres = contrat.factures.filter((une) => une.numero !== facture.numero);
           const factures = [facture, ...autres].sort((a, b) => b.periodeFin.localeCompare(a.periodeFin));
-          return { ...contrat, factures };
+          const echeances = contrat.echeances.map((echeance) =>
+            periode === 'ECHEANCE' && echeance.date === date ? { ...echeance, facture: facture.numero } : echeance,
+          );
+          const annees = contrat.annees.map((annee) =>
+            periode === 'ANNEE' && annee.debut === date ? { ...annee, facture: facture.numero } : annee,
+          );
+          return { ...contrat, factures, echeances, annees };
         }),
       };
     });

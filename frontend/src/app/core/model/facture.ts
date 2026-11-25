@@ -12,16 +12,23 @@ export interface EcheanceFacture {
   statut: StatutEcheance;
   periodeDebut: string;
   periodeFin: string;
-  /** Faux après la date de fin d'un contrat Résilié ou Renoncé. */
+  /** Recette : vrai seulement pour une échéance payée (et pas après la fin d'un contrat Résilié ou Renoncé). */
   facturable: boolean;
+  /** Numéro de la facture qui couvre déjà cette échéance : on propose son téléchargement au lieu d'en générer une. */
+  facture: string | null;
 }
 
-/** Année de cotisation : d'une date anniversaire du contrat à la suivante. */
+/** Année de cotisation : d'une date anniversaire du contrat à la suivante ; montant = ses 12 mensualités. */
 export interface AnneeCotisation {
   debut: string;
   fin: string;
   montantTtc: number;
+  /** Recette : vrai seulement si l'année est entièrement réglée. */
   facturable: boolean;
+  /** Toutes les échéances de l'année sont payées. */
+  reglee: boolean;
+  /** Numéro de la facture annuelle déjà générée. */
+  facture: string | null;
 }
 
 export interface FactureClient {
@@ -69,3 +76,6 @@ export const LIBELLES_STATUT_ECHEANCE: Record<StatutEcheance, string> = {
 
 /** AC4 */
 export const MESSAGE_AUCUNE_COTISATION = 'Vos factures apparaîtront ici dès la première cotisation.';
+
+/** Recette US-22 : une année en cours ne se facture pas encore. */
+export const MESSAGE_ANNEE_NON_REGLEE = "Facture annuelle disponible quand l'année sera entièrement réglée.";
