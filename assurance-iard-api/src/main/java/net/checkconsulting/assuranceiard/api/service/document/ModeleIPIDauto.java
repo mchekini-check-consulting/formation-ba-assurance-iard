@@ -15,8 +15,12 @@ import org.springframework.stereotype.Component;
 @Component
 public class ModeleIPIDauto implements ModeleDocument {
 
+    public static final String TIERS = "TIERS";
+    public static final String INTER = "INTER";
+    public static final String TR = "TR";
+
     /** Formules auto qui ont un IPID (codes moteur tarifaire). */
-    public static final Set<String> FORMULES_AUTO = Set.of("TIERS", "INTER", "TR");
+    public static final Set<String> FORMULES_AUTO = Set.of(TIERS, INTER, TR);
 
     @Override
     public TypeDocument type() {
@@ -70,13 +74,13 @@ public class ModeleIPIDauto implements ModeleDocument {
         List<String> g = new ArrayList<>();
         g.add("Responsabilité civile (obligatoire).");
         g.add("Défense pénale et recours.");
-        if ("INTER".equals(code) || "TR".equals(code)) {
+        if (INTER.equals(code) || TR.equals(code)) {
             g.add("Vol et incendie.");
             g.add("Bris de glace.");
             g.add("Événements climatiques.");
             g.add("Catastrophes naturelles.");
         }
-        if ("TR".equals(code)) {
+        if (TR.equals(code)) {
             g.add("Dommages tous accidents (y compris si vous êtes responsable).");
         }
         return g;
@@ -84,8 +88,8 @@ public class ModeleIPIDauto implements ModeleDocument {
 
     private String franchiseTexte(String code) {
         return switch (code) {
-            case "INTER" -> "Franchise : 400 €.";
-            case "TR" -> "Franchise : 500 €.";
+            case INTER -> "Franchise : 400 €.";
+            case TR -> "Franchise : 500 €.";
             default -> "Pas de franchise : la formule Tiers ne couvre pas les dommages à votre véhicule.";
         };
     }
