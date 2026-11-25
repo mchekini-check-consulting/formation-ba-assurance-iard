@@ -150,7 +150,7 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 
 | Compte | Contenu |
 |---|---|
-| `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE |
+| `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE. US-22 : effet un an avant le 26 du mois courant, 3 échéances payées et 1 à venir |
 | `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON |
 | `recette.prospect@assureasy.fr` (T-05) | prospect sans aucun contrat |
 | `recette.assure2`, `recette.gestionnaire`, `recette.admin` (US-04) | inchangés |
@@ -195,6 +195,18 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
   test) priment ; sinon l'échéancier est calculé depuis le contrat (premier prélèvement de RG3/RG4 d'US-14, puis
   chaque mois, ou chaque année en paiement annuel, jusqu'à la fin de l'année d'assurance en cours). Statut « Payée »
   si la date est passée, « À venir » sinon : simulation de prototype, **à valider PO** (pas de système de paiement).
+  Recette : les mois manquants des années d'assurance des échéances enregistrées sont complétés par le calcul (jour
+  de prélèvement du contrat) : une année de cotisation vaut ses 12 mensualités. Aucune échéance avant la date d'effet
+  (une échéance enregistrée avant est ignorée) : l'échéancier et les années commencent à la date d'effet.
+- **US-22, données de test d'Alice** (`donnees_recette_us22.sql`, lancé après T-05, `DONNEES_TEST_ACTIVES` seulement ;
+  les scripts déjà sur `main` ne sont pas modifiés) : date d'effet de `AE-RECETTE-1` un an plus tôt, le 26 du mois
+  courant au chargement (ex. 26/11/2025), et échéance du 10 de ce mois passée à PAYEE. L'année d'assurance qui se
+  termine le 25 est entièrement réglée (facture annuelle testable) ; `FAC-RECETTE-0001` couvre toujours l'échéance du
+  10 du mois précédent. Pas de migration : ce sont des données de test, jamais chargées en preprod ni en prod.
+- **US-22, recette** : facture d'une échéance seulement si elle est payée (l'avis d'échéance des échéances à venir
+  viendra avec IA-245) ; facture annuelle seulement quand toutes les échéances de l'année d'assurance sont payées (elle
+  vaut alors la cotisation annuelle). Une facture d'au plus un mois qui couvre la date d'une échéance (ex.
+  `FAC-RECETTE-0001`) en tient lieu : pas de seconde facture. Une facture annuelle ne couvre pas une échéance mensuelle.
 - **US-22, factures** : une facture par contrat et par période (`periode_debut`, `periode_fin`), contrôlée par le code
   (verrou sur le contrat) et non par la base ; numéro `FAC-AAAA-NNNNNN` = année de génération + compteur de la table
   `facture` (jamais réutilisé, mais pas remis à zéro chaque année et sans garantie d'absence de trou). HT et TSCA

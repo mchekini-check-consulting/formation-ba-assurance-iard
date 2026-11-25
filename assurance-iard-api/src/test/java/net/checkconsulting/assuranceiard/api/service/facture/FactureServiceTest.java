@@ -55,13 +55,23 @@ class FactureServiceTest {
     private static final long CONTRAT = DonneesContratDeTest.ID;
     private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-25T10:00:00Z"), ZoneId.of("Europe/Paris"));
     private static final LocalDate EFFET = LocalDate.of(2026, 3, 1);
+    private static final LocalDate FIN_ANNEE = LocalDate.of(2027, 2, 28);
+    private static final LocalDate A_VENIR = LocalDate.of(2026, 12, 10);
     private static final LocalDate ECHEANCE = LocalDate.of(2026, 11, 10);
+    private static final LocalDate OCTOBRE = LocalDate.of(2026, 10, 10);
     private static final DonneesContrat DONNEES = habitation(EFFET, null, 10);
+    private static final BigDecimal MENSUALITE = new BigDecimal("18.50");
+    private static final BigDecimal ANNUELLE = new BigDecimal("222.00");
+    /** Année en cours : 2 échéances payées, 1 à venir (non réglée). */
     private static final Echeancier ECHEANCIER = new Echeancier(
-            List.of(new LigneEcheance(ECHEANCE, new BigDecimal("18.50"), "PAYEE", ECHEANCE, LocalDate.of(2026, 12, 9)),
-                    new LigneEcheance(LocalDate.of(2026, 10, 10), new BigDecimal("18.50"), "PAYEE",
-                            LocalDate.of(2026, 10, 10), LocalDate.of(2026, 11, 9))),
-            List.of(new AnneeCotisation(EFFET, LocalDate.of(2027, 2, 28), new BigDecimal("37.00"))));
+            List.of(new LigneEcheance(A_VENIR, MENSUALITE, "A_VENIR", A_VENIR, LocalDate.of(2027, 1, 9)),
+                    new LigneEcheance(ECHEANCE, MENSUALITE, "PAYEE", ECHEANCE, LocalDate.of(2026, 12, 9)),
+                    new LigneEcheance(OCTOBRE, MENSUALITE, "PAYEE", OCTOBRE, LocalDate.of(2026, 11, 9))),
+            List.of(new AnneeCotisation(EFFET, FIN_ANNEE, ANNUELLE, false)));
+    /** Année précédente entièrement réglée. */
+    private static final LocalDate ANNEE_REGLEE = LocalDate.of(2025, 3, 1);
+    private static final Echeancier ECHEANCIER_REGLE = new Echeancier(List.of(),
+            List.of(new AnneeCotisation(ANNEE_REGLEE, LocalDate.of(2026, 2, 28), ANNUELLE, true)));
 
     @Mock
     private SessionService sessionService;
@@ -106,19 +116,29 @@ class FactureServiceTest {
         return contrat;
     }
 
-    private static Facture facture(long id, Long documentId) {
+    private static Facture facture(long id, Long documentId, LocalDate debut, LocalDate fin) {
         Facture facture = new Facture();
         facture.setId(id);
         facture.setNumero("FAC-2026-%06d".formatted(id));
         facture.setContratId(CONTRAT);
-        facture.setPeriodeDebut(ECHEANCE);
-        facture.setPeriodeFin(LocalDate.of(2026, 12, 9));
+        facture.setPeriodeDebut(debut);
+        facture.setPeriodeFin(fin);
         facture.setMontantHt(new BigDecimal("16.97"));
         facture.setTaxe(new BigDecimal("1.53"));
-        facture.setMontantTtc(new BigDecimal("18.50"));
+        facture.setMontantTtc(MENSUALITE);
         facture.setGenereeLe(Instant.parse("2026-11-20T10:00:00Z"));
         facture.setDocumentId(documentId);
         return facture;
+    }
+
+    /** Facture de l'échéance du 10/11 (même période). */
+    private static Facture factureNovembre(long id, Long documentId) {
+        return facture(id, documentId, ECHEANCE, LocalDate.of(2026, 12, 9));
+    }
+
+    /** Comme FAC-RECETTE-0001 : un mois civil qui couvre l'échéance du 10/10. */
+    private static Facture factureMoisCivilOctobre() {
+        return facture(1, 10L, LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31));
     }
 
     private static Document document(long id, boolean stocke) {
@@ -128,10 +148,24 @@ class FactureServiceTest {
         return document;
     }
 
-    private void contratActif(String statut, LocalDate fin) {
+    private void contratActif(String statut, LocalDate fin, Echeancier sonEcheancier) {
         when(contrats.parNumero(NUMERO)).thenReturn(Optional.of(contrat(CONTRAT, NUMERO, statut, fin)));
         when(donneesContrat.lire(CONTRAT)).thenReturn(Optional.of(DONNEES));
-        when(echeancier.de(statut, DONNEES)).thenReturn(ECHEANCIER);
+        when(echeancier.de(statut, DONNEES)).thenReturn(sonEcheancier);
+    }
+
+    private void facturesExistantes(Facture... existantes) {
+        when(factures.findByContratIdInOrderByPeriodeFinDescIdDesc(List.of(CONTRAT))).thenReturn(List.of(existantes));
+    }
+
+    private void nouvelleFacture(long id, Document pdf) {
+        when(factures.reserverIdentifiant()).thenReturn(id);
+        when(documentsGeneres.generer(any())).thenReturn(pdf);
+        when(factures.findById(id)).thenReturn(Optional.of(factureNovembre(id, null)));
+    }
+
+    private FactureGenereeResponse generer(Periode periode, LocalDate date) {
+        return service.generer(NUMERO, new DemandeFactureRequest(periode, date));
     }
 
     // --- Mes factures ---
@@ -140,12 +174,10 @@ class FactureServiceTest {
     void ac1Ac2EcheancierEtFacturesDesContratsSignesSeulement() {
         Compte compte = new Compte();
         when(sessionService.compteConnecte(JETON)).thenReturn(compte);
-        Contrat actif = contrat(CONTRAT, NUMERO, "ACTIF", null);
-        when(contrats.duClient(compte)).thenReturn(List.of(actif,
+        when(contrats.duClient(compte)).thenReturn(List.of(contrat(CONTRAT, NUMERO, "ACTIF", null),
                 contrat(99L, "AE-2026-000099", "EN_ATTENTE_DE_SIGNATURE", null)));
-        when(factures.findByContratIdInOrderByPeriodeFinDescIdDesc(List.of(CONTRAT)))
-                .thenReturn(List.of(facture(2, 20L), facture(1, null)));
-        when(documents.findAllById(List.of(20L))).thenReturn(List.of(document(20, true)));
+        facturesExistantes(factureNovembre(2, 20L), factureMoisCivilOctobre());
+        when(documents.findAllById(List.of(20L, 10L))).thenReturn(List.of(document(20, true)));
         when(donneesContrat.lire(CONTRAT)).thenReturn(Optional.of(DONNEES));
         when(echeancier.de("ACTIF", DONNEES)).thenReturn(ECHEANCIER);
 
@@ -155,12 +187,38 @@ class FactureServiceTest {
         assertThat(reponse.contrats()).singleElement().satisfies(un -> {
             assertThat(un.numero()).isEqualTo(NUMERO);
             assertThat(un.bienAssure()).isEqualTo("12 rue des Lilas, 75001 Paris");
-            assertThat(un.echeances()).hasSize(2).allMatch(MesFacturesResponse.Echeance::facturable);
-            assertThat(un.echeances().getFirst().date()).isEqualTo(ECHEANCE);
-            assertThat(un.annees()).singleElement().satisfies(annee -> assertThat(annee.facturable()).isTrue());
+            // Recette : seule une échéance payée se facture ; une facture qui la couvre déjà est indiquée.
+            assertThat(un.echeances()).extracting(MesFacturesResponse.Echeance::facturable)
+                    .containsExactly(false, true, true);
+            assertThat(un.echeances()).extracting(MesFacturesResponse.Echeance::facture)
+                    .containsExactly(null, "FAC-2026-000002", "FAC-2026-000001");
+            // L'année n'est pas entièrement réglée : pas de facture annuelle.
+            assertThat(un.annees()).singleElement().satisfies(annee -> {
+                assertThat(annee.montantTtc()).isEqualByComparingTo("222.00");
+                assertThat(annee.facturable()).isFalse();
+                assertThat(annee.reglee()).isFalse();
+                assertThat(annee.facture()).isNull();
+            });
             // Téléchargeable seulement si le PDF est stocké.
             assertThat(un.factures()).extracting(MesFacturesResponse.Facture::documentId).containsExactly(20L, null);
         });
+    }
+
+    @Test
+    void uneAnneeRegleeEstFacturableEtSaFactureEstIndiquee() {
+        Compte compte = new Compte();
+        when(sessionService.compteConnecte(JETON)).thenReturn(compte);
+        when(contrats.duClient(compte)).thenReturn(List.of(contrat(CONTRAT, NUMERO, "ACTIF", null)));
+        Facture annuelle = facture(5, null, ANNEE_REGLEE, LocalDate.of(2026, 2, 28));
+        facturesExistantes(annuelle);
+        when(donneesContrat.lire(CONTRAT)).thenReturn(Optional.of(DONNEES));
+        when(echeancier.de("ACTIF", DONNEES)).thenReturn(ECHEANCIER_REGLE);
+
+        MesFacturesResponse.Annee annee = service.mesFactures(JETON).contrats().getFirst().annees().getFirst();
+
+        assertThat(annee.facturable()).isTrue();
+        assertThat(annee.reglee()).isTrue();
+        assertThat(annee.facture()).isEqualTo("FAC-2026-000005");
     }
 
     @Test
@@ -168,7 +226,7 @@ class FactureServiceTest {
         Compte compte = new Compte();
         when(sessionService.compteConnecte(JETON)).thenReturn(compte);
         when(contrats.duClient(compte)).thenReturn(List.of(contrat(CONTRAT, NUMERO, "EN_ATTENTE_EFFET", null)));
-        when(factures.findByContratIdInOrderByPeriodeFinDescIdDesc(List.of(CONTRAT))).thenReturn(List.of());
+        facturesExistantes();
         when(donneesContrat.lire(CONTRAT)).thenReturn(Optional.empty());
 
         MesFacturesResponse reponse = service.mesFactures(JETON);
@@ -194,71 +252,83 @@ class FactureServiceTest {
         when(sessionService.compteConnecte(JETON)).thenReturn(compte);
         when(contrats.duClient(compte)).thenReturn(List.of(contrat(CONTRAT, NUMERO, "RESILIE",
                 LocalDate.of(2026, 10, 31))));
-        when(factures.findByContratIdInOrderByPeriodeFinDescIdDesc(List.of(CONTRAT))).thenReturn(List.of());
+        facturesExistantes();
         when(donneesContrat.lire(CONTRAT)).thenReturn(Optional.of(DONNEES));
         when(echeancier.de("RESILIE", DONNEES)).thenReturn(ECHEANCIER);
 
         MesFacturesResponse.Contrat un = service.mesFactures(JETON).contrats().getFirst();
 
-        assertThat(un.echeances()).extracting(MesFacturesResponse.Echeance::facturable).containsExactly(false, true);
-        assertThat(un.annees().getFirst().facturable()).isTrue();
+        assertThat(un.echeances()).extracting(MesFacturesResponse.Echeance::facturable)
+                .containsExactly(false, false, true);
     }
 
     // --- Générer une facture ---
 
     @Test
-    void ac2GenereLaFactureDUneEcheanceNumeroteeEtStockee() {
-        contratActif("ACTIF", null);
-        when(factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(CONTRAT, ECHEANCE,
-                LocalDate.of(2026, 12, 9))).thenReturn(Optional.empty());
-        when(factures.reserverIdentifiant()).thenReturn(42L);
-        Document pdf = document(77, true);
-        when(documentsGeneres.generer(any())).thenReturn(pdf);
-        Facture enregistree = facture(42, null);
-        when(factures.findById(42L)).thenReturn(Optional.of(enregistree));
+    void ac2GenereLaFactureDUneEcheancePayeeNumeroteeEtStockee() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes();
+        nouvelleFacture(42L, document(77, true));
 
-        FactureGenereeResponse reponse = service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE));
+        FactureGenereeResponse reponse = generer(Periode.ECHEANCE, ECHEANCE);
 
         // RG4 : FAC-AAAA-NNNNNN. 18,50 € TTC à 9 % : 16,97 € HT + 1,53 € de TSCA.
         verify(factures).verrouillerContrat(CONTRAT);
         verify(factures).inserer(42L, "FAC-2026-000042", CONTRAT, ECHEANCE, LocalDate.of(2026, 12, 9),
-                new BigDecimal("16.97"), new BigDecimal("1.53"), new BigDecimal("18.50"), HORLOGE.instant());
+                new BigDecimal("16.97"), new BigDecimal("1.53"), MENSUALITE, HORLOGE.instant());
         ArgumentCaptor<DemandeDocument> demande = ArgumentCaptor.forClass(DemandeDocument.class);
         verify(documentsGeneres).generer(demande.capture());
         assertThat(demande.getValue().reference()).isEqualTo("FAC-2026-000042");
         assertThat(demande.getValue().contratId()).isEqualTo(CONTRAT);
-        assertThat(enregistree.getDocumentId()).isEqualTo(77L);
         assertThat(reponse.existante()).isFalse();
         assertThat(reponse.disponible()).isTrue();
         assertThat(reponse.facture().documentId()).isEqualTo(77L);
     }
 
     @Test
-    void ac2GenereLaFactureDUneAnneeDeCotisation() {
-        contratActif("ACTIF", null);
-        when(factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(CONTRAT, EFFET,
-                LocalDate.of(2027, 2, 28))).thenReturn(Optional.empty());
-        when(factures.reserverIdentifiant()).thenReturn(43L);
-        when(documentsGeneres.generer(any())).thenReturn(document(78, false));
-        when(factures.findById(43L)).thenReturn(Optional.of(facture(43, null)));
+    void recettePoint2PasDeFacturePourUneEcheanceAVenir() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes();
 
-        FactureGenereeResponse reponse = service.generer(NUMERO, new DemandeFactureRequest(Periode.ANNEE, EFFET));
+        assertThatThrownBy(() -> generer(Periode.ECHEANCE, A_VENIR))
+                .isInstanceOf(FactureImpossibleException.class)
+                .hasMessage(FactureService.MESSAGE_ECHEANCE_NON_PAYEE);
+        verify(factures, never()).reserverIdentifiant();
+    }
 
-        verify(factures).inserer(eq(43L), eq("FAC-2026-000043"), eq(CONTRAT), eq(EFFET), eq(LocalDate.of(2027, 2, 28)),
-                any(), any(), eq(new BigDecimal("37.00")), any());
+    @Test
+    void recettePoint2PasDeFactureAnnuelleAvantQueLAnneeSoitReglee() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes();
+
+        assertThatThrownBy(() -> generer(Periode.ANNEE, EFFET))
+                .isInstanceOf(FactureImpossibleException.class)
+                .hasMessage(FactureService.MESSAGE_ANNEE_NON_REGLEE);
+        verify(factures, never()).reserverIdentifiant();
+    }
+
+    @Test
+    void recettePoint1LaFactureDUneAnneeRegleeVautLaCotisationAnnuelle() {
+        contratActif("ACTIF", null, ECHEANCIER_REGLE);
+        facturesExistantes();
+        nouvelleFacture(43L, document(78, false));
+
+        FactureGenereeResponse reponse = generer(Periode.ANNEE, ANNEE_REGLEE);
+
+        verify(factures).inserer(eq(43L), eq("FAC-2026-000043"), eq(CONTRAT), eq(ANNEE_REGLEE),
+                eq(LocalDate.of(2026, 2, 28)), any(), any(), eq(ANNUELLE), any());
         // PDF pas encore produit : la reprise de T-03 le stockera.
         assertThat(reponse.disponible()).isFalse();
         assertThat(reponse.facture().documentId()).isNull();
     }
 
     @Test
-    void ac2UneFactureExistanteEstRenvoyeeSansNouveauNumero() {
-        contratActif("ACTIF", null);
-        when(factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(CONTRAT, ECHEANCE,
-                LocalDate.of(2026, 12, 9))).thenReturn(Optional.of(facture(7, 70L)));
+    void ac2UneFactureDeLaMemePeriodeEstRenvoyeeSansNouveauNumero() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes(factureNovembre(7, 70L));
         when(documents.findAllById(List.of(70L))).thenReturn(List.of(document(70, true)));
 
-        FactureGenereeResponse reponse = service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE));
+        FactureGenereeResponse reponse = generer(Periode.ECHEANCE, ECHEANCE);
 
         assertThat(reponse.existante()).isTrue();
         assertThat(reponse.disponible()).isTrue();
@@ -268,13 +338,35 @@ class FactureServiceTest {
     }
 
     @Test
-    void ac2FactureExistanteSansPdfPasEncoreDisponible() {
-        contratActif("ACTIF", null);
-        when(factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(CONTRAT, ECHEANCE,
-                LocalDate.of(2026, 12, 9))).thenReturn(Optional.of(facture(7, null)));
+    void recettePoint3UneFactureDuMoisQuiCouvreLEcheanceEstRenvoyee() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes(factureMoisCivilOctobre());
+        when(documents.findAllById(List.of(10L))).thenReturn(List.of(document(10, false)));
 
-        assertThat(service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE)).disponible())
-                .isFalse();
+        FactureGenereeResponse reponse = generer(Periode.ECHEANCE, OCTOBRE);
+
+        assertThat(reponse.existante()).isTrue();
+        assertThat(reponse.facture().numero()).isEqualTo("FAC-2026-000001");
+        assertThat(reponse.disponible()).isFalse();
+        verify(factures, never()).reserverIdentifiant();
+    }
+
+    @Test
+    void recettePoint3UneFactureAnnuelleNeCouvrePasUneEcheanceMensuelle() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes(facture(5, null, EFFET, FIN_ANNEE));
+        nouvelleFacture(44L, document(79, true));
+
+        assertThat(generer(Periode.ECHEANCE, ECHEANCE).existante()).isFalse();
+        verify(factures).reserverIdentifiant();
+    }
+
+    @Test
+    void uneFactureDejaGenereePourUneEcheanceAVenirResteTelechargeable() {
+        contratActif("ACTIF", null, ECHEANCIER);
+        facturesExistantes(facture(8, null, A_VENIR, LocalDate.of(2027, 1, 9)));
+
+        assertThat(generer(Periode.ECHEANCE, A_VENIR).existante()).isTrue();
     }
 
     @Test
@@ -282,39 +374,35 @@ class FactureServiceTest {
         when(contrats.parNumero(NUMERO)).thenReturn(Optional.of(contrat(CONTRAT, NUMERO, "EN_ATTENTE_DE_SIGNATURE",
                 null)));
 
-        assertThatThrownBy(() -> service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE)))
+        assertThatThrownBy(() -> generer(Periode.ECHEANCE, ECHEANCE))
                 .isInstanceOf(FactureImpossibleException.class);
         verifyNoInteractions(factures, documentsGeneres);
     }
 
     @Test
     void contratResiliePasDeFactureApresSaDateDeFin() {
-        contratActif("RESILIE", LocalDate.of(2026, 10, 31));
+        contratActif("RESILIE", LocalDate.of(2026, 10, 31), ECHEANCIER);
 
-        assertThatThrownBy(() -> service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE)))
+        assertThatThrownBy(() -> generer(Periode.ECHEANCE, ECHEANCE))
                 .isInstanceOf(FactureImpossibleException.class);
         verify(factures, never()).reserverIdentifiant();
     }
 
     @Test
     void contratRenonceSansDateDeFinLimiteAAujourdhui() {
-        contratActif("RENONCE", null);
-        when(factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(eq(CONTRAT), any(), any()))
-                .thenReturn(Optional.of(facture(7, null)));
+        contratActif("RENONCE", null, ECHEANCIER);
+        facturesExistantes(factureNovembre(7, null));
 
-        assertThat(service.generer(NUMERO, new DemandeFactureRequest(Periode.ECHEANCE, ECHEANCE)).existante())
-                .isTrue();
+        assertThat(generer(Periode.ECHEANCE, ECHEANCE).existante()).isTrue();
     }
 
     @Test
     void dateQuiNEstNiUneEcheanceNiUneAnnee404() {
-        contratActif("ACTIF", null);
+        contratActif("ACTIF", null, ECHEANCIER);
 
-        assertThatThrownBy(() -> service.generer(NUMERO,
-                new DemandeFactureRequest(Periode.ECHEANCE, LocalDate.of(2026, 11, 11))))
+        assertThatThrownBy(() -> generer(Periode.ECHEANCE, LocalDate.of(2026, 11, 11)))
                 .isInstanceOf(PeriodeFacturationInconnueException.class);
-        assertThatThrownBy(() -> service.generer(NUMERO,
-                new DemandeFactureRequest(Periode.ANNEE, LocalDate.of(2025, 3, 1))))
+        assertThatThrownBy(() -> generer(Periode.ANNEE, LocalDate.of(2025, 3, 1)))
                 .isInstanceOf(PeriodeFacturationInconnueException.class);
         verify(factures, never()).inserer(anyLong(), any(), anyLong(), any(), any(), any(), any(), any(), any());
     }
@@ -331,5 +419,13 @@ class FactureServiceTest {
     void rg4NumeroSurSixChiffres() {
         assertThat(FactureService.numero(2026, 1)).isEqualTo("FAC-2026-000001");
         assertThat(FactureService.numero(2027, 1234567)).isEqualTo("FAC-2027-1234567");
+    }
+
+    @Test
+    void periodeDAuPlusUnMois() {
+        assertThat(FactureService.estMensuelle(LocalDate.of(2026, 10, 1), LocalDate.of(2026, 10, 31))).isTrue();
+        assertThat(FactureService.estMensuelle(ECHEANCE, LocalDate.of(2026, 12, 9))).isTrue();
+        assertThat(FactureService.estMensuelle(ECHEANCE, LocalDate.of(2026, 12, 10))).isFalse();
+        assertThat(FactureService.estMensuelle(EFFET, FIN_ANNEE)).isFalse();
     }
 }

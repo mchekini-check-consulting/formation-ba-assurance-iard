@@ -81,8 +81,9 @@ class EcheancierServiceTest {
                     assertThat(ligne.periodeDebut()).isEqualTo(date(2026, 11, 10));
                     assertThat(ligne.periodeFin()).isEqualTo(date(2026, 12, 9));
                 });
+        // Pas encore entièrement réglée : 3 échéances à venir.
         assertThat(echeancier.annees()).singleElement().isEqualTo(
-                new AnneeCotisation(EFFET, date(2027, 2, 28), new BigDecimal("222.00")));
+                new AnneeCotisation(EFFET, date(2027, 2, 28), new BigDecimal("222.00"), false));
     }
 
     @Test
@@ -125,20 +126,106 @@ class EcheancierServiceTest {
         assertThat(echeancier.annees()).extracting(AnneeCotisation::debut)
                 .containsExactly(date(2026, 1, 15), date(2025, 1, 15));
         assertThat(echeancier.annees().getFirst().montantTtc()).isEqualByComparingTo("480.00");
+        // Toutes ses échéances sont passées : l'année est réglée.
+        assertThat(echeancier.annees()).allMatch(AnneeCotisation::reglee);
     }
 
     @Test
-    void ac1LesEcheancesEnregistreesPriment() {
+    void ac1LesEcheancesEnregistreesPrimentEtLesMoisManquantsSontCompletes() {
         Echeance impayee = echeance(date(2026, 10, 10), "IMPAYEE");
         Echeance aVenir = echeance(date(2026, 12, 10), "A_VENIR");
         when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID)).thenReturn(List.of(impayee, aVenir));
 
         Echeancier echeancier = service.de("IMPAYE", habitation(EFFET, null, 10));
 
+        // Les 2 échéances enregistrées gardent leur statut ; les 10 autres mois de l'année sont calculés.
+        assertThat(echeancier.echeances()).hasSize(12);
         assertThat(echeancier.echeances()).extracting(LigneEcheance::date, LigneEcheance::statut)
-                .containsExactly(org.assertj.core.groups.Tuple.tuple(date(2026, 12, 10), "A_VENIR"),
-                        org.assertj.core.groups.Tuple.tuple(date(2026, 10, 10), "IMPAYEE"));
+                .contains(org.assertj.core.groups.Tuple.tuple(date(2026, 12, 10), "A_VENIR"),
+                        org.assertj.core.groups.Tuple.tuple(date(2026, 10, 10), "IMPAYEE"),
+                        org.assertj.core.groups.Tuple.tuple(date(2026, 11, 10), "PAYEE"),
+                        org.assertj.core.groups.Tuple.tuple(date(2027, 2, 10), "A_VENIR"));
+        assertThat(echeancier.annees()).singleElement().isEqualTo(
+                new AnneeCotisation(EFFET, date(2027, 2, 28), new BigDecimal("222.00"), false));
         verifyNoInteractions(donneesContrat);
+    }
+
+    @Test
+    void recettePoint1ChaqueAnneeDesEcheancesEnregistreesCompte12Mensualites() {
+        // Données de recette d'Alice corrigées : effet le 26/11/2025, échéances enregistrées les 10/09, 10/10 et 10/11
+        // (payées) et 10/12 (à venir). Avant la correction, une année ne valait que 55,50 €.
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID)).thenReturn(List.of(
+                echeance(date(2026, 12, 10), "A_VENIR"), echeance(date(2026, 11, 10), "PAYEE"),
+                echeance(date(2026, 10, 10), "PAYEE"), echeance(date(2026, 9, 10), "PAYEE")));
+
+        Echeancier echeancier = service.de("ACTIF", habitation(date(2025, 11, 26), null, 10));
+
+        assertThat(echeancier.annees()).extracting(AnneeCotisation::debut, AnneeCotisation::fin,
+                        AnneeCotisation::reglee)
+                .containsExactly(org.assertj.core.groups.Tuple.tuple(date(2026, 11, 26), date(2027, 11, 25), false),
+                        // Du 10/12/2025 au 10/11/2026 : 12 échéances, toutes payées. La facture annuelle est possible.
+                        org.assertj.core.groups.Tuple.tuple(date(2025, 11, 26), date(2026, 11, 25), true));
+        assertThat(echeancier.annees()).allSatisfy(annee ->
+                assertThat(annee.montantTtc()).isEqualByComparingTo("222.00"));
+        assertThat(echeancier.echeances()).hasSize(24);
+        assertThat(echeancier.echeances().getLast().date()).isEqualTo(date(2025, 12, 10));
+        assertThat(echeancier.echeances().getFirst().date()).isEqualTo(date(2027, 11, 10));
+    }
+
+    @Test
+    void recetteAucuneEcheanceAvantLaDateDEffet() {
+        // Effet le 26/11/2026 : les échéances enregistrées des 10/09, 10/10 et 10/11 sont ignorées.
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID)).thenReturn(List.of(
+                echeance(date(2026, 12, 10), "A_VENIR"), echeance(date(2026, 11, 10), "PAYEE"),
+                echeance(date(2026, 10, 10), "PAYEE"), echeance(date(2026, 9, 10), "PAYEE")));
+
+        Echeancier echeancier = service.de("ACTIF", habitation(date(2026, 11, 26), null, 10));
+
+        assertThat(echeancier.echeances()).allMatch(ligne -> !ligne.date().isBefore(date(2026, 11, 26)));
+        assertThat(echeancier.echeances()).hasSize(12);
+        assertThat(echeancier.echeances().getLast().date()).isEqualTo(date(2026, 12, 10));
+        // L'échéancier et les années commencent à la date d'effet.
+        assertThat(echeancier.annees()).singleElement().satisfies(annee -> {
+            assertThat(annee.debut()).isEqualTo(date(2026, 11, 26));
+            assertThat(annee.montantTtc()).isEqualByComparingTo("222.00");
+        });
+    }
+
+    @Test
+    void recetteSiToutesLesEcheancesEnregistreesSontAvantLEffetLEcheancierEstCalcule() {
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID))
+                .thenReturn(List.of(echeance(date(2026, 1, 10), "PAYEE")));
+        when(donneesContrat.dateSignature(ID)).thenReturn(Optional.empty());
+
+        Echeancier echeancier = service.de("ACTIF", habitation(EFFET, null, 10));
+
+        assertThat(echeancier.echeances()).hasSize(12);
+        assertThat(echeancier.echeances().getLast().date()).isEqualTo(date(2026, 3, 10));
+    }
+
+    @Test
+    void sansJourDePrelevementLesMoisManquantsPrennentLeJourDesEcheancesEnregistrees() {
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID))
+                .thenReturn(List.of(echeance(date(2026, 10, 12), "PAYEE")));
+
+        Echeancier echeancier = service.de("ACTIF", habitation(EFFET, null, null));
+
+        assertThat(echeancier.echeances()).hasSize(12)
+                .allMatch(ligne -> ligne.date().getDayOfMonth() == 12);
+    }
+
+    @Test
+    void contratAnnuelLesEcheancesEnregistreesNeSontPasCompletees() {
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID))
+                .thenReturn(List.of(echeance(date(2026, 3, 1), "PAYEE")));
+
+        Echeancier echeancier = service.de("ACTIF",
+                contrat("AUTO", EFFET, null, "ANNUEL", null, "40.00", List.of()));
+
+        assertThat(echeancier.echeances()).singleElement().satisfies(ligne -> {
+            assertThat(ligne.periodeFin()).isEqualTo(date(2027, 2, 28));
+        });
+        assertThat(echeancier.annees()).singleElement().extracting(AnneeCotisation::reglee).isEqualTo(true);
     }
 
     @Test

@@ -34,7 +34,24 @@
                 <span class="statut-echeance" [class]="'statut-echeance statut-echeance--' + echeance.statut">
                   {{ libellesStatut[echeance.statut] }}
                 </span>
-                @if (peutGenerer && echeance.facturable) {
+                <!-- Recette point 3 : une facture couvre déjà cette échéance, on propose de la télécharger. -->
+                @if (echeance.facture) {
+                  @if (factureDe(contrat, echeance.facture); as facture) {
+                    @if (facture.documentId !== null) {
+                      <button
+                        type="button"
+                        class="ligne__action ligne__action--secondaire"
+                        [attr.aria-label]="'Télécharger la facture ' + facture.numero + ' de l\'échéance du ' + formaterDate(echeance.date)"
+                        (click)="telecharger(facture)"
+                      >
+                        Télécharger la facture
+                      </button>
+                    } @else {
+                      <span class="ligne__action carte-contrat__message">Facture {{ facture.numero }} en préparation</span>
+                    }
+                  }
+                } @else if (peutGenerer && echeance.facturable) {
+                  <!-- Recette point 2 : seulement pour une échéance payée (serveur et écran). -->
                   <button
                     type="button"
                     class="ligne__action"
@@ -58,7 +75,22 @@
               <li class="ligne">
                 <span class="ligne__date">Du {{ formaterDate(annee.debut) }} au {{ formaterDate(annee.fin) }}</span>
                 <span class="ligne__montant">{{ formaterPrix(annee.montantTtc) }}&#160;€ TTC</span>
-                @if (peutGenerer && annee.facturable) {
+                @if (annee.facture) {
+                  @if (factureDe(contrat, annee.facture); as facture) {
+                    @if (facture.documentId !== null) {
+                      <button
+                        type="button"
+                        class="ligne__action ligne__action--secondaire"
+                        [attr.aria-label]="'Télécharger la facture ' + facture.numero + ' de l\'année du ' + formaterDate(annee.debut)"
+                        (click)="telecharger(facture)"
+                      >
+                        Télécharger la facture
+                      </button>
+                    } @else {
+                      <span class="ligne__action carte-contrat__message">Facture {{ facture.numero }} en préparation</span>
+                    }
+                  }
+                } @else if (peutGenerer && annee.facturable) {
                   <button
                     type="button"
                     class="ligne__action"
@@ -68,6 +100,9 @@
                   >
                     {{ enCours() === cle(contrat, 'ANNEE', annee.debut) ? 'Génération…' : 'Générer une facture' }}
                   </button>
+                } @else if (!annee.reglee) {
+                  <!-- Recette point 2 : facture annuelle seulement quand l'année est entièrement réglée. -->
+                  <span class="ligne__action carte-contrat__message">{{ messageAnneeNonReglee }}</span>
                 }
               </li>
             }

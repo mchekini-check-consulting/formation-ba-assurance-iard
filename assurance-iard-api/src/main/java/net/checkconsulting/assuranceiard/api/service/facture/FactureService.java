@@ -6,6 +6,7 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -35,6 +36,7 @@ import net.checkconsulting.assuranceiard.api.service.SessionService;
 import net.checkconsulting.assuranceiard.api.service.document.DemandeDocument;
 import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
 import net.checkconsulting.assuranceiard.api.service.facture.EcheancierService.Echeancier;
+import net.checkconsulting.assuranceiard.api.service.facture.EcheancierService.LigneEcheance;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,7 +47,10 @@ import org.springframework.transaction.annotation.Transactional;
  * <ul>
  *   <li>RG4 : numéro FAC-AAAA-NNNNNN (année de génération, compteur de la table facture qui ne revient jamais en
  *       arrière).</li>
- *   <li>AC2 : une seule facture par contrat et par période ; si elle existe, elle est renvoyée telle quelle.</li>
+ *   <li>AC2 : une seule facture par contrat et par période ; si elle existe, elle est renvoyée telle quelle. Pour une
+ *       échéance mensuelle, une facture d'un mois qui couvre déjà sa date compte aussi (recette).</li>
+ *   <li>Recette : facture d'une échéance seulement si elle est payée ; facture annuelle seulement quand toutes les
+ *       échéances de l'année d'assurance sont payées (elle vaut alors la cotisation annuelle).</li>
  *   <li>Pas de facture pour un contrat en attente de signature ; pour un contrat Résilié ou Renoncé, seulement pour
  *       une période qui commence avant sa date de fin.</li>
  * </ul>
@@ -58,6 +63,9 @@ public class FactureService {
 
     static final Set<String> STATUTS_HORS_VIGUEUR = Set.of("RESILIE", "RENONCE");
     static final String MOTIF = "Facture générée à la demande du client";
+    /** Recette US-22 : pas de facture pour une échéance À venir (l'avis d'échéance viendra avec IA-245). */
+    static final String MESSAGE_ECHEANCE_NON_PAYEE = "La facture d'une échéance est disponible une fois l'échéance payée.";
+    static final String MESSAGE_ANNEE_NON_REGLEE = "Facture annuelle disponible quand l'année sera entièrement réglée.";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
 
     private final SessionService sessionService;
@@ -106,12 +114,18 @@ public class FactureService {
         if (!facturable(contrat, periode.debut())) {
             throw new FactureImpossibleException();
         }
-        var existante = factures.findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(contrat.getId(),
-                periode.debut(), periode.fin());
+        // Recette US-22, point 3 : une facture qui couvre déjà la période (ou le mois de l'échéance) est renvoyée.
+        Optional<Facture> existante = existante(
+                factures.findByContratIdInOrderByPeriodeFinDescIdDesc(List.of(contrat.getId())), periode);
         if (existante.isPresent()) {
             Facture facture = existante.get();
             boolean disponible = estStocke(facture, stockes(List.of(facture)));
             return new FactureGenereeResponse(reponse(facture, disponible), disponible, true);
+        }
+        // Recette US-22, point 2 : échéance payée, ou année d'assurance entièrement réglée.
+        if (!periode.reglee()) {
+            throw new FactureImpossibleException(demande.periode() == DemandeFactureRequest.Periode.ECHEANCE
+                    ? MESSAGE_ECHEANCE_NON_PAYEE : MESSAGE_ANNEE_NON_REGLEE);
         }
         RepartitionTaxe.Detail detail = calcul.detail(donnees, periode.montantTtc());
         long id = factures.reserverIdentifiant();
@@ -144,7 +158,14 @@ public class FactureService {
         return debut.isBefore(limite);
     }
 
-    private record Periode(LocalDate debut, LocalDate fin, BigDecimal montantTtc) {
+    /**
+     * Période demandée.
+     *
+     * @param mensuelle vrai pour l'échéance d'un paiement mensuel (une facture d'un mois qui couvre sa date suffit).
+     * @param reglee échéance payée, ou année dont toutes les échéances sont payées.
+     */
+    private record Periode(LocalDate debut, LocalDate fin, BigDecimal montantTtc, boolean mensuelle,
+            boolean reglee) {
     }
 
     private static Periode periode(Echeancier echeancier, DemandeFactureRequest demande) {
@@ -152,13 +173,44 @@ public class FactureService {
             case ECHEANCE -> echeancier.echeances().stream()
                     .filter(ligne -> ligne.date().equals(demande.date()))
                     .findFirst()
-                    .map(ligne -> new Periode(ligne.periodeDebut(), ligne.periodeFin(), ligne.montantTtc()));
+                    .map(FactureService::periode);
             case ANNEE -> echeancier.annees().stream()
                     .filter(annee -> annee.debut().equals(demande.date()))
                     .findFirst()
-                    .map(annee -> new Periode(annee.debut(), annee.fin(), annee.montantTtc()));
+                    .map(annee -> new Periode(annee.debut(), annee.fin(), annee.montantTtc(), false,
+                            annee.reglee()));
         };
         return trouvee.orElseThrow(PeriodeFacturationInconnueException::new);
+    }
+
+    private static Periode periode(LigneEcheance ligne) {
+        return new Periode(ligne.periodeDebut(), ligne.periodeFin(), ligne.montantTtc(),
+                estMensuelle(ligne.periodeDebut(), ligne.periodeFin()), EcheancierService.PAYEE.equals(ligne.statut()));
+    }
+
+    /**
+     * La facture de cette période : même période, ou, pour une échéance mensuelle, une facture d'au plus un mois qui
+     * couvre sa date (ex. FAC-RECETTE-0001 du 01/10 au 31/10 pour l'échéance du 10/10). Une facture annuelle ne
+     * couvre pas une échéance mensuelle, et inversement (décision BA).
+     */
+    private static Optional<Facture> existante(List<Facture> sesFactures, Periode periode) {
+        Optional<Facture> memePeriode = sesFactures.stream()
+                .filter(facture -> facture.getPeriodeDebut().equals(periode.debut())
+                        && facture.getPeriodeFin().equals(periode.fin()))
+                .min(Comparator.comparing(Facture::getId));
+        if (memePeriode.isPresent() || !periode.mensuelle()) {
+            return memePeriode;
+        }
+        return sesFactures.stream()
+                .filter(facture -> estMensuelle(facture.getPeriodeDebut(), facture.getPeriodeFin()))
+                .filter(facture -> !facture.getPeriodeDebut().isAfter(periode.debut())
+                        && !facture.getPeriodeFin().isBefore(periode.debut()))
+                .min(Comparator.comparing(Facture::getId));
+    }
+
+    /** Une période d'au plus un mois. */
+    static boolean estMensuelle(LocalDate debut, LocalDate fin) {
+        return !fin.isAfter(debut.plusMonths(1).minusDays(1));
     }
 
     private MesFacturesResponse.Contrat contrat(Contrat contrat, List<Facture> sesFactures, Set<Long> stockes) {
@@ -171,17 +223,30 @@ public class FactureService {
                 contrat.getStatut(),
                 EspaceClientService.bienAssure(contrat),
                 sonEcheancier.echeances().stream()
-                        .map(ligne -> new MesFacturesResponse.Echeance(ligne.date(), ligne.montantTtc(),
-                                ligne.statut(), ligne.periodeDebut(), ligne.periodeFin(),
-                                facturable(contrat, ligne.periodeDebut())))
+                        .map(ligne -> {
+                            Periode periode = periode(ligne);
+                            return new MesFacturesResponse.Echeance(ligne.date(), ligne.montantTtc(),
+                                    ligne.statut(), ligne.periodeDebut(), ligne.periodeFin(),
+                                    periode.reglee() && facturable(contrat, ligne.periodeDebut()),
+                                    numeroDe(existante(sesFactures, periode)));
+                        })
                         .toList(),
                 sonEcheancier.annees().stream()
-                        .map(annee -> new MesFacturesResponse.Annee(annee.debut(), annee.fin(), annee.montantTtc(),
-                                facturable(contrat, annee.debut())))
+                        .map(annee -> {
+                            Periode periode = new Periode(annee.debut(), annee.fin(), annee.montantTtc(), false,
+                                    annee.reglee());
+                            return new MesFacturesResponse.Annee(annee.debut(), annee.fin(), annee.montantTtc(),
+                                    annee.reglee() && facturable(contrat, annee.debut()), annee.reglee(),
+                                    numeroDe(existante(sesFactures, periode)));
+                        })
                         .toList(),
                 sesFactures.stream()
                         .map(facture -> reponse(facture, estStocke(facture, stockes)))
                         .toList());
+    }
+
+    private static String numeroDe(Optional<Facture> facture) {
+        return facture.map(Facture::getNumero).orElse(null);
     }
 
     private static MesFacturesResponse.Facture reponse(Facture facture, boolean stocke) {
