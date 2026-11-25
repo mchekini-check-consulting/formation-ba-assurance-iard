@@ -7,6 +7,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -16,8 +17,10 @@ import net.checkconsulting.assuranceiard.api.client.siv.SivClient;
 import net.checkconsulting.assuranceiard.api.client.siv.SivReponse;
 import net.checkconsulting.assuranceiard.api.client.siv.VehiculeInfoSiv;
 import net.checkconsulting.assuranceiard.api.dto.CriteresEligibiliteResponse;
+import net.checkconsulting.assuranceiard.api.dto.FormuleAutoResponse;
 import net.checkconsulting.assuranceiard.api.dto.MarqueResponse;
 import net.checkconsulting.assuranceiard.api.dto.ModeleResponse;
+import net.checkconsulting.assuranceiard.api.dto.PrixFormuleAutoResponse;
 import net.checkconsulting.assuranceiard.api.model.Document;
 import net.checkconsulting.assuranceiard.api.service.BesoinsAutoService;
 import net.checkconsulting.assuranceiard.api.service.DevisAutoCreationService;
@@ -150,5 +153,28 @@ class DevisAutoResourceTest {
     @Test
     void unePlaqueNonSivNestPasModifiee() {
         assertThat(DevisAutoResource.normaliserPlaque("ANCIENNE-PLAQUE-7700-WW-69")).isNotBlank();
+    }
+
+    @Test
+    void lesPrixFormulesSontRetournes() throws Exception {
+        when(formuleAutoService.obtenirPrix(1L)).thenReturn(new PrixFormuleAutoResponse(
+                null, "AUTO-2026.1", null, List.of(), List.of()));
+
+        mockMvc.perform(get("/v1/devis/auto/1/prix-formules"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.versionGrille").value("AUTO-2026.1"));
+    }
+
+    @Test
+    void laFormuleChoisieEstEnregistree() throws Exception {
+        when(formuleAutoService.choisirFormule(any(), any())).thenReturn(
+                new FormuleAutoResponse("INTER", List.of(), new BigDecimal("33.90"), new BigDecimal("406.80"), null));
+
+        mockMvc.perform(put("/v1/devis/auto/1/formule")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"formuleChoisie\":\"INTER\",\"optionsChoisies\":[],\"choixDifferentDuConseil\":false,"
+                                + "\"versionGrille\":\"AUTO-2026.1\",\"prixMensuelTtc\":null,\"prixAnnuelTtc\":null}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.formuleChoisie").value("INTER"));
     }
 }
