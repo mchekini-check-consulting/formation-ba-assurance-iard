@@ -191,7 +191,7 @@ public class GestionErreurs {
     @ExceptionHandler(ProfilBloqueException.class)
     public ProblemDetail profilBloque(ProfilBloqueException exception) {
         ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());
-        probleme.setProperty("motif", exception.getMotif());
+        probleme.setProperty(PROP_MOTIF, exception.getMotif());
         return probleme;
     }
 }
