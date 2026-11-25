@@ -57,6 +57,8 @@ class DevisAutoIT {
 
     @BeforeEach
     void installerDonnees() {
+        plaques.deleteAll();
+        vehicules.deleteAll();
         RefVehicule peugeot = new RefVehicule();
         peugeot.setMarque("Peugeot");
         peugeot.setModele("308");
