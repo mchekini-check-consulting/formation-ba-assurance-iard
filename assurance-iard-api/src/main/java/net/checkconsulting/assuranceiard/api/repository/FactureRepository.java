@@ -24,11 +24,6 @@ public interface FactureRepository extends JpaRepository<Facture, Long> {
     @LogMetier
     List<Facture> findByContratIdInOrderByPeriodeFinDescIdDesc(Collection<Long> contrats);
 
-    /** US-22, AC2 : une seule facture par contrat et par période. */
-    @LogMetier
-    Optional<Facture> findFirstByContratIdAndPeriodeDebutAndPeriodeFinOrderByIdAsc(Long contratId,
-            LocalDate periodeDebut, LocalDate periodeFin);
-
     /** US-22 : la facture d'un document PDF (modèle Facture). */
     @LogMetier
     Optional<Facture> findFirstByDocumentId(Long documentId);

@@ -20,14 +20,24 @@ public record MesFacturesResponse(List<Contrat> contrats, boolean aucuneCotisati
 
     /**
      * @param statut PAYEE, A_VENIR ou IMPAYEE.
-     * @param facturable faux si la période n'est pas facturable (contrat Résilié ou Renoncé, après sa date de fin).
+     * @param facturable vrai seulement pour une échéance payée (recette), hors période après la fin d'un contrat
+     *     Résilié ou Renoncé.
+     * @param facture numéro de la facture qui couvre déjà cette échéance (même période, ou facture d'un mois qui
+     *     couvre sa date) ; vide sinon : l'écran propose alors son téléchargement au lieu d'en générer une autre.
      */
     public record Echeance(LocalDate date, BigDecimal montantTtc, String statut, LocalDate periodeDebut,
-            LocalDate periodeFin, boolean facturable) {
+            LocalDate periodeFin, boolean facturable, String facture) {
     }
 
-    /** Année de cotisation (d'une date anniversaire de l'effet à la suivante). */
-    public record Annee(LocalDate debut, LocalDate fin, BigDecimal montantTtc, boolean facturable) {
+    /**
+     * Année de cotisation (d'une date anniversaire de l'effet à la suivante) ; montant = ses 12 mensualités.
+     *
+     * @param facturable vrai seulement si l'année est entièrement réglée (recette).
+     * @param reglee vrai si toutes ses échéances sont payées.
+     * @param facture numéro de la facture déjà générée pour cette année ; vide sinon.
+     */
+    public record Annee(LocalDate debut, LocalDate fin, BigDecimal montantTtc, boolean facturable, boolean reglee,
+            String facture) {
     }
 
     /** @param documentId PDF téléchargeable par /documents-contrat/{id} ; vide tant qu'il n'est pas stocké. */
