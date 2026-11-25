@@ -1,0 +1,554 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+/* ─── SKIP LINK ───────────────────────────────────────────────── */
+.evitement {
+  position: absolute;
+  left: 1rem;
+  top: -4rem;
+  z-index: 10;
+  padding: 0.75rem 1rem;
+  background: var(--rouge);
+  color: #fff;
+  border-radius: 8px;
+
+  &:focus {
+    top: 1rem;
+  }
+}
+
+/* ─── LAYOUT ──────────────────────────────────────────────────── */
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+/* ─── EN-TÊTE ─────────────────────────────────────────────────── */
+.entete {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: #fff;
+  border-bottom: 1px solid var(--bordure);
+
+  &__ligne {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    padding: 14px 1.5rem;
+  }
+
+  &__actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-decoration: none;
+  color: var(--texte);
+
+  &__icone {
+    display: block;
+  }
+
+  &__nom {
+    font-size: 20px;
+    font-weight: 700;
+  }
+}
+
+.texte-connexion {
+  font-size: 14px;
+  color: var(--texte-discret);
+}
+
+.lien-connexion {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+  margin-left: 4px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.lien-quitter {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+/* ─── STEPPER 6 ÉTAPES ────────────────────────────────────────── */
+.progression {
+  border-top: 1px solid var(--bordure-claire);
+
+  &__liste {
+    display: flex;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  &__etape {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1px;
+    padding: 10px 16px 10px 0;
+    border-bottom: 3px solid var(--bordure);
+    color: var(--texte-discret);
+    text-align: left;
+
+    &--active {
+      border-color: var(--rouge);
+
+      .progression__libelle {
+        color: var(--rouge);
+        font-weight: 700;
+      }
+
+      .progression__nom {
+        color: var(--rouge-fonce);
+        font-weight: 700;
+      }
+    }
+  }
+
+  &__libelle {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--texte-discret);
+  }
+
+  &__nom {
+    font-size: 12px;
+    color: var(--texte-discret);
+  }
+}
+
+/* ─── SOUS-ÉTAPES ─────────────────────────────────────────────── */
+.sous-etapes {
+  background: var(--beige);
+  padding: 10px 1.5rem;
+  display: flex;
+  justify-content: center;
+
+  &__liste {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
+
+.sous-etape {
+  border-radius: 999px;
+  padding: 6px 16px;
+  font-size: 13px;
+  font-weight: 500;
+  background: #fff;
+  border: 1.5px solid var(--gris);
+  color: var(--texte-doux);
+  white-space: nowrap;
+  text-decoration: none;
+
+  &--active {
+    background: var(--rouge);
+    border-color: var(--rouge);
+    color: #fff;
+    font-weight: 600;
+  }
+
+  &--terminee {
+    background: #f6e9e9;
+    border-color: var(--rouge);
+    color: var(--rouge);
+    font-weight: 600;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--rose);
+    }
+  }
+}
+
+/* ─── CORPS ───────────────────────────────────────────────────── */
+.fond-beige {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 60px;
+}
+
+.contenu-etape {
+  max-width: 660px;
+  margin: 32px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── TITRE DE PAGE ───────────────────────────────────────────── */
+.titre-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 26px;
+  color: var(--texte);
+}
+
+.sous-titre-page {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+}
+
+.note-champs {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.rouge {
+  color: var(--rouge);
+}
+
+/* ─── FORMULAIRE ──────────────────────────────────────────────── */
+.formulaire-achat {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── CARTES ──────────────────────────────────────────────────── */
+.carte {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--bordure-claire);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.carte-sous-titre {
+  margin: 0;
+  font-size: 18px;
+  color: var(--texte);
+}
+
+/* ─── BADGE VÉHICULE ──────────────────────────────────────────── */
+.vehicule-badge {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+
+  &--rouge {
+    color: var(--rouge);
+  }
+}
+
+/* ─── COLONNES VÉHICULE ───────────────────────────────────────── */
+.vehicule-colonnes {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px 16px;
+}
+
+.vehicule-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.vehicule-libelle {
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.vehicule-valeur {
+  font-size: 14px;
+  color: var(--texte);
+  font-weight: 700;
+}
+
+/* ─── CHAMP DU FORMULAIRE ─────────────────────────────────────── */
+.champ-formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &--erreur {
+    .saisie {
+      border-color: var(--rouge);
+    }
+  }
+}
+
+.libelle-champ {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+.saisie {
+  height: 44px;
+  border: 1.5px solid var(--gris);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--texte);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+
+  &:focus {
+    border-color: var(--rouge);
+  }
+
+  &--plaque {
+    width: 220px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 600;
+  }
+
+  &--date {
+    width: 180px;
+  }
+}
+
+.aide-champ {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texte-discret);
+}
+
+.erreur {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rouge);
+  font-weight: 500;
+}
+
+/* ─── BOUTONS DE CHOIX ────────────────────────────────────────── */
+.choix-btn {
+  height: 36px;
+  padding: 0 12px;
+  border-radius: 6px;
+  border: 1.5px solid var(--gris);
+  background: #fff;
+  color: var(--texte);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover {
+    border-color: var(--rouge);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rouge);
+    outline-offset: 2px;
+  }
+
+  &--actif {
+    background: #f6e9e9;
+    border-color: var(--rouge);
+    color: var(--rouge-fonce);
+    font-weight: 600;
+  }
+}
+
+.choix-ligne {
+  display: flex;
+  gap: 8px;
+
+  .choix-btn {
+    flex: 1;
+  }
+}
+
+.choix-auto {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.choix-grille-5 {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 8px;
+
+  .choix-btn {
+    text-align: center;
+    white-space: normal;
+    line-height: 1.2;
+    padding: 8px 6px;
+    min-height: 36px;
+    height: auto;
+  }
+}
+
+/* ─── CASE À COCHER NON IMMATRICULÉ ──────────────────────────── */
+.case-non-immat {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  color: var(--texte);
+  cursor: pointer;
+
+  input[type='checkbox'] {
+    width: 16px;
+    height: 16px;
+    accent-color: var(--rouge);
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+}
+
+/* ─── AVERTISSEMENT ORANGE ────────────────────────────────────── */
+.avertissement-orange {
+  margin: 0;
+  font-size: 13px;
+  color: #9a5a00;
+  background: #fff8e6;
+  border: 1px solid #f5c550;
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+/* ─── MESSAGES ────────────────────────────────────────────────── */
+.message-attention {
+  margin: 0;
+  font-size: 14px;
+  color: var(--texte-doux);
+}
+
+.lien-rouge-inline {
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.lien-modifier {
+  font-size: 13px;
+  color: var(--rouge);
+  text-decoration: underline;
+  align-self: flex-start;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+/* ─── BAS DE PAGE ─────────────────────────────────────────────── */
+.bas-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 16px;
+}
+
+.lien-bas-retour {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+.btn-suivant {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--rouge);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover {
+    background: var(--rouge-fonce);
+  }
+}
+
+/* ─── ACCESSIBILITÉ ───────────────────────────────────────────── */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ─── RESPONSIVE ──────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .progression__etape:nth-child(n + 4) {
+    display: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .vehicule-colonnes {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .choix-ligne {
+    flex-wrap: wrap;
+
+    .choix-btn {
+      flex: 0 0 calc(50% - 4px);
+    }
+  }
+
+  .choix-grille-5 {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .carte {
+    padding: 20px 16px;
+  }
+
+  .contenu-etape {
+    margin-top: 20px;
+  }
+}

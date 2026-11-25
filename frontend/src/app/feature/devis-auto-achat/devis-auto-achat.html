@@ -1,0 +1,203 @@
+<iard-devis-auto-layout sousEtape="1.2"></iard-devis-auto-layout>
+
+<!-- CORPS DE PAGE -->
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <!-- TITRE -->
+      <div class="titre-zone">
+        <h1 class="titre-page serif">Votre v&#233;hicule</h1>
+        <p class="sous-titre-page">V&#233;rifiez que c&#39;est bien le v&#244;tre, puis parlez-nous de son achat.</p>
+        <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+      </div>
+
+      <form class="formulaire-achat" novalidate (submit)="continuer($event)">
+
+        <!-- ═══ CARTE 1 : VÉHICULE ═══ -->
+        <section class="carte" aria-labelledby="titre-vehicule">
+          <h2 id="titre-vehicule" class="sr-only">Votre v&#233;hicule</h2>
+
+          @if (modePlaque) {
+            <!-- Mode plaque : confirmation du véhicule trouvé -->
+            <p class="vehicule-badge vehicule-badge--rouge">
+              Nous avons trouv&#233; ce v&#233;hicule pour la plaque {{ vehicule.immatriculation }}
+            </p>
+          } @else {
+            <!-- Mode marque : véhicule sélectionné -->
+            <p class="vehicule-badge vehicule-badge--rouge">V&#233;hicule s&#233;lectionn&#233;</p>
+          }
+
+          <!-- 4 colonnes : marque/modèle · version · énergie · année/mise en circulation -->
+          <div class="vehicule-colonnes">
+            <div class="vehicule-colonne">
+              <span class="vehicule-libelle">Marque et mod&#232;le</span>
+              <strong class="vehicule-valeur">{{ vehicule.marque }} {{ vehicule.modele }}</strong>
+            </div>
+            <div class="vehicule-colonne">
+              <span class="vehicule-libelle">Version</span>
+              <strong class="vehicule-valeur">{{ vehicule.version ?? '&#8212;' }}</strong>
+            </div>
+            <div class="vehicule-colonne">
+              <span class="vehicule-libelle">&#201;nergie</span>
+              <strong class="vehicule-valeur">{{ formaterEnergie(vehicule.energie) }}</strong>
+            </div>
+            <div class="vehicule-colonne">
+              @if (modePlaque) {
+                <span class="vehicule-libelle">1re mise en circulation</span>
+              } @else {
+                <span class="vehicule-libelle">Ann&#233;e</span>
+              }
+              <strong class="vehicule-valeur">{{ vehicule.annee ?? '&#8212;' }}</strong>
+            </div>
+          </div>
+
+          @if (modePlaque) {
+            <!-- Question de confirmation (plaque uniquement) -->
+            <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurVehicule()">
+              <span class="libelle-champ">Est-ce bien votre v&#233;hicule&#160;?&#160;<span class="rouge">*</span></span>
+              <div class="choix-auto" role="group" aria-label="Confirmation du véhicule">
+                <button
+                  type="button"
+                  class="choix-btn"
+                  [class.choix-btn--actif]="vehiculeConfirme() === true"
+                  [attr.aria-pressed]="vehiculeConfirme() === true"
+                  (click)="vehiculeConfirme.set(true)"
+                >C&#39;est mon v&#233;hicule</button>
+                <button
+                  type="button"
+                  class="choix-btn"
+                  [class.choix-btn--actif]="vehiculeConfirme() === false"
+                  [attr.aria-pressed]="vehiculeConfirme() === false"
+                  (click)="vehiculeConfirme.set(false)"
+                >Ce n&#39;est pas mon v&#233;hicule</button>
+              </div>
+              @if (vehiculeConfirme() === false) {
+                <p class="message-attention">
+                  Pas de souci, retrouvez-le par sa marque.
+                  <a class="lien-rouge-inline" routerLink="/devis-auto/vehicule" [queryParams]="{mode: 'marque'}">Rechercher par marque</a>
+                </p>
+              }
+              @if (erreurVehicule()) {
+                <p class="erreur" role="alert">{{ erreurVehicule() }}</p>
+              }
+            </div>
+          } @else {
+            <!-- Lien modifier (marque uniquement) -->
+            <a class="lien-modifier" routerLink="/devis-auto/vehicule" [queryParams]="{mode: 'marque'}">Modifier</a>
+          }
+        </section>
+
+        <!-- ═══ CARTE 2 : ACHAT ═══ -->
+        <section class="carte" aria-labelledby="titre-achat">
+
+          <!-- Immatriculation (mode marque uniquement, facultatif) -->
+          @if (!modePlaque) {
+            <label class="case-non-immat">
+              <input type="checkbox" [checked]="nonImmatricule()" (change)="toggleNonImmatricule()" />
+              Mon v&#233;hicule n&#39;est pas encore immatricul&#233;
+            </label>
+            @if (!nonImmatricule()) {
+              <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurImmatriculation()">
+                <label class="libelle-champ" for="immatriculation">Immatriculation (facultatif)</label>
+                <input
+                  id="immatriculation"
+                  type="text"
+                  class="saisie saisie--plaque"
+                  placeholder="EX. AB-123-CD"
+                  [value]="immatriculationSaisie()"
+                  (input)="formaterImmatriculation($event)"
+                  (blur)="verifierPlaque()"
+                  maxlength="9"
+                  autocomplete="off"
+                  [attr.aria-invalid]="!!erreurImmatriculation() || null"
+                />
+                <p class="aide-champ">Case A de votre carte grise. Vous pourrez la renseigner plus tard.</p>
+                @if (verificationEnCours()) {
+                  <p class="aide-champ">V&#233;rification&#8230;</p>
+                }
+                @if (avertissementModele()) {
+                  <p class="avertissement-orange" role="alert">
+                    Cette plaque correspond &#224; un(e) {{ avertissementModele() }}. V&#233;rifiez votre v&#233;hicule.
+                    <a class="lien-rouge-inline" routerLink="/devis-auto/vehicule" [queryParams]="{mode: 'marque'}">Modifier</a>
+                  </p>
+                }
+                @if (erreurImmatriculation()) {
+                  <p class="erreur" role="alert">{{ erreurImmatriculation() }}</p>
+                }
+              </div>
+            }
+          }
+
+          <h2 id="titre-achat" class="carte-sous-titre serif">L&#39;achat du v&#233;hicule</h2>
+
+          <!-- Date d'acquisition -->
+          <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurDate()">
+            <label class="libelle-champ" for="date-achat">Date d&#39;acquisition&#160;<span class="rouge">*</span></label>
+            <input
+              id="date-achat"
+              type="text"
+              class="saisie saisie--date"
+              placeholder="JJ/MM/AAAA"
+              [value]="dateAcquisition()"
+              (input)="saisirDate($event)"
+              maxlength="10"
+              inputmode="numeric"
+              [attr.aria-invalid]="!!erreurDate() || null"
+            />
+            @if (erreurDate()) {
+              <p class="erreur" role="alert">{{ erreurDate() }}</p>
+            }
+          </div>
+
+          <!-- Mode d'achat -->
+          <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurModeAchat()">
+            <span class="libelle-champ" id="label-mode-achat">Mode d&#39;achat&#160;<span class="rouge">*</span></span>
+            <div class="choix-ligne" role="group" aria-labelledby="label-mode-achat">
+              @for (opt of modesAchat; track opt.valeur) {
+                <button
+                  type="button"
+                  class="choix-btn"
+                  [class.choix-btn--actif]="modeAchat() === opt.valeur"
+                  [attr.aria-pressed]="modeAchat() === opt.valeur"
+                  [attr.title]="opt.titre || null"
+                  (click)="modeAchat.set(opt.valeur)"
+                >{{ opt.libelle }}</button>
+              }
+            </div>
+            @if (erreurModeAchat()) {
+              <p class="erreur" role="alert">{{ erreurModeAchat() }}</p>
+            }
+          </div>
+
+          <!-- Titulaire carte grise -->
+          <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurTitulaire()">
+            <span class="libelle-champ" id="label-titulaire">&#192; quel nom est la carte grise&#160;?&#160;<span class="rouge">*</span></span>
+            <div class="choix-grille-5" role="group" aria-labelledby="label-titulaire">
+              @for (opt of titulaires; track opt.valeur) {
+                <button
+                  type="button"
+                  class="choix-btn"
+                  [class.choix-btn--actif]="titulaireCarteGrise() === opt.valeur"
+                  [attr.aria-pressed]="titulaireCarteGrise() === opt.valeur"
+                  (click)="titulaireCarteGrise.set(opt.valeur)"
+                >{{ opt.libelle }}</button>
+              }
+            </div>
+            @if (erreurTitulaire()) {
+              <p class="erreur" role="alert">{{ erreurTitulaire() }}</p>
+            }
+          </div>
+
+        </section>
+
+        <!-- BAS DE PAGE -->
+        <div class="bas-page">
+          <a class="lien-bas-retour" routerLink="/devis-auto/vehicule" [queryParams]="{mode: modePlaque ? 'plaque' : 'marque'}">&#8592; Retour &#224; la recherche</a>
+          <button type="submit" class="btn-suivant">Suivant</button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+</main>

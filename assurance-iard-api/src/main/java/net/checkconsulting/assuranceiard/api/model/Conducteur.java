@@ -53,4 +53,13 @@ public class Conducteur extends EntiteHorodatee {
 
     @Column(name = "eligible_en_ligne")
     private Boolean eligibleEnLigne;
+
+    @Column(name = "conducteur_principal", length = 25)
+    private String conducteurPrincipal;
+
+    @Column(name = "conduite_accompagnee", nullable = false)
+    private Boolean conduiteAccompagnee = false;
+
+    @Column(name = "nb_sinistres_non_responsables_3_ans")
+    private Integer nbSinistresNonResponsables3Ans;
 }

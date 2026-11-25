@@ -23,7 +23,7 @@ public class DevisAuto extends EntiteHorodatee {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "devis_id", nullable = false, unique = true)
+    @Column(name = "devis_id", unique = true)
     private Long devisId;
 
     @Column(name = "vehicule_id")
@@ -40,6 +40,9 @@ public class DevisAuto extends EntiteHorodatee {
 
     @Column(name = "ancien_numero_contrat", length = 40)
     private String ancienNumeroContrat;
+
+    @Column(name = "assure_vehicule", length = 20)
+    private String assureVehicule;
 
     @Column(name = "date_effet_souhaitee")
     private LocalDate dateEffetSouhaitee;

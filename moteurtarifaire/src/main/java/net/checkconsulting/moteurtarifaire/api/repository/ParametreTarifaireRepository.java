@@ -9,4 +9,6 @@ public interface ParametreTarifaireRepository extends JpaRepository<ParametreTar
 
     @LogMetier
     List<ParametreTarifaire> findByGrilleId(Long grilleId);
+
+    List<ParametreTarifaire> findByGrilleIdAndCategorie(Long grilleId, String categorie);
 }
