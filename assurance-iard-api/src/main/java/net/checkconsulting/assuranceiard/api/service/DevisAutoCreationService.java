@@ -1,6 +1,5 @@
 package net.checkconsulting.assuranceiard.api.service;
 
-import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
