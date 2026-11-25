@@ -1,0 +1,94 @@
+.mes-factures {
+  max-width: 820px;
+
+  &__vide {
+    margin: 0;
+  }
+
+  &__succes {
+    margin: 0;
+    color: #1f6b3a;
+    font-weight: 600;
+  }
+}
+
+.contrat-factures h3 {
+  margin-top: 12px;
+  font-size: 17px;
+}
+
+.lignes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.ligne {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  padding: 10px 0;
+  border-bottom: 1px solid #ececf1;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__date {
+    min-width: 110px;
+    font-weight: 600;
+  }
+
+  &__montant {
+    min-width: 110px;
+  }
+
+  &__action {
+    margin-left: auto;
+    padding: 6px 14px;
+    border: 1px solid #a82b27;
+    border-radius: 999px;
+    background: #a82b27;
+    color: #fff;
+    font: inherit;
+    font-size: 14px;
+    cursor: pointer;
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    &--secondaire {
+      background: #fff;
+      color: #a82b27;
+    }
+  }
+
+  &__message {
+    flex-basis: 100%;
+    font-size: 14px;
+  }
+}
+
+.statut-echeance {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 600;
+  background: #eef0f4;
+  color: #3d4250;
+
+  &--PAYEE {
+    background: #e3f3e8;
+    color: #1f6b3a;
+  }
+
+  &--IMPAYEE {
+    background: #fbe7e6;
+    color: #a82b27;
+  }
+}

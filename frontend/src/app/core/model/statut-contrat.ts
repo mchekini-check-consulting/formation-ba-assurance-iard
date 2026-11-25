@@ -38,7 +38,8 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: "En attente d'effet",
     ton: 'bleu',
     message: 'Votre contrat est signé : il prendra effet à sa date d’effet.',
-    actions: ['detail', 'regenerer'],
+    // US-22 : facture possible dès la signature (décision BA, à valider PO).
+    actions: ['detail', 'regenerer', 'genererFacture'],
   },
   ACTIF: {
     libelle: 'Actif',
@@ -86,7 +87,8 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Renoncé',
     ton: 'gris',
     message: 'Vous avez renoncé à ce contrat. Ses documents restent consultables.',
-    actions: ['detail'],
+    // US-22 : factures des périodes antérieures à la renonciation (décision BA, à valider PO).
+    actions: ['detail', 'genererFacture'],
   },
 };
 

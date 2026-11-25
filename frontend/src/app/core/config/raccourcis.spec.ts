@@ -15,9 +15,9 @@ const actions = (c: ContratResume, reglage = RACCOURCIS): string[] =>
 
 describe('raccourcis du contrat (US-18, AC2)', () => {
   it('masque les fonctions pas encore livrées', () => {
-    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'regenerer']);
+    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'regenerer', 'genererFacture']);
     expect(RACCOURCIS.modifierGaranties.livre).toBe(false);
-    expect(RACCOURCIS.genererFacture.livre).toBe(false);
+    expect(RACCOURCIS.genererFacture.livre).toBe(true);
     expect(RACCOURCIS.declarerSinistre.livre).toBe(false);
   });
 
@@ -26,13 +26,13 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
       ...RACCOURCIS,
       declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true, lien: () => ({ commandes: ['/sinistres'] }) },
     };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'declarerSinistre']);
-    expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail']);
+    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'genererFacture', 'declarerSinistre']);
+    expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail', 'genererFacture']);
   });
 
   it('une fonction livrée sans adresse reste masquée', () => {
-    const reglage = { ...RACCOURCIS, genererFacture: { ...RACCOURCIS.genererFacture, livre: true } };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer']);
+    const reglage = { ...RACCOURCIS, declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true } };
+    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'genererFacture']);
   });
 
   it('« Voir le détail » ouvre la fiche par numéro', () => {
@@ -78,9 +78,20 @@ describe('navigation et tuiles (US-18, maquette)', () => {
   const tout = { ...LIVRAISONS, factures: true, sinistres: true, monCompte: true, modifierGaranties: true };
   const adresses = { factures: '/espace-client/factures', sinistres: '/espace-client/sinistres', monCompte: '/compte', modifierGaranties: '/garanties' };
 
-  it('masque Mes factures, Mes sinistres et Mon compte tant que leurs US ne sont pas livrées', () => {
-    expect(navigationClient().map((e) => e.libelle)).toEqual(['Tableau de bord', 'Mes contrats', 'Mes devis', 'Mes documents']);
-    expect(LIVRAISONS.factures || LIVRAISONS.sinistres || LIVRAISONS.monCompte).toBe(false);
+  it('masque Mes sinistres et Mon compte tant que leurs US ne sont pas livrées ; US-22 : Mes factures est livrée', () => {
+    expect(navigationClient().map((e) => e.libelle)).toEqual([
+      'Tableau de bord',
+      'Mes contrats',
+      'Mes devis',
+      'Mes documents',
+      'Mes factures',
+    ]);
+    expect(navigationClient().find((e) => e.libelle === 'Mes factures')).toEqual({
+      libelle: 'Mes factures',
+      adresse: '/espace-client/factures',
+      rubrique: 'CONTRATS',
+    });
+    expect(LIVRAISONS.sinistres || LIVRAISONS.monCompte).toBe(false);
   });
 
   it('affiche les liens dans l’ordre de la maquette une fois livrés', () => {
@@ -102,7 +113,7 @@ describe('navigation et tuiles (US-18, maquette)', () => {
   });
 
   it('« Faire un nouveau devis » est toujours proposé, les autres tuiles selon les livraisons', () => {
-    expect(tuiles().map((t) => t.libelle)).toEqual(['Faire un nouveau devis']);
+    expect(tuiles().map((t) => t.libelle)).toEqual(['Mes factures', 'Faire un nouveau devis']);
     expect(tuiles(tout, adresses).map((t) => t.libelle)).toEqual([
       'Déclarer un sinistre',
       'Modifier mes garanties',
@@ -116,5 +127,36 @@ describe('navigation et tuiles (US-18, maquette)', () => {
     expect(RACCOURCIS.genererFacture.livre).toBe(LIVRAISONS.factures);
     expect(RACCOURCIS.declarerSinistre.livre).toBe(LIVRAISONS.sinistres);
     expect(RACCOURCIS.detail.libelle).toBe('Voir mon contrat');
+  });
+});
+
+describe('US-22 : raccourci « Générer une facture » et lien « Voir mes factures »', () => {
+  it('ouvre Mes factures sur le contrat (ancre contrat-<numéro>)', () => {
+    const facture = raccourcisDuContrat(contrat('ACTIF', 'AUTO')).find((r) => r.action === 'genererFacture');
+    expect(facture?.libelle).toBe('Générer une facture');
+    expect(facture?.lien).toEqual({ commandes: ['/espace-client/factures'], fragment: 'contrat-AE-1' });
+    expect(adresseSiLivree('factures')).toBe('/espace-client/factures');
+  });
+
+  it('jamais proposé pour un contrat en attente de signature ; proposé pour les autres statuts', () => {
+    expect(actions(contrat('EN_ATTENTE_DE_SIGNATURE'))).not.toContain('genererFacture');
+    for (const statut of [
+      'EN_ATTENTE_EFFET',
+      'ACTIF',
+      'ACTIF_JUSTIFICATIFS_ATTENDUS',
+      'AVENANT_EN_ATTENTE',
+      'IMPAYE',
+      'SUSPENDU',
+      'RESILIATION_EN_COURS',
+      'RESILIE',
+      'RENONCE',
+    ] as const) {
+      expect(actions(contrat(statut))).toContain('genererFacture');
+    }
+  });
+
+  it('sans adresse, le raccourci est masqué', () => {
+    const reglage = { ...RACCOURCIS, genererFacture: { ...RACCOURCIS.genererFacture, lien: () => null } };
+    expect(actions(contrat('ACTIF'), reglage)).not.toContain('genererFacture');
   });
 });

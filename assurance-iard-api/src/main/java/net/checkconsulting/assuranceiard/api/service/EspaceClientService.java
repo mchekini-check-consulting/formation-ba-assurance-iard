@@ -185,7 +185,7 @@ public class EspaceClientService {
     }
 
     /** Le logement (adresse) ou le véhicule (marque, modèle, immatriculation), en une ligne. */
-    static String bienAssure(Contrat contrat) {
+    public static String bienAssure(Contrat contrat) {
         if (Contrat.AUTO.equals(contrat.getProduit())) {
             return vehicule(contrat.getVehicule());
         }

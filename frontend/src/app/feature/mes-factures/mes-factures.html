@@ -1,0 +1,119 @@
+<section class="mes-devis mes-factures" aria-labelledby="mes-factures-titre">
+  <h1 id="mes-factures-titre" class="serif">Mes factures</h1>
+
+  @if (chargement()) {
+    <p>Chargement de vos factures…</p>
+  } @else if (donnees() === null) {
+    <p class="mes-devis__erreur" role="alert">Vos factures n'ont pas pu être chargées. Réessayez dans quelques instants.</p>
+  } @else if (donnees()!.aucuneCotisation) {
+    <!-- AC4 -->
+    <p class="mes-factures__vide">{{ messageAucuneCotisation }}</p>
+  } @else {
+    @for (contrat of donnees()!.contrats; track contrat.numero) {
+      <section class="devis-ligne contrat-factures" [id]="ancreContrat(contrat.numero)" [attr.aria-labelledby]="ancreContrat(contrat.numero) + '-titre'">
+        <div class="devis-ligne__entete">
+          <h2 [id]="ancreContrat(contrat.numero) + '-titre'">
+            Contrat {{ contrat.numero }} · {{ libellesProduit[contrat.produit] }}
+          </h2>
+          <iard-badge-statut [statut]="contrat.statut" />
+        </div>
+        @if (contrat.bienAssure) {
+          <p class="carte-contrat__message">{{ contrat.bienAssure }}</p>
+        }
+
+        <!-- AC1 : échéancier, du plus récent au plus ancien -->
+        <h3>Échéancier</h3>
+        @if (contrat.echeances.length === 0) {
+          <p class="carte-contrat__message">Aucune échéance pour ce contrat pour le moment.</p>
+        } @else {
+          <ul class="lignes" [attr.aria-label]="'Échéancier du contrat ' + contrat.numero">
+            @for (echeance of contrat.echeances; track echeance.date) {
+              <li class="ligne">
+                <span class="ligne__date">{{ formaterDate(echeance.date) }}</span>
+                <span class="ligne__montant">{{ formaterPrix(echeance.montantTtc) }}&#160;€ TTC</span>
+                <span class="statut-echeance" [class]="'statut-echeance statut-echeance--' + echeance.statut">
+                  {{ libellesStatut[echeance.statut] }}
+                </span>
+                @if (peutGenerer && echeance.facturable) {
+                  <button
+                    type="button"
+                    class="ligne__action"
+                    [disabled]="enCours() !== null"
+                    [attr.aria-label]="'Générer la facture de l\'échéance du ' + formaterDate(echeance.date)"
+                    (click)="generer(contrat, 'ECHEANCE', echeance.date)"
+                  >
+                    {{ enCours() === cle(contrat, 'ECHEANCE', echeance.date) ? 'Génération…' : 'Générer une facture' }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        <!-- AC2 : année de cotisation, d'une date anniversaire à la suivante -->
+        @if (contrat.annees.length > 0) {
+          <h3>Années de cotisation</h3>
+          <ul class="lignes" [attr.aria-label]="'Années de cotisation du contrat ' + contrat.numero">
+            @for (annee of contrat.annees; track annee.debut) {
+              <li class="ligne">
+                <span class="ligne__date">Du {{ formaterDate(annee.debut) }} au {{ formaterDate(annee.fin) }}</span>
+                <span class="ligne__montant">{{ formaterPrix(annee.montantTtc) }}&#160;€ TTC</span>
+                @if (peutGenerer && annee.facturable) {
+                  <button
+                    type="button"
+                    class="ligne__action"
+                    [disabled]="enCours() !== null"
+                    [attr.aria-label]="'Générer la facture de l\'année du ' + formaterDate(annee.debut) + ' au ' + formaterDate(annee.fin)"
+                    (click)="generer(contrat, 'ANNEE', annee.debut)"
+                  >
+                    {{ enCours() === cle(contrat, 'ANNEE', annee.debut) ? 'Génération…' : 'Générer une facture' }}
+                  </button>
+                }
+              </li>
+            }
+          </ul>
+        }
+
+        @if (messagesContrat()[contrat.numero]?.texte; as texte) {
+          <p
+            [class]="messagesContrat()[contrat.numero].succes ? 'mes-factures__succes' : 'mes-devis__erreur'"
+            role="status"
+          >
+            {{ texte }}
+          </p>
+        }
+
+        <!-- AC2 : factures déjà générées, téléchargeables -->
+        <h3>Factures</h3>
+        @if (contrat.factures.length === 0) {
+          <p class="carte-contrat__message">Aucune facture générée pour ce contrat.</p>
+        } @else {
+          <ul class="lignes" [attr.aria-label]="'Factures du contrat ' + contrat.numero">
+            @for (facture of contrat.factures; track facture.numero) {
+              <li class="ligne">
+                <span class="ligne__date">{{ facture.numero }}</span>
+                <span>Du {{ formaterDate(facture.periodeDebut) }} au {{ formaterDate(facture.periodeFin) }}</span>
+                <span class="ligne__montant">{{ formaterPrix(facture.montantTtc) }}&#160;€ TTC</span>
+                @if (facture.documentId !== null) {
+                  <button
+                    type="button"
+                    class="ligne__action ligne__action--secondaire"
+                    [attr.aria-label]="'Télécharger la facture ' + facture.numero"
+                    (click)="telecharger(facture)"
+                  >
+                    Télécharger
+                  </button>
+                } @else {
+                  <span class="carte-contrat__message">En préparation</span>
+                }
+                @if (messagesFacture()[facture.numero]?.texte; as message) {
+                  <p class="mes-devis__erreur ligne__message" role="status">{{ message }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </section>
+    }
+  }
+</section>

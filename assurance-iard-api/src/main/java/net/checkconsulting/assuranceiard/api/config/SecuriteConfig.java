@@ -10,7 +10,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 @Configuration
 @EnableConfigurationProperties({
     ConnexionProperties.class, DoubleAuthentificationProperties.class, JustificatifsProperties.class,
-    ReinitialisationProperties.class, DonneesTestProperties.class, DocumentsProperties.class})
+    ReinitialisationProperties.class, DonneesTestProperties.class, DocumentsProperties.class,
+    FacturationProperties.class})
 public class SecuriteConfig {
 
     @Bean

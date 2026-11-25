@@ -6,7 +6,9 @@ import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
+import net.checkconsulting.assuranceiard.api.dto.DemandeFactureRequest;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
+import net.checkconsulting.assuranceiard.api.dto.FactureGenereeResponse;
 import net.checkconsulting.assuranceiard.api.dto.FicheContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.GenerationContratRequest;
 import net.checkconsulting.assuranceiard.api.dto.RegenerationResponse;
@@ -19,6 +21,7 @@ import net.checkconsulting.assuranceiard.api.securite.TypeRessource;
 import net.checkconsulting.assuranceiard.api.service.ContratService;
 import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
 import net.checkconsulting.assuranceiard.api.service.document.RegenerationContratService;
+import net.checkconsulting.assuranceiard.api.service.facture.FactureService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -34,6 +37,7 @@ public class ContratResource {
     private final ContratService contratService;
     private final EspaceClientService espaceClientService;
     private final RegenerationContratService regenerationService;
+    private final FactureService factureService;
 
     @PostMapping("/devis/contrat")
     @Acces(rubrique = Rubrique.SOUSCRIPTION, droit = Droit.CREER,
@@ -75,6 +79,21 @@ public class ContratResource {
     @LogMetier(champs = {"resultat.version", "resultat.disponible"})
     public RegenerationResponse regenerer(@PathVariable String numero) {
         return regenerationService.regenererALaDemandeDuClient(numero);
+    }
+
+    /**
+     * US-22, AC2 : génère la facture PDF d'une échéance ou d'une année de cotisation (ou renvoie celle déjà générée
+     * pour cette période). Droit DOCUMENTS/CREER ; seul le propriétaire du contrat peut le faire, un refus est tracé
+     * dans acces_refuse (US-04). 404 si la date n'est ni une échéance ni une année du contrat, 422 si le contrat est en
+     * attente de signature ou si la période commence après la fin d'un contrat Résilié ou Renoncé.
+     */
+    @PostMapping("/contrats/{numero}/factures")
+    @Acces(rubrique = Rubrique.DOCUMENTS, droit = Droit.CREER,
+            ressource = TypeRessource.CONTRAT_NUMERO, identifiant = "numero")
+    @LogMetier(champs = {"demande.periode", "resultat.existante", "resultat.disponible"})
+    public FactureGenereeResponse genererFacture(@PathVariable String numero,
+            @Valid @RequestBody DemandeFactureRequest demande) {
+        return factureService.generer(numero, demande);
     }
 
     @GetMapping("/devis/contrat/{referenceDevis}")

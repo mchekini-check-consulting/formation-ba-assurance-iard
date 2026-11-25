@@ -72,6 +72,13 @@ export const routes: Routes = [
         title: "Mon espace – Assur'Easy",
       },
       {
+        // US-22 : échéancier et factures (génération : droit DOCUMENTS/CREER, vérifié par le serveur).
+        path: 'factures',
+        loadComponent: () => import('./feature/mes-factures/mes-factures').then((m) => m.MesFactures),
+        canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+        title: "Mes factures – Assur'Easy",
+      },
+      {
         path: 'documents',
         loadComponent: () => import('./feature/mes-documents/mes-documents').then((m) => m.MesDocuments),
         canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],

@@ -69,6 +69,14 @@ public class DonneesContratRepository {
                 .findFirst();
     }
 
+    /** US-22 : jour de la signature (heure de Paris) ; vide si le contrat n'est pas signé. */
+    @LogMetier
+    public Optional<LocalDate> dateSignature(long contratId) {
+        return jdbc.queryForList("""
+                SELECT (signe_le AT TIME ZONE 'Europe/Paris')::DATE FROM contrat
+                WHERE id = ? AND signe_le IS NOT NULL""", LocalDate.class, contratId).stream().findFirst();
+    }
+
     private List<DonneesContrat.Option> options(long contratId) {
         List<DonneesContrat.Option> options = jdbc.query(OPTIONS, (ligne, rang) -> option(ligne), contratId);
         return options.isEmpty() ? jdbc.query(OPTIONS_DU_DEVIS, (ligne, rang) -> option(ligne), contratId)

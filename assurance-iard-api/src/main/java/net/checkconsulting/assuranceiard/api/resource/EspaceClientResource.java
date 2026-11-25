@@ -1,12 +1,14 @@
 package net.checkconsulting.assuranceiard.api.resource;
 
 import lombok.RequiredArgsConstructor;
+import net.checkconsulting.assuranceiard.api.dto.MesFacturesResponse;
 import net.checkconsulting.assuranceiard.api.dto.TableauDeBordResponse;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.model.Droit;
 import net.checkconsulting.assuranceiard.api.model.Rubrique;
 import net.checkconsulting.assuranceiard.api.securite.Acces;
 import net.checkconsulting.assuranceiard.api.service.EspaceClientService;
+import net.checkconsulting.assuranceiard.api.service.facture.FactureService;
 import org.springframework.http.HttpHeaders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestHeader;
@@ -22,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class EspaceClientResource {
 
     private final EspaceClientService service;
+    private final FactureService factures;
 
     @GetMapping("/espace-client/tableau-de-bord")
     @Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER)
@@ -29,5 +32,17 @@ public class EspaceClientResource {
     public TableauDeBordResponse tableauDeBord(
             @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
         return service.tableauDeBord(authorization);
+    }
+
+    /**
+     * US-22, AC1, AC2, AC4 : « Mes factures », échéancier et factures de chaque contrat signé du client connecté, et
+     * seulement les siens. Droit CONTRATS/CONSULTER.
+     */
+    @GetMapping("/espace-client/factures")
+    @Acces(rubrique = Rubrique.CONTRATS, droit = Droit.CONSULTER)
+    @LogMetier(champs = {"resultat.aucuneCotisation"})
+    public MesFacturesResponse mesFactures(
+            @RequestHeader(name = HttpHeaders.AUTHORIZATION, required = false) String authorization) {
+        return factures.mesFactures(authorization);
     }
 }
