@@ -12,6 +12,7 @@ import static org.mockito.Mockito.when;
 import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -172,6 +173,58 @@ class DocumentsGeneresServiceTest {
 
         document.setEmpreinte(DocumentsGeneresService.empreinte(new byte[] {9}));
         assertThatThrownBy(() -> service.telecharger(10L)).isInstanceOf(DocumentAltereException.class);
+    }
+
+    /** Génère une version, puis renvoie son PDF stocké (pour relire ses propriétés). */
+    private Document genererEtStocker() {
+        when(documents.enVigueurVerrouille(7L, "CONDITIONS_PARTICULIERES", "")).thenReturn(Optional.empty());
+        Document document = service.generer(
+                DemandeDocument.duContrat(TypeDocument.CONDITIONS_PARTICULIERES, 7L, "DEMANDE_CLIENT"));
+        ArgumentCaptor<DocumentContenu> contenu = ArgumentCaptor.forClass(DocumentContenu.class);
+        verify(contenus).save(contenu.capture());
+        when(contenus.findByDocumentId(document.getId())).thenReturn(Optional.of(contenu.getValue()));
+        return document;
+    }
+
+    @Test
+    void us21LaDateDeProductionDuPdfEstRetenue() {
+        Document document = genererEtStocker();
+
+        assertThat(service.production(document)).hasValueSatisfying(production ->
+                assertThat(production.produitLe()).isEqualTo(HORLOGE.instant().truncatedTo(ChronoUnit.SECONDS)));
+    }
+
+    @Test
+    void us21DonneesInchangeesLeContenuEstAJour() {
+        Document document = genererEtStocker();
+
+        assertThat(service.contenuAJour(document)).isTrue();
+    }
+
+    @Test
+    void us21UneDonneeChangeeLeContenuNEstPlusAJour() {
+        Document document = genererEtStocker();
+        when(modele.rediger(any())).thenReturn(new ContenuDocument("Conditions particulières", "AE-2026-000001",
+                List.of(new ContenuDocument.Section("Franchise", "500,00 €"))));
+
+        assertThat(service.contenuAJour(document)).isFalse();
+    }
+
+    @Test
+    void us21UnDocumentNonStockeOuSansEmpreinteNEstPasAJour() {
+        Document nonStocke = existant(1);
+        assertThat(service.contenuAJour(nonStocke)).isFalse();
+        assertThat(service.production(nonStocke)).isEmpty();
+
+        Document ancien = existant(1);
+        ancien.setId(20L);
+        ancien.setStocke(true);
+        DocumentContenu contenu = new DocumentContenu();
+        contenu.setContenu(new GabaritPdf().rendre(new ContenuDocument("T", "AE-1", List.of()),
+                new GabaritPdf.Pied("T", "AE-1", 1, java.time.LocalDate.of(2026, 1, 1))));
+        when(contenus.findByDocumentId(20L)).thenReturn(Optional.of(contenu));
+        // Contenu différent : pas à jour (un PDF d'avant US-21 serait aussi « pas à jour », faute d'empreinte).
+        assertThat(service.contenuAJour(ancien)).isFalse();
     }
 
     @Test

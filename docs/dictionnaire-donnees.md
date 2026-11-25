@@ -178,8 +178,11 @@ remplacer par les éléments du PO.
   **en lecture seule** : la souscription habitation du sprint 1 enregistre ses contrats comme avant, et le
   déclencheur `tg_contrat_completer` les complète. À rendre modifiables avec la souscription auto (US-33).
 - Lien entre les justificatifs d'US-04 (`justificatif`) et la nouvelle table `document` : à faire.
-- **T-03** : les contrats créés après V27 (nouvelles souscriptions) n'ont pas encore de ligne « conditions
-  particulières » : US-21 / US-33 appellent le service de documents à la signature.
+- ~~**T-03** : les contrats créés après V27 n'ont pas de ligne « conditions particulières ».~~ US-21 : la signature
+  habitation crée la V1 (motif « Signature du contrat ») ; la régénération crée la version suivante (motif
+  « Régénération à la demande du client »), la précédente passe à REMPLACE. Aucune migration. Reste à faire : la
+  signature auto (US-33). Les contrats habitation signés entre V27 et US-21 obtiennent leur V1 à la première
+  régénération.
 - ~~L'écran `devis-contrat` teste une valeur de statut `SIGNE`.~~ Retiré en US-18 (10 statuts de RG3).
 - **Données de test** : le contrat auto `AE-RECETTE-A10` est au statut `RENONCE`, alors que la renonciation ne
   s'applique pas à l'assurance auto obligatoire (art. L112-2-1 du Code des assurances). Affiché tel quel par US-18,

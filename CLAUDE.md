@@ -69,6 +69,15 @@ l'intégrer dans la branche avant d'envoyer (skill `deploy`).
   `frontend/proxy.conf.json` (préfixe `/api` retiré). Une seule entrée
   aujourd'hui : avec un deuxième backend, passer à `/api/<backend>` (une
   entrée par backend, skill `nouvelle-fonctionnalite`).
+- Espace client et back-office : toute page accessible depuis la barre latérale
+  (pages client, Mes factures, Mes sinistres, Mon compte, pages internes) est une
+  route enfant de `/espace-client`, `/back-office` ou `/admin` (`app.routes.ts`),
+  rendue dans le cadre commun `CadreEspace` : en-tête + barre latérale verticale
+  à gauche du contenu, jamais de barre horizontale sur ordinateur (seule
+  exception : sur mobile, RG5, la barre passe au-dessus du contenu).
+- Une nouvelle page client apparaît dans la barre via `LIVRAISONS`/`ADRESSES`
+  (`core/config/raccourcis.ts`) ; `app.routes.spec.ts` échoue si une page de la
+  barre n'est pas rendue dans le cadre.
 
 **`helm.yaml`** (lu par la plateforme)
 - Nouvelle application **à la fin** de `applications:` (Kargo repère les

@@ -66,3 +66,46 @@
   font-variant-numeric: tabular-nums;
   letter-spacing: 0.04em;
 }
+
+// US-21 : section « Versions » et message de confirmation de la régénération.
+.fiche__confirmation {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #e7f5ea;
+  color: #1e6b34;
+  font-weight: 600;
+
+  &--erreur {
+    background: #fbeaea;
+    color: #a82b27;
+  }
+}
+
+.versions {
+  &__statut {
+    margin-left: 6px;
+    padding: 2px 10px;
+    border: 1px solid currentcolor;
+    border-radius: 999px;
+    color: #4a4a4f;
+    font-size: 13px;
+    font-weight: 600;
+
+    &--en-vigueur {
+      color: #1e6b34;
+    }
+  }
+
+  &__date,
+  &__motif {
+    color: var(--texte-discret);
+    font-size: 14px;
+  }
+
+  // Recette US-21 : à la place du bouton quand rien n'a changé.
+  &__a-jour {
+    margin: 0;
+    color: var(--texte-doux);
+  }
+}

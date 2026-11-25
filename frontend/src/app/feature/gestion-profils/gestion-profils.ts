@@ -1,6 +1,5 @@
 import { TitleCasePipe } from '@angular/common';
 import { Component, inject, signal } from '@angular/core';
-import { RouterLink } from '@angular/router';
 import { HistoriqueEntree, Permission, ProfilInfo, ProfilsService } from '../../core/service/profils.service';
 
 const LABELS_RUBRIQUES: Record<string, string> = {
@@ -26,7 +25,7 @@ const ORDRE_DROITS = ['CONSULTER', 'CREER', 'MODIFIER', 'DESACTIVER'];
 /** US-02 : gestion des profils et de leurs droits d'accès (réservé aux administrateurs). */
 @Component({
   selector: 'iard-gestion-profils',
-  imports: [RouterLink, TitleCasePipe],
+  imports: [TitleCasePipe],
   styleUrl: './gestion-profils.scss',
   templateUrl: './gestion-profils.html',
 })

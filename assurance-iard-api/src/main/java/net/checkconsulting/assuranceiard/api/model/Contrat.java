@@ -100,4 +100,9 @@ public class Contrat {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vehicule_id", insertable = false, updatable = false)
     private Vehicule vehicule;
+
+    /** US-18 : mandat de prélèvement (IBAN masqué sur le tableau de bord). Lecture seule. */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "mandat_sepa_id", insertable = false, updatable = false)
+    private MandatSepa mandatSepa;
 }

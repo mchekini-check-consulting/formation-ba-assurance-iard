@@ -1,0 +1,61 @@
+<header class="entete">
+  <div class="entete__ligne">
+    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
+      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
+      <span class="logo__nom serif">Assur'Easy</span>
+    </a>
+    <div class="compte">
+      @if (initiales()) {
+        <span class="compte__initiales" aria-hidden="true">{{ initiales() }}</span>
+      }
+      <span class="compte__nom">{{ nomAffiche() }}</span>
+      <button type="button" class="compte__deconnexion" (click)="seDeconnecter()">Se déconnecter</button>
+    </div>
+  </div>
+</header>
+
+<div class="cadre">
+  <!-- RG5 : barre latérale à gauche sur ordinateur, au-dessus du contenu sur mobile -->
+  <aside class="barre">
+    <nav class="barre__navigation" aria-label="Mon espace">
+      <ul class="barre__liste">
+        @for (entree of navigation(); track entree.adresse) {
+          <li>
+            <a
+              class="barre__lien"
+              [routerLink]="entree.adresse"
+              [class.barre__lien--actif]="estActif(entree.adresse, entree.exacte)"
+              [attr.aria-current]="estActif(entree.adresse, entree.exacte) ? 'page' : null"
+              >{{ entree.libelle }}</a
+            >
+          </li>
+        }
+      </ul>
+    </nav>
+
+    <!-- US-04 : liens du back-office, pour les profils internes seulement, séparés de la navigation client -->
+    @if (estInterne()) {
+      <nav class="interne" aria-labelledby="titre-interne">
+        <p id="titre-interne" class="interne__titre">Espace interne</p>
+        <ul class="barre__liste">
+          @for (entree of navigationInterne(); track entree.adresse) {
+            <li>
+              <a
+                class="barre__lien"
+                [routerLink]="entree.adresse"
+                [class.barre__lien--actif]="estActif(entree.adresse)"
+                [attr.aria-current]="estActif(entree.adresse) ? 'page' : null"
+                >{{ entree.libelle }}</a
+              >
+            </li>
+          }
+        </ul>
+      </nav>
+    }
+  </aside>
+
+  <!-- Gabarit de route : la page de l'espace s'affiche ici (routes enfants de /espace-client, /back-office, /admin) -->
+  <main class="contenu">
+    <router-outlet />
+  </main>
+</div>

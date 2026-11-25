@@ -26,7 +26,9 @@ public record FicheContratResponse(
         LocalDate dateEcheance,
         LocalDate dateFin,
         Paiement paiement,
-        List<Document> documents) {
+        List<Document> documents,
+        List<Version> versionsConditionsParticulieres,
+        boolean conditionsParticulieresAJour) {
 
     public record Logement(String type, Integer surface, String adresse, String codePostal, String ville) {
     }
@@ -43,5 +45,17 @@ public record FicheContratResponse(
 
     /** Document en vigueur, téléchargeable par /documents-contrat/{id}. */
     public record Document(Long id, String type, String libelle, Integer version, Instant dateCreation) {
+    }
+
+    /**
+     * US-21, AC2 : une version des conditions particulières (EN_VIGUEUR ou REMPLACE), la plus récente d'abord.
+     *
+     * @param motif code {@code MotifRegeneration} (DEMANDE_CLIENT, AVENANT, COORDONNEES, CONDITIONS_GENERALES,
+     *     SIGNATURE), ou texte libre pour une version antérieure à US-21
+     * @param genereLe date de production du PDF ; vide tant qu'il n'est pas produit (ou s'il date d'avant US-21)
+     * @param disponible vrai si son PDF est stocké (sinon le téléchargement répond « en préparation »)
+     */
+    public record Version(Long id, Integer version, String statut, Instant dateCreation, String motif,
+            Instant genereLe, boolean disponible) {
     }
 }

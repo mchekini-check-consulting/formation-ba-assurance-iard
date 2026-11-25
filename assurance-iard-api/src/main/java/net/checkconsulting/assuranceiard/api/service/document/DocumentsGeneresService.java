@@ -8,6 +8,7 @@ import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.HexFormat;
 import java.util.Locale;
+import java.util.Optional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.config.DocumentsProperties;
@@ -124,13 +125,40 @@ public class DocumentsGeneresService {
         return new Fichier(nomFichier(document), "pdf", pdf);
     }
 
-    private byte[] produire(Document document) {
+    /** US-21 : date de production et empreinte du contenu du PDF stocké ; vide s'il n'est pas (encore) stocké. */
+    @Transactional(readOnly = true)
+    public Optional<GabaritPdf.Production> production(Document document) {
+        if (!Boolean.TRUE.equals(document.getStocke())) {
+            return Optional.empty();
+        }
+        return contenus.findByDocumentId(document.getId()).map(DocumentContenu::getContenu)
+                .flatMap(gabarit::production);
+    }
+
+    /**
+     * US-21 : vrai si le PDF stocké a été produit avec les données actuelles (même contenu rédigé, à la même
+     * version). Faux s'il n'est pas stocké ou s'il date d'avant US-21 (pas d'empreinte) : on peut alors régénérer.
+     */
+    @Transactional(readOnly = true)
+    public boolean contenuAJour(Document document) {
+        return production(document)
+                .map(GabaritPdf.Production::empreinteContenu)
+                .filter(empreinte -> empreinte != null && !empreinte.isBlank())
+                .map(empreinte -> empreinte.equals(GabaritPdf.empreinte(rediger(document))))
+                .orElse(false);
+    }
+
+    private ContenuDocument rediger(Document document) {
         ModeleDocument modele = catalogue.pour(document)
                 .orElseThrow(() -> new IllegalStateException("Aucun modèle pour le type " + document.getType()));
-        ContenuDocument contenu = modele.rediger(document).avec(sectionAssureur());
+        return modele.rediger(document).avec(sectionAssureur());
+    }
+
+    private byte[] produire(Document document) {
+        ContenuDocument contenu = rediger(document);
         GabaritPdf.Pied pied = new GabaritPdf.Pied(TypeDocument.valueOf(document.getType()).libelle(),
                 contenu.numero(), document.getVersion(), aujourdHui());
-        byte[] pdf = gabarit.rendre(contenu, pied);
+        byte[] pdf = gabarit.rendre(contenu, pied, Instant.now(horloge));
         if (pdf.length > reglages.tailleMax().toBytes()) {
             throw new IllegalStateException("PDF trop volumineux : " + pdf.length + " octets");
         }

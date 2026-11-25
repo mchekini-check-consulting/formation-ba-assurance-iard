@@ -9,7 +9,7 @@ import { DevisService } from '../../core/service/devis.service';
 @Component({
   selector: 'iard-mes-devis',
   imports: [RouterLink],
-  styleUrls: ['../compte-cree/compte-cree.scss', './mes-devis.scss'],
+  styleUrls: ['./mes-devis.scss'],
   templateUrl: './mes-devis.html',
 })
 export class MesDevis {

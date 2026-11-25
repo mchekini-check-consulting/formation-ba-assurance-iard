@@ -7,7 +7,7 @@ import { BackOfficeService } from '../../core/service/back-office.service';
 @Component({
   selector: 'iard-dossiers-clients',
   imports: [RouterLink],
-  styleUrls: ['../compte-cree/compte-cree.scss', '../mes-devis/mes-devis.scss'],
+  styleUrls: ['../mes-devis/mes-devis.scss'],
   templateUrl: './dossiers-clients.html',
 })
 export class DossiersClients {

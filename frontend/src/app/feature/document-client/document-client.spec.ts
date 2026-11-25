@@ -31,12 +31,20 @@ describe('DocumentClientPage (US-04)', () => {
     vi.restoreAllMocks();
   });
 
+  it('US-18 : n’a plus son propre en-tête (le cadre commun est apporté par la route)', () => {
+    http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));
+    fixture.detectChanges();
+    expect(page.querySelector('header')).toBeNull();
+    expect(page.querySelector('main')).toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('prépare le document puis libère sa mémoire en quittant la page', () => {
     expect(page.textContent).toContain('Chargement du document');
     http.expectOne('/api/assurance-iard-api/documents/5').flush(new Blob(['pdf']));
     fixture.detectChanges();
 
-    expect(page.querySelector('main .btn')?.getAttribute('href')).toBe('blob:document');
+    expect(page.querySelector('section .btn')?.getAttribute('href')).toBe('blob:document');
     fixture.destroy();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:document');
   });

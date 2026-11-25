@@ -7,11 +7,32 @@ export const CONTRAT_AUTO: ContratResume = {
   numero: 'AE-RECETTE-A03',
   produit: 'AUTO',
   statut: 'ACTIF',
+  formule: 'TR',
   bienAssure: 'Renault Clio · AB-003-CD',
+  typeLogement: null,
+  ville: null,
   cotisationMensuelle: 45,
   dateEffet: '2026-09-25',
   dateEcheance: '2027-09-25',
   dateFin: null,
+  ibanMasque: '•••• 7788',
+};
+
+/** Contrat habitation du sprint 1 (référence de devis, logement). */
+export const CONTRAT_HABITATION: ContratResume = {
+  referenceDevis: '7c9e6679-7425-40de-944b-e07fc1f90ae7',
+  numero: 'AE-2026-000001',
+  produit: 'HABITATION',
+  statut: 'ACTIF',
+  formule: 'confort',
+  bienAssure: '12 rue des Lilas, 94000 Créteil',
+  typeLogement: 'appartement',
+  ville: 'Créteil',
+  cotisationMensuelle: 14.9,
+  dateEffet: '2026-12-01',
+  dateEcheance: '2027-12-01',
+  dateFin: null,
+  ibanMasque: '•••• 4821',
 };
 
 export const FICHE_AUTO: FicheContrat = {
@@ -31,7 +52,11 @@ export const FICHE_AUTO: FicheContrat = {
   dateFin: null,
   paiement: { frequence: 'MENSUEL', jourPrelevement: 5, ibanMasque: '•••• 7788', rum: 'AE-RUM-RECETTE-A' },
   documents: [
-    { id: 12, type: 'CONDITIONS_PARTICULIERES', libelle: 'Conditions particulières', version: 1, dateCreation: null },
     { id: 13, type: 'CONDITIONS_GENERALES', libelle: 'Conditions générales', version: 1, dateCreation: null },
   ],
+  versionsConditionsParticulieres: [
+    { id: 14, version: 2, statut: 'EN_VIGUEUR', dateCreation: '2026-11-24T10:00:00Z', motif: 'DEMANDE_CLIENT', genereLe: '2026-11-24T10:00:05Z', disponible: true },
+    { id: 12, version: 1, statut: 'REMPLACE', dateCreation: '2026-09-25T08:00:00Z', motif: 'SIGNATURE', genereLe: '2026-09-25T08:00:05Z', disponible: true },
+  ],
+  conditionsParticulieresAJour: false,
 };

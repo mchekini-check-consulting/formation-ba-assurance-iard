@@ -3,7 +3,11 @@ import { TestBed } from '@angular/core/testing';
 import { provideHttpClient } from '@angular/common/http';
 import {
   ContratService,
+  MESSAGE_A_JOUR,
+  MESSAGE_IMPOSSIBLE,
+  MESSAGE_TROP_TOT,
   ResultatFiche,
+  ResultatRegeneration,
   ResultatGeneration,
   ResultatObtention,
   ResultatSignature,
@@ -139,6 +143,52 @@ describe('ContratService', () => {
       service.obtenirFiche('AE-X').subscribe((r) => resultats.push(r));
       http.expectOne('/api/assurance-iard-api/contrats/AE-X').flush({}, { status, statusText: 'Erreur' });
       expect(resultats).toEqual([{ statut }]);
+    });
+  });
+
+  describe('US-21 : régénération des conditions particulières', () => {
+    const URL = '/api/assurance-iard-api/contrats/AE-RECETTE-A03/conditions-particulieres';
+    let resultats: ResultatRegeneration[];
+    beforeEach(() => (resultats = []));
+
+    it('demande la nouvelle version par POST', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      const requete = http.expectOne(URL);
+      expect(requete.request.method).toBe('POST');
+      requete.flush({ documentId: 55, version: 3, dateCreation: null, disponible: true, emailEnvoye: true });
+      expect(resultats).toEqual([
+        { statut: 'regenere', regeneration: { documentId: 55, version: 3, dateCreation: null, disponible: true, emailEnvoye: true } },
+      ]);
+    });
+
+    it('429 : trop rapproché, avec le message du serveur', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush({ detail: 'Réessayez dans une minute.' }, { status: 429, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'trop-tot', message: 'Réessayez dans une minute.' }]);
+    });
+
+    it('422 : statut qui ne permet pas la régénération, message par défaut sans détail', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush(null, { status: 422, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'impossible', message: MESSAGE_IMPOSSIBLE }]);
+    });
+
+    it('409 : aucune donnée n’a changé', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush(null, { status: 409, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'a-jour', message: MESSAGE_A_JOUR }]);
+    });
+
+    it('429 sans détail : message par défaut', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush(null, { status: 429, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'trop-tot', message: MESSAGE_TROP_TOT }]);
+    });
+
+    it('autre erreur : erreur technique', () => {
+      service.regenerer('AE-RECETTE-A03').subscribe((r) => resultats.push(r));
+      http.expectOne(URL).flush({}, { status: 500, statusText: 'x' });
+      expect(resultats).toEqual([{ statut: 'erreur-technique' }]);
     });
   });
 });

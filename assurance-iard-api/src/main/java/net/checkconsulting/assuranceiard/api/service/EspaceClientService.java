@@ -36,6 +36,8 @@ import net.checkconsulting.assuranceiard.api.repository.FactureRepository;
 import net.checkconsulting.assuranceiard.api.repository.PermissionRepository;
 import net.checkconsulting.assuranceiard.api.repository.SinistreRepository;
 import net.checkconsulting.assuranceiard.api.repository.VehiculeRepository;
+import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
+import net.checkconsulting.assuranceiard.api.service.document.GabaritPdf;
 import net.checkconsulting.assuranceiard.api.utils.EcheanceAnnuelle;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -49,11 +51,15 @@ import org.springframework.transaction.annotation.Transactional;
 @RequiredArgsConstructor
 public class EspaceClientService {
 
-    /** AC3 : documents affichés sur la fiche (ceux qui n'existent pas encore en base n'apparaissent pas). */
-    static final List<TypeDocument> DOCUMENTS_FICHE = List.of(TypeDocument.CONDITIONS_PARTICULIERES,
-            TypeDocument.CONDITIONS_GENERALES, TypeDocument.IPID, TypeDocument.FICHE_CONSEIL,
-            TypeDocument.MANDAT_SEPA, TypeDocument.ATTESTATION, TypeDocument.MEMO_VEHICULE);
+    /**
+     * AC3 : documents affichés sur la fiche (ceux qui n'existent pas encore en base n'apparaissent pas). US-21 : les
+     * conditions particulières n'y sont plus, elles ont leur section « Versions ».
+     */
+    static final List<TypeDocument> DOCUMENTS_FICHE = List.of(TypeDocument.CONDITIONS_GENERALES, TypeDocument.IPID,
+            TypeDocument.FICHE_CONSEIL, TypeDocument.MANDAT_SEPA, TypeDocument.ATTESTATION,
+            TypeDocument.MEMO_VEHICULE);
     static final String SINISTRE_DECLARE = "DECLARE";
+    private static final String EN_VIGUEUR = "EN_VIGUEUR";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
 
     private final SessionService sessionService;
@@ -66,6 +72,7 @@ public class EspaceClientService {
     private final SinistreRepository sinistres;
     private final DocumentRepository documents;
     private final DonneesContratRepository donneesContrat;
+    private final DocumentsGeneresService documentsGeneres;
     private final Clock horloge;
 
     /** US-04, AC1 / US-18 : « Mes contrats », habitation et auto. */
@@ -93,6 +100,7 @@ public class EspaceClientService {
 
         return new TableauDeBordResponse(
                 compte.getPrenom(),
+                compte.getNom(),
                 sesContrats.stream().map(this::resume).toList(),
                 devisVisibles,
                 devisVisibles ? devisEnCours(compte) : List.of(),
@@ -111,6 +119,9 @@ public class EspaceClientService {
         DonneesContrat.Logement logement = donnees.logement();
         DonneesContrat.Vehicule vehicule = donnees.vehicule();
         DonneesContrat.Paiement paiement = donnees.paiement();
+        // US-21, AC2 : toutes les versions des conditions particulières, la plus récente d'abord.
+        List<Document> versions = documents.versionsDuContrat(contrat.getId(),
+                TypeDocument.CONDITIONS_PARTICULIERES.name());
 
         return new FicheContratResponse(
                 contrat.getNumero(),
@@ -133,7 +144,18 @@ public class EspaceClientService {
                 contrat.getDateFin(),
                 new FicheContratResponse.Paiement(paiement.frequence(), paiement.jourPrelevement(),
                         paiement.ibanMasque(), paiement.rum()),
-                documentsDeLaFiche(contrat));
+                documentsDeLaFiche(contrat),
+                versions.stream().map(this::version).toList(),
+                versions.stream().filter(document -> EN_VIGUEUR.equals(document.getStatut())).findFirst()
+                        .map(documentsGeneres::contenuAJour).orElse(false));
+    }
+
+    /** US-21, AC2 : une version des conditions particulières, avec la date de production de son PDF. */
+    private FicheContratResponse.Version version(Document document) {
+        return new FicheContratResponse.Version(document.getId(), document.getVersion(), document.getStatut(),
+                document.getDateCreation(), document.getMotif(),
+                documentsGeneres.production(document).map(GabaritPdf.Production::produitLe).orElse(null),
+                Boolean.TRUE.equals(document.getStocke()));
     }
 
     private boolean peut(Compte compte, Rubrique rubrique) {
@@ -147,11 +169,15 @@ public class EspaceClientService {
                 contrat.getNumero(),
                 contrat.getProduit(),
                 contrat.getStatut(),
+                contrat.getFormule(),
                 bienAssure(contrat),
+                contrat.getTypeLogement(),
+                contrat.getVille(),
                 contrat.getCotisationMensuelle(),
                 contrat.getDateEffet(),
                 echeance(contrat),
-                contrat.getDateFin());
+                contrat.getDateFin(),
+                contrat.getMandatSepa() == null ? null : contrat.getMandatSepa().getIbanMasque());
     }
 
     private LocalDate echeance(Contrat contrat) {

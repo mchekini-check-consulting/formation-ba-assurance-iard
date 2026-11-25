@@ -22,6 +22,10 @@ export interface DescriptionStatut {
 /**
  * US-18, RG3 : libellé, couleur, message et actions possibles de chaque statut. « Voir les factures » est rattaché à
  * l'action « Générer une facture » (interprétation à valider PO).
+ * US-21, RG2 (recette) : « Régénérer » est possible pour tout contrat signé et en vigueur, sauf Suspendu : jamais
+ * avant la signature, ni pour un contrat Résilié ou Renoncé (ses anciens documents restent téléchargeables). Elle
+ * prime sur RG3 d'US-18 pour Impayé et Résiliation en cours (à valider PO).
+ * Même règle côté serveur : RegenerationContratService.STATUTS_EXCLUS.
  */
 export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
   EN_ATTENTE_DE_SIGNATURE: {
@@ -34,7 +38,7 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: "En attente d'effet",
     ton: 'bleu',
     message: 'Votre contrat est signé : il prendra effet à sa date d’effet.',
-    actions: ['detail'],
+    actions: ['detail', 'regenerer'],
   },
   ACTIF: {
     libelle: 'Actif',
@@ -58,7 +62,7 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Impayé',
     ton: 'rouge',
     message: 'Un paiement n’a pas abouti : régularisez votre situation pour garder votre couverture.',
-    actions: ['detail', 'genererFacture'],
+    actions: ['detail', 'regenerer', 'genererFacture'],
   },
   SUSPENDU: {
     libelle: 'Suspendu',
@@ -70,7 +74,7 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Résiliation en cours',
     ton: 'gris',
     message: 'Votre contrat sera résilié à sa date de fin ; vous restez couvert jusque-là.',
-    actions: ['detail', 'genererFacture', 'declarerSinistre'],
+    actions: ['detail', 'regenerer', 'genererFacture', 'declarerSinistre'],
   },
   RESILIE: {
     libelle: 'Résilié',

@@ -21,6 +21,7 @@ import net.checkconsulting.assuranceiard.api.model.MandatSepa;
 import net.checkconsulting.assuranceiard.api.model.RecommandationDevis;
 import net.checkconsulting.assuranceiard.api.repository.CompteRepository;
 import net.checkconsulting.assuranceiard.api.repository.ContratRepository;
+import net.checkconsulting.assuranceiard.api.repository.DocumentRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.MandatSepaRepository;
 import net.checkconsulting.assuranceiard.api.repository.RecommandationDevisRepository;
@@ -71,6 +72,9 @@ class ContratIT {
 
     @Autowired
     private TarifDevisRepository tarifsDevis;
+
+    @Autowired
+    private DocumentRepository documents;
 
     @MockitoBean
     private MoteurTarifaireClient moteur;
@@ -163,6 +167,15 @@ class ContratIT {
         assertThat(contratRepository.findByDossier(dossier))
                 .isPresent()
                 .hasValueSatisfying(c -> assertThat(c.getStatut()).isEqualTo("ACTIF"));
+
+        // US-21, AC4 : la V1 des conditions particulières est créée à la signature, et téléchargeable.
+        long contratId = contratRepository.findByDossier(dossier).orElseThrow().getId();
+        assertThat(documents.enVigueur(contratId, "CONDITIONS_PARTICULIERES", ""))
+                .hasValueSatisfying(v1 -> {
+                    assertThat(v1.getVersion()).isEqualTo(1);
+                    assertThat(v1.getMotif()).isEqualTo("SIGNATURE");
+                    assertThat(v1.getStocke()).isTrue();
+                });
     }
 
     @Test

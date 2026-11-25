@@ -79,6 +79,24 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    /** US-21, RG2 : statut du contrat qui ne permet pas la régénération (RG3 d'US-18). */
+    @ExceptionHandler(RegenerationImpossibleException.class)
+    public ProblemDetail regenerationImpossible(RegenerationImpossibleException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
+    /** US-21 : régénération demandée alors qu'aucune donnée n'a changé. */
+    @ExceptionHandler(RegenerationInutileException.class)
+    public ProblemDetail regenerationInutile(RegenerationInutileException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /** US-21 : une régénération par minute et par contrat. */
+    @ExceptionHandler(RegenerationTropRapprocheeException.class)
+    public ProblemDetail regenerationTropRapprochee(RegenerationTropRapprocheeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
+    }
+
     @ExceptionHandler(MandatNonSigneException.class)
     public ProblemDetail mandatNonSigne(MandatNonSigneException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());

@@ -35,6 +35,35 @@ class GabaritPdfTest {
     }
 
     @Test
+    void us21LePdfRetientSaDateDeProductionEtLEmpreinteDeSonContenu() {
+        ContenuDocument contenu = new ContenuDocument("Conditions particulières", "AE-2026-000001",
+                List.of(new Section("Franchise", "300,00 €")));
+        java.time.Instant produitLe = java.time.Instant.parse("2026-11-24T09:30:00Z");
+
+        byte[] pdf = gabarit.rendre(contenu, PIED, produitLe);
+
+        assertThat(gabarit.production(pdf)).contains(
+                new GabaritPdf.Production(produitLe, GabaritPdf.empreinte(contenu)));
+    }
+
+    @Test
+    void us21LEmpreinteNeDependQueDuContenuPasDuPiedDePage() {
+        ContenuDocument contenu = new ContenuDocument("Titre", "AE-1", List.of(new Section("Franchise", "300,00 €")));
+        ContenuDocument autre = new ContenuDocument("Titre", "AE-1", List.of(new Section("Franchise", "500,00 €")));
+
+        assertThat(GabaritPdf.empreinte(contenu))
+                .isEqualTo(GabaritPdf.empreinte(new ContenuDocument("Titre", "AE-1",
+                        List.of(new Section("Franchise", "300,00 €")))))
+                .isNotEqualTo(GabaritPdf.empreinte(autre))
+                .hasSize(64);
+    }
+
+    @Test
+    void us21UnPdfIllisibleNaPasDeProduction() {
+        assertThat(gabarit.production(new byte[] {1, 2, 3})).isEmpty();
+    }
+
+    @Test
     void unDocumentCourtTientSurUnePageAvecSonPiedDePage() throws IOException {
         byte[] pdf = gabarit.rendre(new ContenuDocument("Mon titre", "AE-2026-000001",
                 List.of(new Section("Franchise", "300,00 €"))), PIED);

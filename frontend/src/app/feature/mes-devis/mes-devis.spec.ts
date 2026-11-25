@@ -64,6 +64,13 @@ describe('MesDevis', () => {
 
   afterEach(() => http.verify());
 
+  it('US-18 : n’a plus son propre en-tête (le cadre commun est apporté par la route)', () => {
+    afficher([]);
+    expect(page.querySelector('header')).toBeNull();
+    expect(page.querySelector('main')).toBeNull();
+    expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain('Mon espace');
+  });
+
   it('AC1 : affiche le devis et sa date de fin de validité', () => {
     afficher([valide]);
     expect(page.textContent).toContain('Formule Confort');

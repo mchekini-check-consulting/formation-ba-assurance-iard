@@ -1,157 +1,163 @@
-<header class="entete">
-  <div class="entete__ligne">
-    <a class="logo" routerLink="/" aria-label="Assur'Easy, accueil">
-      <img class="logo__icone" src="favicon.png" alt="" width="36" height="36" />
-      <span class="logo__nom serif">Assur'Easy</span>
-    </a>
-    <button type="button" class="btn btn--contour" (click)="seDeconnecter()">Se déconnecter</button>
-  </div>
-  <!-- RG5 : la navigation passe au-dessus du contenu et revient à la ligne, sans défilement horizontal -->
-  <!-- US-04, AC3 : seulement les rubriques autorisées par le profil (droits de l'US-02 fournis par le serveur) -->
-  <nav class="navigation" aria-label="Mon espace">
-    <ul class="navigation__liste">
-      @if (peut('CONTRATS', 'CONSULTER')) {
-        <li><a routerLink="/espace-client/contrats">Mes contrats</a></li>
-      }
-      @if (peut('DEVIS', 'CONSULTER')) {
-        <li><a routerLink="/espace-client/devis">Mes devis</a></li>
-      }
-      @if (peut('DOCUMENTS', 'CONSULTER')) {
-        <li><a routerLink="/espace-client/documents">Mes documents</a></li>
-      }
-      @if (estInterne()) {
-        @if (peut('COMPTES_UTILISATEURS', 'CONSULTER')) {
-          <li><a routerLink="/back-office/clients">Dossiers clients</a></li>
-        }
-        @if (profil() === 'ADMINISTRATEUR') {
-          <li><a routerLink="/admin/profils">Gérer les profils</a></li>
-        }
-        @if (peut('PROFILS', 'CONSULTER')) {
-          <li><a routerLink="/admin/acces-refuses">Journal des accès refusés</a></li>
-        }
-      }
-    </ul>
-  </nav>
-</header>
-
-<main class="page">
-  <div class="mes-devis tableau-de-bord">
+<div class="tableau-de-bord">
+  <div class="tableau-de-bord__accueil">
     <h1 class="serif">
-      @if (tableau()?.prenom; as prenom) {
-        Bonjour {{ prenom }}
+      @if (prenom()) {
+        Bonjour {{ prenom() }}
       } @else {
         Mon espace
       }
     </h1>
-    <p class="tableau-de-bord__connexion">Vous êtes connecté avec <strong>{{ email() }}</strong>.</p>
+    <p class="tableau-de-bord__sous-titre">L'essentiel de vos assurances, en un coup d'œil.</p>
+  </div>
 
-    @switch (etat()) {
-      @case ('chargement') {
-        <p>Chargement de votre espace…</p>
-      }
-      @case ('erreur') {
-        <p class="mes-devis__erreur" role="alert">
-          Votre espace n'a pas pu être chargé. Réessayez dans quelques instants.
-        </p>
-      }
-      @case ('affiche') {
-        @if (tableau(); as t) {
-          <section class="tableau-de-bord__section" aria-labelledby="titre-contrats">
+  @switch (etat()) {
+    @case ('chargement') {
+      <p>Chargement de votre espace…</p>
+    }
+    @case ('erreur') {
+      <p class="erreur" role="alert">Votre espace n'a pas pu être chargé. Réessayez dans quelques instants.</p>
+    }
+    @case ('affiche') {
+      @if (tableau(); as t) {
+        <!-- AC1 : mes contrats -->
+        <section class="section" aria-labelledby="titre-contrats">
+          <div class="section__entete">
             <h2 id="titre-contrats" class="serif">Mes contrats</h2>
-            @if (t.contrats.length === 0) {
-              <!-- AC6 : sans contrat, orientation vers la souscription -->
-              <div class="devis-ligne sans-contrat">
-                <p>Vous n'avez pas encore de contrat. Assurez votre logement ou votre véhicule en quelques minutes.</p>
-                <div class="devis-ligne__actions">
-                  <a class="btn" routerLink="/devis/logement">Assurer mon logement</a>
-                  <a class="btn btn--contour" routerLink="/devis-auto/vehicule">Assurer mon véhicule</a>
-                </div>
-              </div>
-            } @else {
-              <ul class="mes-devis__liste">
-                @for (contrat of t.contrats; track contrat.numero) {
-                  <li><iard-carte-contrat [contrat]="contrat" /></li>
-                }
-              </ul>
+            @if (t.contrats.length) {
+              <a class="section__lien" routerLink="/espace-client/contrats">Tout voir</a>
             }
-          </section>
+          </div>
+          @if (t.contrats.length === 0) {
+            <!-- AC6 : sans contrat, orientation vers la souscription -->
+            <div class="bloc sans-contrat">
+              <p>Vous n'avez pas encore de contrat. Assurez votre logement ou votre véhicule en quelques minutes.</p>
+              <div class="bloc__actions">
+                <a class="btn" routerLink="/devis/logement">Assurer mon logement</a>
+                <a class="btn btn--contour" routerLink="/devis-auto/vehicule">Assurer mon véhicule</a>
+              </div>
+            </div>
+          } @else {
+            <ul class="grille grille--contrats">
+              @for (contrat of contratsAffiches(); track contrat.numero) {
+                <li><iard-carte-contrat [contrat]="contrat" /></li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- Prochaine échéance (avec les dernières factures), devis en cours, sinistres en cours -->
+        <div class="grille grille--resume">
+          @if (t.contrats.length) {
+            <section class="bloc" aria-labelledby="titre-echeance">
+              <h2 id="titre-echeance" class="bloc__titre">Prochaine échéance</h2>
+              @if (prochaineEcheance(); as c) {
+                <p class="bloc__valeur">{{ formaterDate(c.dateEcheance!) }}</p>
+                <p>{{ LIBELLES_PRODUIT[c.produit] }} · N° {{ c.numero }}</p>
+                <p><strong>{{ formaterPrix(c.cotisationMensuelle) }}&#160;€/mois TTC</strong></p>
+                @if (c.ibanMasque) {
+                  <p class="bloc__discret">Prélevé sur <span class="iban">{{ c.ibanMasque }}</span></p>
+                }
+              } @else {
+                <p class="bloc__discret">Aucune échéance à venir.</p>
+              }
+
+              <h3 class="bloc__sous-titre">Dernières factures</h3>
+              @if (t.dernieresFactures.length === 0) {
+                <p class="bloc__discret">Aucune facture pour le moment.</p>
+              } @else {
+                <ul class="factures">
+                  @for (facture of t.dernieresFactures; track facture.numero) {
+                    <li>
+                      <span>{{ facture.numero }} · {{ formaterPrix(facture.montantTtc) }}&#160;€</span>
+                      @if (facture.documentId !== null) {
+                        <button
+                          type="button"
+                          class="lien-bouton"
+                          [attr.aria-label]="'Télécharger la facture ' + facture.numero"
+                          (click)="telechargerFacture(facture)"
+                        >
+                          Télécharger
+                        </button>
+                      } @else {
+                        <span class="bloc__discret">PDF bientôt disponible</span>
+                      }
+                      @if (messagesFactures()[facture.numero]; as message) {
+                        <p class="erreur factures__message" role="status">{{ message }}</p>
+                      }
+                    </li>
+                  }
+                </ul>
+              }
+              @if (adresseFactures) {
+                <a class="section__lien" [routerLink]="adresseFactures">Voir mes factures</a>
+              }
+            </section>
+          }
 
           @if (t.devisVisibles) {
-            <section class="tableau-de-bord__section" aria-labelledby="titre-devis">
-              <h2 id="titre-devis" class="serif">Mes devis en cours</h2>
-              @if (t.devisEnCours.length === 0) {
-                <p>Aucun devis en cours.</p>
+            <section class="bloc" aria-labelledby="titre-devis">
+              <h2 id="titre-devis" class="bloc__titre">Devis en cours</h2>
+              @if (devisRecent(); as devis) {
+                <p class="bloc__valeur">
+                  {{ LIBELLES_PRODUIT[devis.produit] }}@if (devis.description) { · <iard-texte-plaque [texte]="devis.description" />}
+                </p>
+                <p>Formule {{ libelleFormule(devis.formule) }}</p>
+                <p><strong>{{ formaterPrix(devis.prixMensuel) }}&#160;€/mois TTC</strong></p>
+                <p class="bloc__discret">Valable jusqu'au {{ formaterDate(devis.dateFinValidite) }}</p>
+                <!-- « Mes devis » ne montre que l'habitation (AC4 auto reporté au backlog) -->
+                @if (devis.produit === 'HABITATION') {
+                  <div class="bloc__actions">
+                    <a class="btn btn--contour" routerLink="/espace-client/devis">Voir mon devis</a>
+                  </div>
+                }
               } @else {
-                <ul class="mes-devis__liste">
-                  @for (devis of t.devisEnCours; track $index) {
-                    <li class="devis-ligne">
-                      <h3 class="serif">{{ LIBELLES_PRODUIT[devis.produit] }} · {{ libelleFormule(devis.formule) }}</h3>
-                      @if (devis.description) {
-                        <p>{{ devis.description }}</p>
-                      }
-                      <p><strong>{{ formaterPrix(devis.prixMensuel) }}&#160;€/mois</strong></p>
-                      <p>Valable jusqu'au {{ formaterDate(devis.dateFinValidite) }}</p>
-                    </li>
-                  }
-                </ul>
+                <p class="bloc__discret">Aucun devis en cours.</p>
               }
             </section>
           }
-
-          <section class="tableau-de-bord__section" aria-labelledby="titre-factures">
-            <h2 id="titre-factures" class="serif">Mes dernières factures</h2>
-            @if (t.dernieresFactures.length === 0) {
-              <p>Aucune facture pour le moment.</p>
-            } @else {
-              <ul class="mes-devis__liste">
-                @for (facture of t.dernieresFactures; track facture.numero) {
-                  <li class="devis-ligne">
-                    <h3 class="serif">Facture {{ facture.numero }}</h3>
-                    <p>Contrat {{ facture.numeroContrat }}</p>
-                    <p>
-                      Du {{ formaterDate(facture.periodeDebut) }} au {{ formaterDate(facture.periodeFin) }} :
-                      <strong>{{ formaterPrix(facture.montantTtc) }}&#160;€</strong>
-                    </p>
-                    @if (facture.documentId !== null) {
-                      <div class="devis-ligne__actions">
-                        <button type="button" class="btn btn--contour" (click)="telechargerFacture(facture)">
-                          Télécharger la facture {{ facture.numero }}
-                        </button>
-                      </div>
-                      @if (messagesFactures()[facture.numero]; as message) {
-                        <p class="mes-devis__erreur" role="status">{{ message }}</p>
-                      }
-                    } @else {
-                      <p class="mes-devis__mention">PDF bientôt disponible.</p>
-                    }
-                  </li>
-                }
-              </ul>
-            }
-          </section>
 
           @if (t.sinistresVisibles) {
-            <section class="tableau-de-bord__section" aria-labelledby="titre-sinistres">
-              <h2 id="titre-sinistres" class="serif">Mes sinistres déclarés</h2>
+            <section class="bloc" aria-labelledby="titre-sinistres">
+              <h2 id="titre-sinistres" class="bloc__titre">Sinistres en cours</h2>
               @if (t.sinistres.length === 0) {
-                <p>Aucun sinistre déclaré.</p>
+                <p class="bloc__discret">Aucun sinistre en cours.</p>
               } @else {
-                <ul class="mes-devis__liste">
+                <ul class="sinistres">
                   @for (sinistre of t.sinistres; track $index) {
-                    <li class="devis-ligne">
-                      <h3 class="serif">{{ libelleSinistre(sinistre.type) }}</h3>
-                      @if (sinistre.numero) {
-                        <p>Sinistre {{ sinistre.numero }}</p>
-                      }
-                      <p>Contrat {{ sinistre.numeroContrat }} · survenu le {{ formaterDate(sinistre.dateSurvenance) }}</p>
+                    <li>
+                      <p class="bloc__valeur">{{ libelleSinistre(sinistre.type) }}</p>
+                      <p>
+                        @if (produitDuContrat()(sinistre.numeroContrat); as produit) {
+                          {{ LIBELLES_PRODUIT[produit] }} ·
+                        }
+                        @if (sinistre.numero) {
+                          Sinistre {{ sinistre.numero }} ·
+                        }
+                        survenu le {{ formaterDate(sinistre.dateSurvenance) }}
+                      </p>
+                      <span class="badge-sinistre">{{ LIBELLE_SINISTRE_DECLARE }}</span>
                     </li>
                   }
                 </ul>
               }
+              @if (adresseSinistres) {
+                <div class="bloc__actions">
+                  <a class="btn btn--contour" [routerLink]="adresseSinistres">Voir mes sinistres</a>
+                </div>
+              }
             </section>
           }
-        }
+        </div>
+
+        <section class="section" aria-labelledby="titre-actions">
+          <h2 id="titre-actions" class="serif">Que voulez-vous faire ?</h2>
+          <ul class="grille grille--tuiles">
+            @for (tuile of tuiles; track tuile.adresse) {
+              <li><a class="tuile" [routerLink]="tuile.adresse">{{ tuile.libelle }}</a></li>
+            }
+          </ul>
+        </section>
       }
     }
-  </div>
-</main>
+  }
+</div>

@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, Router, convertToParamMap, provideRouter } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { FICHE_AUTO } from '../../core/model/contrat.exemples';
-import { ContratClient } from './contrat-client';
+import { ContratClient, messageDeConfirmation } from './contrat-client';
 
 const REFERENCE = '7c9e6679-7425-40de-944b-e07fc1f90ae7';
 
@@ -15,14 +15,14 @@ describe('ContratClient (US-18, AC3)', () => {
   let router: Router;
   let parametres: BehaviorSubject<ReturnType<typeof convertToParamMap>>;
 
-  const ouvrir = (identifiant: string): void => {
+  const ouvrir = (identifiant: string, fragment: string | null = null): void => {
     parametres = new BehaviorSubject(convertToParamMap({ numero: identifiant }));
     TestBed.configureTestingModule({
       providers: [
         provideRouter([]),
         provideHttpClient(),
         provideHttpClientTesting(),
-        { provide: ActivatedRoute, useValue: { paramMap: parametres } },
+        { provide: ActivatedRoute, useValue: { paramMap: parametres, snapshot: { fragment } } },
       ],
     });
     http = TestBed.inject(HttpTestingController);
@@ -55,8 +55,9 @@ describe('ContratClient (US-18, AC3)', () => {
       'Responsabilité civile (12,00 €/mois)',
     );
     expect(page.querySelector('.iban')?.textContent).toBe('•••• 7788');
-    const documents = Array.from(page.querySelectorAll('.fiche__documents li span')).map((d) => d.textContent);
-    expect(documents).toEqual(['Conditions particulières (version 1)', 'Conditions générales (version 1)']);
+    const documents = Array.from(page.querySelectorAll('.fiche__documents:not(.versions) li span')).map((d) => d.textContent);
+    // US-21 : les conditions particulières ne sont plus dans « Documents » (section « Versions »).
+    expect(documents).toEqual(['Conditions générales (version 1)']);
   });
 
   it('affiche la fiche habitation et le raccourci « Signer » si le contrat attend la signature', () => {
@@ -92,7 +93,7 @@ describe('ContratClient (US-18, AC3)', () => {
       page.querySelectorAll<HTMLButtonElement>('.fiche__documents button')[indice].click();
     };
 
-    it('télécharge les conditions particulières par la route de T-03', () => {
+    it('télécharge un document de la fiche (conditions générales) par la route de T-03', () => {
       vi.spyOn(URL, 'createObjectURL').mockReturnValue('blob:cp');
       vi.spyOn(URL, 'revokeObjectURL').mockImplementation(() => undefined);
       const clic = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
@@ -102,14 +103,14 @@ describe('ContratClient (US-18, AC3)', () => {
       });
 
       telecharger(0);
-      http.expectOne('/api/assurance-iard-api/documents-contrat/12').flush(new Blob(['%PDF']));
+      http.expectOne('/api/assurance-iard-api/documents-contrat/13').flush(new Blob(['%PDF']));
 
-      expect(nom).toBe('conditions-particulieres-AE-RECETTE-A03-v1.pdf');
+      expect(nom).toBe('conditions-generales-AE-RECETTE-A03-v1.pdf');
       vi.restoreAllMocks();
     });
 
     it('409 : « Document en préparation, réessayez dans quelques minutes »', () => {
-      telecharger(1);
+      telecharger(0);
       http
         .expectOne('/api/assurance-iard-api/documents-contrat/13')
         .flush(new Blob(), { status: 409, statusText: 'x' });
@@ -123,7 +124,7 @@ describe('ContratClient (US-18, AC3)', () => {
     it('autre erreur : message clair', () => {
       telecharger(0);
       http
-        .expectOne('/api/assurance-iard-api/documents-contrat/12')
+        .expectOne('/api/assurance-iard-api/documents-contrat/13')
         .flush(new Blob(), { status: 500, statusText: 'x' });
       fixture.detectChanges();
 
@@ -141,6 +142,184 @@ describe('ContratClient (US-18, AC3)', () => {
     ouvrir('AE-RECETTE-A03');
     repondreFiche('AE-RECETTE-A03', {}, 500);
     expect(page.querySelector('[role="alert"]')?.textContent).toContain("n'a pas pu être chargé");
+  });
+
+  describe('US-21 : versions et régénération des conditions particulières', () => {
+    const URL_REGENERATION = '/api/assurance-iard-api/contrats/AE-RECETTE-A03/conditions-particulieres';
+    const versions = (): string[] =>
+      Array.from(page.querySelectorAll('.versions li > span')).map((v) =>
+        (v.textContent ?? '').replace(/\s+/g, ' ').trim(),
+      );
+    /** Le bouton de régénération (son texte change pendant la demande). */
+    const bouton = (): HTMLButtonElement | null =>
+      page.querySelector<HTMLButtonElement>('#versions .devis-ligne__actions button');
+
+    it('AC2 : affiche toutes les versions, en vigueur et remplacées, chacune téléchargeable', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      expect(versions()).toEqual([
+        'Version 2 En vigueur · Générée le 24/11/2026 · À votre demande',
+        'Version 1 Remplacée · Générée le 25/09/2026 · À la signature de votre contrat',
+      ]);
+      page.querySelectorAll<HTMLButtonElement>('.versions button')[1].click();
+      http
+        .expectOne('/api/assurance-iard-api/documents-contrat/12')
+        .flush(new Blob(), { status: 409, statusText: 'x' });
+      fixture.detectChanges();
+      expect(page.querySelector('.versions [role="status"]')?.textContent).toContain('Document en préparation');
+    });
+
+    it('AC1 et AC3 : régénère, confirme l’envoi par e-mail, puis relit les versions', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      bouton()!.click();
+      fixture.detectChanges();
+      expect(bouton()?.disabled).toBe(true);
+      const requete = http.expectOne(URL_REGENERATION);
+      expect(requete.request.method).toBe('POST');
+      requete.flush({ documentId: 15, version: 3, dateCreation: '2026-11-24T11:00:00Z', disponible: true, emailEnvoye: true });
+      repondreFiche('AE-RECETTE-A03', {
+        ...FICHE_AUTO,
+        versionsConditionsParticulieres: [
+          { id: 15, version: 3, statut: 'EN_VIGUEUR', dateCreation: '2026-11-24T11:00:00Z', motif: 'DEMANDE_CLIENT', genereLe: '2026-11-24T11:00:02Z', disponible: true },
+          ...FICHE_AUTO.versionsConditionsParticulieres.map((v) => ({ ...v, statut: 'REMPLACE' })),
+        ],
+        conditionsParticulieresAJour: true,
+      });
+
+      expect(page.querySelector('.fiche__confirmation')?.textContent?.trim()).toBe(
+        'Vos conditions particulières sont régénérées (version 3). Nous vous les avons aussi envoyées par e-mail.',
+      );
+      expect(page.querySelector('.fiche__confirmation')?.getAttribute('role')).toBe('status');
+      expect(versions()[0]).toContain('Version 3 En vigueur');
+      // Plus rien n'a changé : le bouton laisse place au message « à jour ».
+      expect(bouton()).toBeNull();
+      expect(page.querySelector('.versions__a-jour')?.textContent?.trim()).toBe(
+        'Vos conditions particulières sont à jour (version 3, générée le 24/11/2026).',
+      );
+      expect(versions().slice(1).every((v) => v.includes('Remplacée'))).toBe(true);
+    });
+
+    it('recette : sans changement de données, pas de bouton mais « à jour (version N, générée le …) »', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, conditionsParticulieresAJour: true });
+
+      expect(bouton()).toBeNull();
+      expect(page.querySelector('.versions__a-jour')?.textContent?.trim()).toBe(
+        'Vos conditions particulières sont à jour (version 2, générée le 24/11/2026).',
+      );
+    });
+
+    it('409 « déjà à jour » renvoyé par le serveur : message, puis la fiche est relue', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      bouton()!.click();
+      http
+        .expectOne(URL_REGENERATION)
+        .flush({ detail: 'Vos conditions particulières sont déjà à jour (version 2).' }, { status: 409, statusText: 'x' });
+      repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, conditionsParticulieresAJour: true });
+
+      expect(page.querySelector('.fiche__confirmation')?.textContent?.trim()).toBe(
+        'Vos conditions particulières sont déjà à jour (version 2).',
+      );
+      expect(bouton()).toBeNull();
+    });
+
+    it('une version sans PDF produit est « En préparation » ; un motif inconnu n’est pas affiché', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', {
+        ...FICHE_AUTO,
+        versionsConditionsParticulieres: [
+          { id: 20, version: 1, statut: 'EN_VIGUEUR', dateCreation: null, motif: 'Données de recette T-05', genereLe: null, disponible: false },
+        ],
+      });
+
+      expect(versions()).toEqual(['Version 1 En vigueur · En préparation']);
+    });
+
+    it('une régénération par minute : le message du serveur est affiché', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      bouton()!.click();
+      http
+        .expectOne(URL_REGENERATION)
+        .flush({ detail: 'Réessayez dans une minute.' }, { status: 429, statusText: 'x' });
+      fixture.detectChanges();
+
+      expect(page.querySelector('.fiche__confirmation--erreur')?.textContent?.trim()).toBe('Réessayez dans une minute.');
+      expect(page.querySelector('.fiche__confirmation')?.getAttribute('role')).toBe('alert');
+    });
+
+    it('erreur technique : message clair', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      bouton()!.click();
+      http.expectOne(URL_REGENERATION).flush({}, { status: 500, statusText: 'x' });
+      fixture.detectChanges();
+
+      expect(page.querySelector('.fiche__confirmation--erreur')?.textContent).toContain("n'a pas pu aboutir");
+    });
+
+    it.each(['IMPAYE', 'RESILIATION_EN_COURS', 'EN_ATTENTE_EFFET'])(
+      'RG2 : bouton proposé pour un contrat signé %s',
+      (statut) => {
+        ouvrir('AE-RECETTE-A03');
+        repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, statut });
+
+        expect(bouton()).not.toBeNull();
+      },
+    );
+
+    it.each(['SUSPENDU', 'EN_ATTENTE_DE_SIGNATURE', 'RESILIE', 'RENONCE'])(
+      'RG2 : pas de bouton pour un contrat %s (les versions restent visibles et téléchargeables)',
+      (statut) => {
+        ouvrir('AE-RECETTE-A03');
+        repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, statut });
+
+        expect(bouton()).toBeNull();
+        expect(versions()).toHaveLength(2);
+      },
+    );
+
+    it('la régénération n’apparaît pas en double dans les raccourcis de la fiche', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      expect(Array.from(page.querySelectorAll('a')).map((a) => a.textContent?.trim())).not.toContain(
+        'Régénérer mon contrat',
+      );
+    });
+
+    it('sans version : message d’attente', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, versionsConditionsParticulieres: [] });
+
+      expect(page.querySelector('#versions')?.textContent).toContain('seront disponibles ici dès leur création');
+    });
+
+    it('ouverte depuis le raccourci du tableau de bord, la fiche affiche la section « Versions »', async () => {
+      const defiler = vi.fn();
+      ouvrir('AE-RECETTE-A03', 'versions');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+      (page.querySelector('#versions') as HTMLElement).scrollIntoView = defiler;
+      vi.spyOn(document, 'getElementById').mockReturnValue(page.querySelector('#versions') as HTMLElement);
+
+      await new Promise((fin) => setTimeout(fin));
+
+      expect(defiler).toHaveBeenCalled();
+      vi.restoreAllMocks();
+    });
+
+    it('AC3 : messages selon que le PDF est prêt et que l’e-mail est parti', () => {
+      const base = { documentId: 1, version: 2, dateCreation: null };
+      expect(messageDeConfirmation({ ...base, disponible: false, emailEnvoye: false })).toContain('en préparation');
+      expect(messageDeConfirmation({ ...base, disponible: true, emailEnvoye: false })).toContain("n'a pas abouti");
+    });
   });
 
   describe('non-régression : ancienne adresse par référence de devis', () => {
