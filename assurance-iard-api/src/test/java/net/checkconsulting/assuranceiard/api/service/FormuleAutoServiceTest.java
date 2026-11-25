@@ -119,6 +119,21 @@ class FormuleAutoServiceTest {
     }
 
     @Test
+    void obtenirPrix_avec_conducteur_sans_permis_ni_bm_utilise_valeurs_par_defaut() {
+        conducteur.setDatePermis(null);
+        conducteur.setCoefficientBonusMalus(null);
+        vehicule.setKmAnnuel(null);
+        vehicule.setValeurEstimee(null);
+        when(moteurTarifaire.calculerAuto(any())).thenReturn(new TarifAutoResponse(
+                null, "AUTO-2026.1", true, "TR", List.of(), List.of(), null,
+                LocalDate.now().plusDays(30), "Peugeot", "308", null));
+
+        PrixFormuleAutoResponse reponse = service.obtenirPrix(1L);
+
+        assertThat(reponse.prix()).isEmpty();
+    }
+
+    @Test
     void choisirFormule_vehiculeRemplacement_incompatible_tiers_est_retire() {
         // Si le client choisit TIERS avec VEHICULE_REMPLACEMENT → le service doit quand même enregistrer
         // (la compatibilité est gérée côté frontend ; le service sauvegarde ce qui lui est envoyé)

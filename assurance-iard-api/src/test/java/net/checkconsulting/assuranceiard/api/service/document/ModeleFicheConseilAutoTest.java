@@ -183,4 +183,53 @@ class ModeleFicheConseilAutoTest {
                 .collect(java.util.stream.Collectors.joining(" "));
         assertThat(texteDevis).contains("30 jours");
     }
+
+    @Test
+    void rediger_avecPrixNuls() {
+        devisAuto.setPrixMensuelTtc(null);
+        devisAuto.setPrixAnnuelTtc(null);
+        when(devisAutos.findById(7L)).thenReturn(Optional.of(devisAuto));
+        Document doc = new Document();
+        doc.setReference("7");
+
+        ContenuDocument contenu = modele.rediger(doc);
+
+        String texteTarif = contenu.sections().stream()
+                .filter(s -> s.titre().equals("Tarif"))
+                .flatMap(s -> s.lignes().stream())
+                .collect(java.util.stream.Collectors.joining(" "));
+        assertThat(texteTarif).contains("Prix non calculé");
+    }
+
+    @Test
+    void rediger_avecPriorite() {
+        devisAuto.setPriorite("PRIX");
+        when(devisAutos.findById(7L)).thenReturn(Optional.of(devisAuto));
+        Document doc = new Document();
+        doc.setReference("7");
+
+        ContenuDocument contenu = modele.rediger(doc);
+
+        String texteBesoins = contenu.sections().stream()
+                .filter(s -> s.titre().equals("Vos besoins (étape 2)"))
+                .flatMap(s -> s.lignes().stream())
+                .collect(java.util.stream.Collectors.joining(" "));
+        assertThat(texteBesoins).contains("PRIX");
+    }
+
+    @Test
+    void rediger_avecRaisonsFormule() {
+        devisAuto.setRaisonsFormule("Usage professionnel|Véhicule récent");
+        when(devisAutos.findById(7L)).thenReturn(Optional.of(devisAuto));
+        Document doc = new Document();
+        doc.setReference("7");
+
+        ContenuDocument contenu = modele.rediger(doc);
+
+        String texteConseil = contenu.sections().stream()
+                .filter(s -> s.titre().equals("Formule conseillée"))
+                .flatMap(s -> s.lignes().stream())
+                .collect(java.util.stream.Collectors.joining(" "));
+        assertThat(texteConseil).contains("professionnel");
+    }
 }
