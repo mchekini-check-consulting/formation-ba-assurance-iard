@@ -74,6 +74,14 @@ class DocumentContratResourceTest {
     }
 
     @Test
+    void ipidDocumentNonTrouveEst409() throws Exception {
+        when(documents.enVigueur(0L, "IPID", "TIERS")).thenReturn(java.util.Optional.empty());
+
+        mockMvc.perform(get("/documents-contrat/ipid/TIERS"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
     void lesErreursOntUnCodeEtUnMessageClairs() throws Exception {
         when(service.telecharger(6L)).thenThrow(new DocumentInconnuException());
         when(service.telecharger(7L)).thenThrow(new DocumentIndisponibleException());

@@ -105,6 +105,20 @@ class FormuleAutoServiceTest {
     }
 
     @Test
+    void obtenirPrix_leve_exception_si_vehicule_introuvable() {
+        when(vehicules.findById(10L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.obtenirPrix(1L))
+                .isInstanceOf(VehiculeIntrouvableException.class);
+    }
+
+    @Test
+    void obtenirPrix_leve_exception_si_conducteur_introuvable() {
+        when(conducteurs.findById(20L)).thenReturn(Optional.empty());
+        assertThatThrownBy(() -> service.obtenirPrix(1L))
+                .isInstanceOf(VehiculeIntrouvableException.class);
+    }
+
+    @Test
     void choisirFormule_vehiculeRemplacement_incompatible_tiers_est_retire() {
         // Si le client choisit TIERS avec VEHICULE_REMPLACEMENT → le service doit quand même enregistrer
         // (la compatibilité est gérée côté frontend ; le service sauvegarde ce qui lui est envoyé)
