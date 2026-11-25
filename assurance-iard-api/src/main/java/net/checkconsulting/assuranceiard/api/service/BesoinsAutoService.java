@@ -72,9 +72,13 @@ public class BesoinsAutoService {
      * b. TIERS        : priorite PRIX ET (vehicule ancien > 10 ans OU valeur < 3 000 EUR).
      * c. INTERMEDIAIRE : tous les autres cas.
      */
+    private static boolean estLoaOuLld(Vehicule vehicule) {
+        return "LOA".equals(vehicule.getModeAchat()) || "LLD".equals(vehicule.getModeAchat());
+    }
+
     String determinerFormule(BesoinsAutoRequest r, Vehicule vehicule) {
         int age = ageVehicule(vehicule);
-        boolean loaOuLld = "LOA".equals(vehicule.getModeAchat()) || "LLD".equals(vehicule.getModeAchat());
+        boolean loaOuLld = estLoaOuLld(vehicule);
         // a. TOUS_RISQUES
         if (age < SEUIL_RECENTS_ANS
                 || (r.valeurVehicule() != null && r.valeurVehicule() > SEUIL_VALEUR_HAUTE)
@@ -95,7 +99,7 @@ public class BesoinsAutoService {
     List<String> genererRaisons(String formule, BesoinsAutoRequest r, Vehicule vehicule) {
         List<String> raisons = new ArrayList<>();
         int age = ageVehicule(vehicule);
-        boolean loaOuLld = "LOA".equals(vehicule.getModeAchat()) || "LLD".equals(vehicule.getModeAchat());
+        boolean loaOuLld = estLoaOuLld(vehicule);
         switch (formule) {
             case "TOUS_RISQUES" -> {
                 if (age < SEUIL_RECENTS_ANS) raisons.add("Votre vehicule a moins de 5 ans");
