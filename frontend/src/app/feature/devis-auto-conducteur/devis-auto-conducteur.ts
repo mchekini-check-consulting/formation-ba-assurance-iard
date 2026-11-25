@@ -23,7 +23,7 @@ function validerDateSaisie(str: string): string | null {
   if (d.getDate() !== j || d.getMonth() !== m - 1 || d.getFullYear() !== a) {
     return 'Date invalide.';
   }
-  if (d > new Date()) return 'La date ne peut pas être dans le futur.';
+  if (d > new Date()) return 'La date ne peut pas Ãªtre dans le futur.';
   return null;
 }
 
@@ -128,7 +128,7 @@ export class DevisAutoConducteur {
   protected readonly messageInfoConducteur = computed(() => {
     const c = this.conducteurPrincipal();
     if (c === 'ENFANT' || c === 'CONJOINT' || c === 'AUTRE_PERSONNE_FOYER') {
-      return "Le souscripteur reste juridiquement responsable du contrat. Le conducteur principal est la personne qui utilise le véhicule au quotidien.";
+      return "Le souscripteur reste juridiquement responsable du contrat. Le conducteur principal est la personne qui utilise le vÃ©hicule au quotidien.";
     }
     return null;
   });
@@ -139,16 +139,16 @@ export class DevisAutoConducteur {
     }
     const bm = this.bonusMalus();
     if (bm !== null && bm > this.bonusMalusMax()) {
-      return `Votre coefficient bonus-malus (${bm.toFixed(2).replace('.', ',')}) dépasse le plafond accepté.`;
+      return `Votre coefficient bonus-malus (${bm.toFixed(2).replace('.', ',')}) dÃ©passe le plafond acceptÃ©.`;
     }
     if (this.resiliationAssureur() === 'NON_PAIEMENT') {
-      return "Une résiliation pour non-paiement empêche la souscription en ligne.";
+      return "Une rÃ©siliation pour non-paiement empÃªche la souscription en ligne.";
     }
     if (this.suspensionAnnulation() === true) {
-      return "Une suspension ou annulation de permis empêche la souscription en ligne.";
+      return "Une suspension ou annulation de permis empÃªche la souscription en ligne.";
     }
     if (this.condamnationAlcool() === true) {
-      return "Une condamnation pour alcool ou stupéfiants empêche la souscription en ligne.";
+      return "Une condamnation pour alcool ou stupÃ©fiants empÃªche la souscription en ligne.";
     }
     const novice = (() => {
       const agePermis = this.agePermisAns();
@@ -158,7 +158,7 @@ export class DevisAutoConducteur {
       return "Un profil novice avec sinistre responsable ne peut pas souscrire en ligne.";
     }
     if (this.titulaireCarteGrise() === 'AUTRE_PERSONNE') {
-      return "La carte grise au nom d'une autre personne empêche la souscription en ligne.";
+      return "La carte grise au nom d'une autre personne empÃªche la souscription en ligne.";
     }
     return null;
   });
@@ -177,12 +177,12 @@ export class DevisAutoConducteur {
     if (!this.tentative() || this.conducteurEstMineur()) return null;
     const bm = this.bonusMalus();
     if (bm === null) return 'Indiquez votre coefficient bonus-malus.';
-    if (bm < 0.5 || bm > 3.5) return 'Le coefficient doit être entre 0,50 et 3,50.';
+    if (bm < 0.5 || bm > 3.5) return 'Le coefficient doit Ãªtre entre 0,50 et 3,50.';
     return null;
   });
   protected readonly erreurAnneesAssurance = computed(() =>
     this.tentative() && !this.conducteurEstMineur() && this.anneesAssurance() === null
-      ? "Indiquez vos années d'assurance continue."
+      ? "Indiquez vos annÃ©es d'assurance continue."
       : null,
   );
   protected readonly erreurSinistresResponsables = computed(() =>
@@ -197,22 +197,22 @@ export class DevisAutoConducteur {
   );
   protected readonly erreurResiliationAssureur = computed(() =>
     this.tentative() && !this.conducteurEstMineur() && !this.resiliationAssureur()
-      ? 'Répondez à cette question.'
+      ? 'RÃ©pondez Ã  cette question.'
       : null,
   );
   protected readonly erreurSuspensionAnnulation = computed(() =>
     this.tentative() && !this.conducteurEstMineur() && this.suspensionAnnulation() === null
-      ? 'Répondez à cette question.'
+      ? 'RÃ©pondez Ã  cette question.'
       : null,
   );
   protected readonly erreurCondamnationAlcool = computed(() =>
     this.tentative() && !this.conducteurEstMineur() && this.condamnationAlcool() === null
-      ? 'Répondez à cette question.'
+      ? 'RÃ©pondez Ã  cette question.'
       : null,
   );
   protected readonly erreurAssureVehicule = computed(() =>
     this.tentative() && !this.conducteurEstMineur() && !this.assureVehicule()
-      ? 'Répondez à cette question.'
+      ? 'RÃ©pondez Ã  cette question.'
       : null,
   );
   protected readonly erreurAncienAssureur = computed(() =>
@@ -224,7 +224,7 @@ export class DevisAutoConducteur {
     this.tentative() &&
     this.assureVehicule() === 'OUI_PLUS_UN_AN' &&
     !this.ancienNumeroContrat().trim()
-      ? "Indiquez votre numéro de contrat actuel."
+      ? "Indiquez votre numÃ©ro de contrat actuel."
       : null,
   );
 
@@ -237,7 +237,7 @@ export class DevisAutoConducteur {
   ];
 
   protected readonly tranchesAnnees: { valeur: number; libelle: string }[] = [
-    { valeur: 0, libelle: "Aucune (1ère assurance)" },
+    { valeur: 0, libelle: "Aucune (1Ã¨re assurance)" },
     { valeur: 1, libelle: '1 an' },
     { valeur: 2, libelle: '2 ans' },
     { valeur: 3, libelle: '3 ans' },
@@ -245,10 +245,10 @@ export class DevisAutoConducteur {
 
   protected readonly optsResiliation: { valeur: ResiliationAuto; libelle: string }[] = [
     { valeur: 'AUCUNE', libelle: 'Non' },
-    { valeur: 'NON_PAIEMENT', libelle: 'Oui – Non-paiement' },
-    { valeur: 'SINISTRALITE', libelle: 'Oui – Sinistralité' },
-    { valeur: 'FAUSSE_DECLARATION', libelle: 'Oui – Fausse déclaration' },
-    { valeur: 'AUTRE_MOTIF', libelle: 'Oui – Autre motif' },
+    { valeur: 'NON_PAIEMENT', libelle: 'Oui â€“ Non-paiement' },
+    { valeur: 'SINISTRALITE', libelle: 'Oui â€“ SinistralitÃ©' },
+    { valeur: 'FAUSSE_DECLARATION', libelle: 'Oui â€“ Fausse dÃ©claration' },
+    { valeur: 'AUTRE_MOTIF', libelle: 'Oui â€“ Autre motif' },
   ];
 
   protected readonly optsAssureVehicule: { valeur: AssureVehicule; libelle: string }[] = [
@@ -444,7 +444,9 @@ export class DevisAutoConducteur {
         ancienNumeroContrat: conducteur.ancienNumeroContrat || undefined,
       })
       .subscribe({
-        next: () => {
+        next: (rep) => {
+          this.devisAutoService.enregistrerDevisAutoId(rep.devisAutoId);
+          this.devisAutoService.enregistrerTarifEtape1(this.tarif());
           this.enregistrement.set(false);
           this.router.navigate(['/devis-auto/besoins']);
         },
@@ -453,9 +455,11 @@ export class DevisAutoConducteur {
           if (err?.status === 422 && err?.error?.motif) {
             this.erreurServeur.set("Votre profil ne permet pas la souscription en ligne.");
           } else {
-            this.erreurServeur.set("Une erreur est survenue. Veuillez réessayer.");
+            this.erreurServeur.set("Une erreur est survenue. Veuillez rÃ©essayer.");
           }
         },
       });
   }
 }
+
+

@@ -79,31 +79,31 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
-    /** US-21, RG2 : statut du contrat qui ne permet pas la régénération (RG3 d'US-18). */
+    /** US-21, RG2 : statut du contrat qui ne permet pas la rÃ©gÃ©nÃ©ration (RG3 d'US-18). */
     @ExceptionHandler(RegenerationImpossibleException.class)
     public ProblemDetail regenerationImpossible(RegenerationImpossibleException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
     }
 
-    /** US-21 : régénération demandée alors qu'aucune donnée n'a changé. */
+    /** US-21 : rÃ©gÃ©nÃ©ration demandÃ©e alors qu'aucune donnÃ©e n'a changÃ©. */
     @ExceptionHandler(RegenerationInutileException.class)
     public ProblemDetail regenerationInutile(RegenerationInutileException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
-    /** US-21 : une régénération par minute et par contrat. */
+    /** US-21 : une rÃ©gÃ©nÃ©ration par minute et par contrat. */
     @ExceptionHandler(RegenerationTropRapprocheeException.class)
     public ProblemDetail regenerationTropRapprochee(RegenerationTropRapprocheeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
     }
 
-    /** US-22 : contrat en attente de signature, ou période postérieure à la fin d'un contrat Résilié ou Renoncé. */
+    /** US-22 : contrat en attente de signature, ou pÃ©riode postÃ©rieure Ã  la fin d'un contrat RÃ©siliÃ© ou RenoncÃ©. */
     @ExceptionHandler(FactureImpossibleException.class)
     public ProblemDetail factureImpossible(FactureImpossibleException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
     }
 
-    /** US-22 : la date demandée n'est ni une échéance ni une année de cotisation du contrat. */
+    /** US-22 : la date demandÃ©e n'est ni une Ã©chÃ©ance ni une annÃ©e de cotisation du contrat. */
     @ExceptionHandler(PeriodeFacturationInconnueException.class)
     public ProblemDetail periodeFacturationInconnue(PeriodeFacturationInconnueException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
@@ -144,7 +144,7 @@ public class GestionErreurs {
 
     @ExceptionHandler(MoteurDonneesInvalidesException.class)
     public ProblemDetail moteurDonneesInvalides(MoteurDonneesInvalidesException exception) {
-        log.warn("Tarif refusé par le moteur : champs invalides={}", exception.getErreurs().stream().map(ErreurChampMoteur::champ).toList());
+        log.warn("Tarif refusÃ© par le moteur : champs invalides={}", exception.getErreurs().stream().map(ErreurChampMoteur::champ).toList());
         ProblemDetail probleme = ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
         probleme.setProperty("erreurs", exception.getErreurs());
         return probleme;
@@ -158,29 +158,29 @@ public class GestionErreurs {
 
     @ExceptionHandler(MoteurTarifExpireException.class)
     public ProblemDetail moteurTarifExpire(MoteurTarifExpireException exception) {
-        log.warn("Tarif expiré auprès du moteur");
+        log.warn("Tarif expirÃ© auprÃ¨s du moteur");
         return ProblemDetail.forStatusAndDetail(HttpStatus.GONE, exception.getMessage());
     }
 
     @ExceptionHandler(MoteurIndisponibleException.class)
     public ProblemDetail moteurIndisponible(MoteurIndisponibleException exception) {
-        log.error("Le moteur tarifaire a répondu par une erreur");
+        log.error("Le moteur tarifaire a rÃ©pondu par une erreur");
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
     }
 
     @ExceptionHandler(FeignException.class)
     public ProblemDetail moteurInjoignable(FeignException exception) {
-        log.error("Le moteur tarifaire ne répond pas", exception);
+        log.error("Le moteur tarifaire ne rÃ©pond pas", exception);
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, MoteurIndisponibleException.MESSAGE);
     }
 
     @ExceptionHandler(TarifDevisIncoherentException.class)
     public ProblemDetail tarifDevisIncoherent(TarifDevisIncoherentException exception) {
-        log.warn("Contrat ou devis refusé : aucun tarif valable");
+        log.warn("Contrat ou devis refusÃ© : aucun tarif valable");
         return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
     }
 
-    @ExceptionHandler({DocumentInconnuException.class, ClientInconnuException.class})
+    @ExceptionHandler({DocumentInconnuException.class, ClientInconnuException.class, VehiculeIntrouvableException.class})
     public ProblemDetail introuvable(RuntimeException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
@@ -207,3 +207,4 @@ public class GestionErreurs {
         return probleme;
     }
 }
+

@@ -1,0 +1,24 @@
+<main style="padding: 48px 24px; max-width: 700px; margin: 0 auto; font-family: sans-serif;">
+  <h1>&#201;tape 3 &#8211; Ma formule conseill&#233;e <span style="font-size: 0.7em; color: #888;">(&#224; venir)</span></h1>
+
+  @if (devisAutoService.recommandation(); as reco) {
+    <div style="background: #fff; border-radius: 16px; border: 1px solid #e5e5e5; padding: 24px; margin: 24px 0;">
+      <p>Formule conseill&#233;e re&#231;ue : <strong style="color: #a82b27; font-size: 1.25rem;">{{ libelle(reco.formuleConseillee) }}</strong></p>
+      @if (reco.prixMensuel) {
+        <p>Tarif estim&#233; : <strong>{{ formaterPrix(reco.prixMensuel) }} &#8364;/mois</strong></p>
+      }
+      <ul style="padding-left: 1.25rem; margin: 12px 0 0;">
+        @for (raison of reco.raisons; track raison) {
+          <li style="margin: 4px 0;">{{ raison }}</li>
+        }
+      </ul>
+    </div>
+    <p style="color: #666; font-size: 0.875rem;">
+      Cette &#233;tape est provisoire. La s&#233;lection de formule et le d&#233;tail des garanties seront d&#233;velopp&#233;s prochainement (US-29).
+    </p>
+  } @else {
+    <p>Aucune recommandation disponible. <a routerLink="/devis-auto/besoins">Retour aux besoins</a></p>
+  }
+
+  <a routerLink="/devis-auto/besoins" style="display: inline-block; margin-top: 24px; color: #a82b27; text-decoration: underline;">&#8592; Retour &#224; mes besoins</a>
+</main>

@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import { droitGuard } from './core/guards/droit.guard';
-import { achatRenseigneGuard, conducteurRenseigneGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './core/guards/devis-auto.guard';
+import { achatRenseigneGuard, besoinsRenseignesGuard, conducteurRenseigneGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './core/guards/devis-auto.guard';
 import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
@@ -16,6 +16,7 @@ import { Connexion } from './feature/connexion/connexion';
 import { DevisAutoAchat } from './feature/devis-auto-achat/devis-auto-achat';
 import { DevisAutoConducteur } from './feature/devis-auto-conducteur/devis-auto-conducteur';
 import { DevisAutoBesoins } from './feature/devis-auto-besoins/devis-auto-besoins';
+import { DevisAutoFormule } from './feature/devis-auto-formule/devis-auto-formule';
 import { DevisAutoUsage } from './feature/devis-auto-usage/devis-auto-usage';
 import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
@@ -181,6 +182,12 @@ export const routes: Routes = [
     component: DevisAutoBesoins,
     canActivate: [conducteurRenseigneGuard],
     title: "Étape 2 – Mes besoins – Assur'Easy",
+  },
+  {
+    path: 'devis-auto/formule',
+    component: DevisAutoFormule,
+    canActivate: [besoinsRenseignesGuard],
+    title: "Etape 3 - Ma formule conseillee - Assur'Easy",
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {

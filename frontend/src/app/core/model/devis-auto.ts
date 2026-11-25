@@ -95,3 +95,23 @@ export interface CriteresEligibilite {
   bonusMalusMaxLigne: number;
   resiliationBloquante: string;
 }
+
+// US-29 : besoins étape 2
+export type PrioriteAuto = 'PRIX' | 'EQUILIBRE' | 'PROTECTION_LARGE';
+export type FormuleConseillee = 'TOUS_RISQUES' | 'INTERMEDIAIRE' | 'TIERS';
+
+export interface BesoinsAuto {
+  valeurVehicule: number;
+  vehiculeIndispensable: boolean;
+  assistance0km: boolean;
+  protectionConducteur: boolean;
+  brisGlace: boolean;
+  accompagnementLitige: boolean;
+  priorite: PrioriteAuto;
+}
+
+export interface RecommandationAuto {
+  formuleConseillee: FormuleConseillee;
+  raisons: string[];
+  prixMensuel: number | null;
+}

@@ -1,4 +1,4 @@
-import { inject } from '@angular/core';
+﻿import { inject } from '@angular/core';
 import { CanActivateFn, Router } from '@angular/router';
 import { DevisAutoService } from '../service/devis-auto.service';
 
@@ -26,4 +26,13 @@ export const conducteurRenseigneGuard: CanActivateFn = () => {
   if (devisAuto.achat() === null) return inject(Router).parseUrl('/devis-auto/achat');
   if (devisAuto.usage() === null) return inject(Router).parseUrl('/devis-auto/usage');
   return devisAuto.conducteur() !== null ? true : inject(Router).parseUrl('/devis-auto/conducteur');
+};
+
+export const besoinsRenseignesGuard: CanActivateFn = () => {
+  const devisAuto = inject(DevisAutoService);
+  if (devisAuto.vehicule() === null) return inject(Router).parseUrl('/devis-auto/vehicule');
+  if (devisAuto.achat() === null) return inject(Router).parseUrl('/devis-auto/achat');
+  if (devisAuto.usage() === null) return inject(Router).parseUrl('/devis-auto/usage');
+  if (devisAuto.conducteur() === null) return inject(Router).parseUrl('/devis-auto/conducteur');
+  return devisAuto.recommandation() !== null ? true : inject(Router).parseUrl('/devis-auto/besoins');
 };
