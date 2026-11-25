@@ -105,4 +105,28 @@ class RepriseDocumentsTest {
 
         verify(documents).aStocker(Set.of("CONDITIONS_PARTICULIERES", "CONDITIONS_GENERALES"), 20);
     }
+
+    @Test
+    void creeLesIPIDManquants() {
+        // TIERS et TR n'existent pas, INTER existe déjà
+        when(documents.enVigueur(eq(0L), eq("IPID"), eq("TIERS"))).thenReturn(Optional.empty());
+        when(documents.enVigueur(eq(0L), eq("IPID"), eq("TR"))).thenReturn(Optional.empty());
+
+        reprise(true).reprendre();
+
+        verify(service).generer(
+                DemandeDocument.commun(TypeDocument.IPID, "TIERS", "IPID auto provisoire (US-29)"));
+        verify(service).generer(
+                DemandeDocument.commun(TypeDocument.IPID, "TR", "IPID auto provisoire (US-29)"));
+    }
+
+    @Test
+    void ipidDejaCreeParlAutreInstanceEstIgnore() {
+        when(documents.enVigueur(eq(0L), eq("IPID"), eq("INTER"))).thenReturn(Optional.empty());
+        when(service.generer(DemandeDocument.commun(TypeDocument.IPID, "INTER", "IPID auto provisoire (US-29)")))
+                .thenThrow(new DataIntegrityViolationException("déjà créé"));
+
+        // Ne doit pas lever d'exception
+        reprise(true).reprendre();
+    }
 }
