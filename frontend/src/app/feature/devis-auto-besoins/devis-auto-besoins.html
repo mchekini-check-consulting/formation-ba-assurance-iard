@@ -1,5 +1,210 @@
-<main style="padding: 48px 24px; text-align: center;">
-  <h1>Mes besoins &#8211; &Eacute;tape 2</h1>
-  <p>Cette &#233;tape est en cours de d&#233;veloppement.</p>
-  <a routerLink="/devis-auto/conducteur">&#8592; Retour &#224; l&#8217;&#233;tape 1.4</a>
+﻿<iard-devis-auto-layout sousEtape="2"></iard-devis-auto-layout>
+
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <div class="titre-zone">
+        <h1 class="titre-page serif">Mes besoins</h1>
+        <p class="sous-titre-page">Quelques questions pour vous conseiller la formule la mieux adapt&#233;e.</p>
+        <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+      </div>
+
+      <div class="grille-devis">
+
+        <!-- FORMULAIRE -->
+        <div class="colonne-formulaire">
+          <form class="formulaire-besoins" novalidate (submit)="soumettre($event)">
+
+            <section class="carte" aria-labelledby="titre-vehicule">
+              <h2 id="titre-vehicule" class="carte-sous-titre serif">Votre v&#233;hicule</h2>
+
+              <!-- Valeur du véhicule -->
+              <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurValeur()">
+                <label class="libelle-champ" for="valeur-vehicule">
+                  Valeur actuelle du v&#233;hicule&#160;<span class="rouge">*</span>
+                </label>
+                <p id="aide-valeur" class="aide">Valeur &#224; la cote Argus ou prix d&#8217;achat.</p>
+                <div class="montant">
+                  <input
+                    id="valeur-vehicule"
+                    type="text"
+                    inputmode="numeric"
+                    class="saisie"
+                    placeholder="Ex.&#160;15&#160;000"
+                    [value]="valeurVehicule() ?? ''"
+                    (input)="saisirValeur($event)"
+                    aria-describedby="aide-valeur"
+                    [attr.aria-invalid]="!!erreurValeur() || null"
+                  />
+                  <span class="montant__unite">&#8364;</span>
+                </div>
+                @if (erreurValeur()) {
+                  <p class="erreur" role="alert">{{ erreurValeur() }}</p>
+                }
+              </div>
+
+              <!-- Véhicule indispensable -->
+              <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurIndispensable()">
+                <span class="libelle-champ" id="label-indispensable">
+                  Ce v&#233;hicule est-il indispensable &#224; votre quotidien&#160;?&#160;<span class="rouge">*</span>
+                </span>
+                <div class="choix" role="group" aria-labelledby="label-indispensable">
+                  <button
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="vehiculeIndispensable() === true"
+                    [attr.aria-pressed]="vehiculeIndispensable() === true"
+                    (click)="vehiculeIndispensable.set(true)"
+                  >Oui</button>
+                  <button
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="vehiculeIndispensable() === false"
+                    [attr.aria-pressed]="vehiculeIndispensable() === false"
+                    (click)="vehiculeIndispensable.set(false)"
+                  >Non</button>
+                </div>
+                @if (erreurIndispensable()) {
+                  <p class="erreur" role="alert">{{ erreurIndispensable() }}</p>
+                }
+              </div>
+            </section>
+
+            <section class="carte" aria-labelledby="titre-garanties">
+              <h2 id="titre-garanties" class="carte-sous-titre serif">Garanties souhait&#233;es</h2>
+              <p class="aide-section">S&#233;lectionnez les options qui vous int&#233;ressent.</p>
+
+              <!-- Assistance 0 km -->
+              <div class="champ-formulaire champ-toggle">
+                <label class="libelle-champ interrupteur-label" for="assistance-0km">
+                  <input
+                    id="assistance-0km"
+                    type="checkbox"
+                    class="interrupteur"
+                    [checked]="assistance0km() === true"
+                    (change)="assistance0km.set(!assistance0km())"
+                  />
+                  <span>Assistance 0&#160;km</span>
+                </label>
+                <p class="aide">D&#233;pannage &#224; domicile en cas de panne ou d&#8217;accident.</p>
+              </div>
+
+              <!-- Protection conducteur -->
+              <div class="champ-formulaire champ-toggle">
+                <label class="libelle-champ interrupteur-label" for="protection-conducteur">
+                  <input
+                    id="protection-conducteur"
+                    type="checkbox"
+                    class="interrupteur"
+                    [checked]="protectionConducteur() === true"
+                    (change)="protectionConducteur.set(!protectionConducteur())"
+                  />
+                  <span>Protection conducteur</span>
+                </label>
+                <p class="aide">Indemnisation en cas d&#8217;accident corporel &#224; votre volant.</p>
+              </div>
+
+              <!-- Bris de glace -->
+              <div class="champ-formulaire champ-toggle">
+                <label class="libelle-champ interrupteur-label" for="bris-glace">
+                  <input
+                    id="bris-glace"
+                    type="checkbox"
+                    class="interrupteur"
+                    [checked]="brisGlace() === true"
+                    (change)="brisGlace.set(!brisGlace())"
+                  />
+                  <span>Bris de glace</span>
+                </label>
+                <p class="aide">Remplacement ou r&#233;paration du pare-brise et vitres.</p>
+              </div>
+
+              <!-- Accompagnement litige -->
+              <div class="champ-formulaire champ-toggle">
+                <label class="libelle-champ interrupteur-label" for="accompagnement-litige">
+                  <input
+                    id="accompagnement-litige"
+                    type="checkbox"
+                    class="interrupteur"
+                    [checked]="accompagnementLitige() === true"
+                    (change)="accompagnementLitige.set(!accompagnementLitige())"
+                  />
+                  <span>Accompagnement en cas de litige</span>
+                </label>
+                <p class="aide">Protection juridique pour tout litige li&#233; &#224; votre v&#233;hicule.</p>
+              </div>
+            </section>
+
+            <section class="carte" aria-labelledby="titre-priorite">
+              <h2 id="titre-priorite" class="carte-sous-titre serif">Votre priorit&#233;</h2>
+              <div class="champ-formulaire" [class.champ-formulaire--erreur]="!!erreurPriorite()">
+                <span class="libelle-champ" id="label-priorite">
+                  Qu&#8217;est-ce qui compte le plus pour vous&#160;?&#160;<span class="rouge">*</span>
+                </span>
+                <div class="choix choix--3col" role="group" aria-labelledby="label-priorite">
+                  <button type="button" class="choix__option"
+                    [class.choix__option--actif]="priorite() === 'PRIX'"
+                    [attr.aria-pressed]="priorite() === 'PRIX'"
+                    (click)="priorite.set('PRIX')">Le prix</button>
+                  <button type="button" class="choix__option"
+                    [class.choix__option--actif]="priorite() === 'EQUILIBRE'"
+                    [attr.aria-pressed]="priorite() === 'EQUILIBRE'"
+                    (click)="priorite.set('EQUILIBRE')">L&#8217;&#233;quilibre</button>
+                  <button type="button" class="choix__option"
+                    [class.choix__option--actif]="priorite() === 'PROTECTION_LARGE'"
+                    [attr.aria-pressed]="priorite() === 'PROTECTION_LARGE'"
+                    (click)="priorite.set('PROTECTION_LARGE')">La protection la plus large</button>
+                </div>
+                @if (erreurPriorite()) {
+                  <p class="erreur" role="alert">{{ erreurPriorite() }}</p>
+                }
+              </div>
+            </section>
+
+            <section class="carte carte--pourquoi" aria-labelledby="titre-pourquoi">
+              <h2 id="titre-pourquoi" class="carte__titre">Pourquoi ces questions&#160;?</h2>
+              <p>
+                Vos r&#233;ponses nous permettent de vous conseiller la formule la plus adapt&#233;e &#224; votre situation,
+                conform&#233;ment &#224; notre devoir de conseil (article L521-4 du Code des assurances).
+              </p>
+            </section>
+
+            @if (erreur()) {
+              <div class="alerte-bloquante" role="alert">
+                <p class="alerte-bloquante__texte">{{ erreur() }}</p>
+              </div>
+            }
+
+            <div class="bas-page">
+              <a class="lien-bas-retour" routerLink="/devis-auto/conducteur">&#8592; Retour au conducteur</a>
+              <button type="submit" class="btn-suivant" [disabled]="!complet() || envoi()">
+                @if (envoi()) { Enregistrement&#8230; } @else { Voir ma formule conseill&#233;e }
+              </button>
+            </div>
+
+          </form>
+        </div>
+
+        <!-- ENCART TARIF -->
+        <aside class="encart-tarif" aria-label="Tarif estimé">
+          <div class="encart-tarif__conteneur">
+            <p class="encart-tarif__titre">Votre tarif</p>
+            @if (tarifEtape1() && tarifEtape1()!.tarifable && tarifEtape1()!.prix.length > 0) {
+              <p class="encart-tarif__prix">
+                <span class="encart-tarif__des">d&#232;s</span>
+                <strong>{{ formaterPrix(tarifEtape1()!.prix[0].mensuel) }}&nbsp;&#8364;</strong>
+                <span>/&nbsp;mois</span>
+              </p>
+              <p class="encart-tarif__aide">Estimation mise &#224; jour en temps r&#233;el</p>
+            } @else {
+              <p class="encart-tarif__attente">Renseignez le formulaire pour voir votre tarif.</p>
+            }
+            <p class="encart-tarif__prochaine-etape">Votre formule conseill&#233;e vous sera pr&#233;sent&#233;e &#224; l&#8217;&#233;tape suivante.</p>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </div>
 </main>

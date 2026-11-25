@@ -3,7 +3,7 @@ import { provideRouter } from '@angular/router';
 import { DevisAutoLayout } from './devis-auto-layout';
 
 describe('DevisAutoLayout', () => {
-  const creer = (sousEtape: '1.1' | '1.2' | '1.3' | '1.4') => {
+  const creer = (sousEtape: '1.1' | '1.2' | '1.3' | '1.4' | '2') => {
     TestBed.configureTestingModule({ providers: [provideRouter([])] });
     const fixture = TestBed.createComponent(DevisAutoLayout);
     fixture.componentRef.setInput('sousEtape', sousEtape);
@@ -62,5 +62,19 @@ describe('DevisAutoLayout', () => {
     expect(texte).toContain('Déjà client');
     expect(texte).toContain('Se connecter');
     expect(texte).toContain('Quitter le devis');
+  });
+
+  it('etape 2 active : etape 2 en bordeaux, etape 1 faite', () => {
+    const fixture = creer('2');
+    const el = fixture.nativeElement as HTMLElement;
+    const etapes = el.querySelectorAll('.progression__etape');
+    expect(etapes[0].classList.contains('progression__etape--faite')).toBe(true);
+    expect(etapes[1].classList.contains('progression__etape--active')).toBe(true);
+  });
+
+  it('etape 2 : pas de sous-etapes affichees', () => {
+    const fixture = creer('2');
+    const el = fixture.nativeElement as HTMLElement;
+    expect(el.querySelector('.sous-etapes')).toBeNull();
   });
 });

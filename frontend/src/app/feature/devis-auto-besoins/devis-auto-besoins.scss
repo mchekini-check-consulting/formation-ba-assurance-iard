@@ -1,0 +1,344 @@
+﻿:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.fond-beige {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 60px;
+}
+
+.contenu-etape {
+  margin: 32px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.titre-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 26px;
+  color: var(--texte);
+}
+
+.sous-titre-page {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+}
+
+.note-champs {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.rouge { color: var(--rouge); }
+
+.grille-devis {
+  display: grid;
+  grid-template-columns: 1fr 320px;
+  gap: 24px;
+  align-items: start;
+}
+
+.colonne-formulaire { min-width: 0; }
+
+.formulaire-besoins {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.carte {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--bordure-claire);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.carte-sous-titre {
+  margin: 0;
+  font-size: 18px;
+  color: var(--texte);
+}
+
+.carte--pourquoi {
+  background: var(--beige);
+
+  .carte__titre {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0 0 8px;
+  }
+
+  p { margin: 0; font-size: 0.875rem; }
+}
+
+.champ-formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &--erreur .saisie { border-color: var(--rouge); }
+}
+
+.libelle-champ {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--texte);
+}
+
+.saisie {
+  height: 44px;
+  border: 1.5px solid var(--gris);
+  border-radius: 8px;
+  padding: 0 12px;
+  font-size: 15px;
+  color: var(--texte);
+  background: #fff;
+  outline: none;
+  transition: border-color 0.15s;
+  font-family: inherit;
+
+  &:focus { border-color: var(--rouge); }
+}
+
+.aide {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+.aide-section {
+  margin: 0 0 4px;
+  font-size: 13px;
+  color: var(--texte-doux);
+}
+
+.erreur {
+  margin: 0;
+  font-size: 13px;
+  color: var(--rouge);
+  font-weight: 500;
+}
+
+.montant {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 220px;
+
+  &__unite {
+    font-size: 1rem;
+    color: #444;
+  }
+}
+
+.choix {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+
+  &--3col {
+    flex-wrap: nowrap;
+  }
+}
+
+.choix__option {
+  flex: 1;
+  min-height: 44px;
+  padding: 8px 16px;
+  border-radius: 6px;
+  border: 1.5px solid var(--gris);
+  background: #fff;
+  color: var(--texte);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+
+  &:hover { border-color: var(--rouge); }
+  &:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+
+  &--actif {
+    background: #f6e9e9;
+    border-color: var(--rouge);
+    color: var(--rouge-fonce);
+    font-weight: 600;
+  }
+}
+
+.champ-toggle {
+  padding-block: 10px;
+  border-top: 1px solid var(--bordure-claire, #e5e5e5);
+
+  &:first-of-type { border-top: none; }
+}
+
+.interrupteur-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  font-weight: 400;
+}
+
+.interrupteur {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--rouge);
+  cursor: pointer;
+}
+
+.alerte-bloquante {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 16px 20px;
+  background: #fdf2f2;
+  border: 1px solid #f0c0bc;
+  border-radius: 12px;
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    color: #7a1f1f;
+    line-height: 1.5;
+  }
+}
+
+.bas-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 16px;
+}
+
+.lien-bas-retour {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover { text-decoration: none; }
+}
+
+.btn-suivant {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--rouge);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--rouge-fonce); }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.encart-tarif {
+  position: sticky;
+  top: 80px;
+
+  &__conteneur {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--bordure-claire);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &__titre {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texte-discret);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  &__formule {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  &__prix {
+    margin: 8px 0 0;
+    font-size: 15px;
+    color: var(--texte);
+
+    strong {
+      display: block;
+      font-size: 28px;
+      color: var(--rouge);
+      line-height: 1;
+    }
+
+    span { font-size: 13px; color: var(--texte-doux); }
+  }
+
+  &__attente {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-discret);
+    line-height: 1.5;
+  }
+
+  &__des {
+    display: block;
+    font-size: 13px;
+    color: var(--texte-doux);
+    margin-bottom: 2px;
+  }
+
+  &__prochaine-etape {
+    margin: 4px 0 0;
+    font-size: 12px;
+    color: var(--texte-discret);
+    line-height: 1.4;
+  }
+}
+
+@media (max-width: 900px) {
+  .grille-devis {
+    grid-template-columns: 1fr;
+  }
+
+  .encart-tarif {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .carte { padding: 20px 16px; }
+  .contenu-etape { margin-top: 20px; }
+}

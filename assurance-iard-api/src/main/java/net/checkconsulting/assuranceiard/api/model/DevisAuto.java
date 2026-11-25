@@ -6,6 +6,7 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -46,4 +47,35 @@ public class DevisAuto extends EntiteHorodatee {
 
     @Column(name = "date_effet_souhaitee")
     private LocalDate dateEffetSouhaitee;
+
+    // US-29 : besoins étape 2
+    @Column(name = "valeur_vehicule")
+    private Integer valeurVehicule;
+
+    @Column(name = "vehicule_indispensable")
+    private Boolean vehiculeIndispensable;
+
+    @Column(name = "assistance_0km")
+    private Boolean assistance0km;
+
+    @Column(name = "protection_conducteur")
+    private Boolean protectionConducteur;
+
+    @Column(name = "bris_glace")
+    private Boolean brisGlace;
+
+    @Column(name = "accompagnement_litige")
+    private Boolean accompagnementLitige;
+
+    @Column(name = "priorite", length = 10)
+    private String priorite;
+
+    @Column(name = "formule_conseillee", length = 30)
+    private String formuleConseillee;
+
+    @Column(name = "raisons_formule", columnDefinition = "text")
+    private String raisonsFormule;
+
+    @Column(name = "prix_mensuel_estime", precision = 10, scale = 2)
+    private BigDecimal prixMensuelEstime;
 }

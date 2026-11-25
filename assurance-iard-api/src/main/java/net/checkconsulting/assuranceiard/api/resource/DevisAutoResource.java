@@ -5,6 +5,8 @@ import java.util.List;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.client.siv.SivClient;
 import net.checkconsulting.assuranceiard.api.client.siv.SivReponse;
+import net.checkconsulting.assuranceiard.api.dto.BesoinsAutoReponse;
+import net.checkconsulting.assuranceiard.api.dto.BesoinsAutoRequest;
 import net.checkconsulting.assuranceiard.api.dto.CriteresEligibiliteResponse;
 import net.checkconsulting.assuranceiard.api.dto.DevisAutoCreationRequest;
 import net.checkconsulting.assuranceiard.api.dto.DevisAutoCreationResponse;
@@ -14,19 +16,21 @@ import net.checkconsulting.assuranceiard.api.dto.SivRechercheResponse;
 import net.checkconsulting.assuranceiard.api.dto.TarifAutoRequest;
 import net.checkconsulting.assuranceiard.api.dto.TarifAutoResponse;
 import net.checkconsulting.assuranceiard.api.securite.AccesPublic;
+import net.checkconsulting.assuranceiard.api.service.BesoinsAutoService;
 import net.checkconsulting.assuranceiard.api.service.DevisAutoCreationService;
 import net.checkconsulting.assuranceiard.api.service.EligibiliteAutoService;
 import net.checkconsulting.assuranceiard.api.service.ReferentielVehiculeService;
 import net.checkconsulting.assuranceiard.api.service.TarificateurAutoService;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-/** US-27 : référentiels et recherche SIV pour le parcours de tarification auto. */
+/** US-27/28/29 : référentiels, recherche SIV, tarification et parcours devis auto. */
 @RestController
 @RequestMapping("/v1/devis/auto")
 @RequiredArgsConstructor
@@ -37,6 +41,7 @@ public class DevisAutoResource {
     private final EligibiliteAutoService eligibiliteAutoService;
     private final TarificateurAutoService tarificateurAutoService;
     private final DevisAutoCreationService devisAutoCreationService;
+    private final BesoinsAutoService besoinsAutoService;
 
     @AccesPublic
     @GetMapping("/referentiels/vehicules")
@@ -78,6 +83,15 @@ public class DevisAutoResource {
     @PostMapping
     public DevisAutoCreationResponse creerDevis(@Valid @RequestBody DevisAutoCreationRequest demande) {
         return devisAutoCreationService.creer(demande);
+    }
+
+    /** US-29 : enregistre les besoins et retourne la formule conseillée (RG1). */
+    @AccesPublic
+    @PostMapping("/{id}/besoins")
+    public BesoinsAutoReponse enregistrerBesoins(
+            @PathVariable Long id,
+            @Valid @RequestBody BesoinsAutoRequest demande) {
+        return besoinsAutoService.enregistrerBesoins(id, demande);
     }
 
     static String normaliserPlaque(String input) {

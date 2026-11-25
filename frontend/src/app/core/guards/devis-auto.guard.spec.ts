@@ -1,7 +1,7 @@
-import { TestBed } from '@angular/core/testing';
+﻿import { TestBed } from '@angular/core/testing';
 import { ActivatedRouteSnapshot, Router, RouterStateSnapshot, UrlTree, provideRouter } from '@angular/router';
 import { DevisAutoService } from '../service/devis-auto.service';
-import { achatRenseigneGuard, conducteurRenseigneGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './devis-auto.guard';
+import { achatRenseigneGuard, besoinsRenseignesGuard, conducteurRenseigneGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './devis-auto.guard';
 import { VehiculeAuto, AchatAuto, ConducteurAuto, UsageAutoSaisie } from '../model/devis-auto';
 
 describe('gardes du devis auto', () => {
@@ -117,6 +117,42 @@ describe('gardes du devis auto', () => {
       devisAuto.usage.set(usage);
       devisAuto.enregistrerConducteur(conducteur);
       expect(TestBed.runInInjectionContext(() => conducteurRenseigneGuard(route, etat))).toBe(true);
+    });
+  });
+
+  describe('besoinsRenseignesGuard', () => {
+    it("renvoie vers l'etape 1.1 si aucun vehicule", () => {
+      const resultat = TestBed.runInInjectionContext(() => besoinsRenseignesGuard(route, etat));
+      expect(adresse(resultat)).toBe('/devis-auto/vehicule');
+    });
+
+    it("renvoie vers l'etape 1.4 si le conducteur n'est pas renseigne", () => {
+      devisAuto.vehicule.set(vehicule);
+      devisAuto.achat.set(achat);
+      devisAuto.usage.set(usage);
+      const resultat = TestBed.runInInjectionContext(() => besoinsRenseignesGuard(route, etat));
+      expect(adresse(resultat)).toBe('/devis-auto/conducteur');
+    });
+
+    it("renvoie vers les besoins si la recommandation n'est pas disponible", () => {
+      devisAuto.vehicule.set(vehicule);
+      devisAuto.achat.set(achat);
+      devisAuto.usage.set(usage);
+      devisAuto.enregistrerConducteur(conducteur);
+      const resultat = TestBed.runInInjectionContext(() => besoinsRenseignesGuard(route, etat));
+      expect(adresse(resultat)).toBe('/devis-auto/besoins');
+    });
+
+    it('laisse passer une fois les besoins renseignes', () => {
+      devisAuto.vehicule.set(vehicule);
+      devisAuto.achat.set(achat);
+      devisAuto.usage.set(usage);
+      devisAuto.enregistrerConducteur(conducteur);
+      devisAuto.enregistrerBesoinsEtRecommandation(
+        { valeurVehicule: 15000, vehiculeIndispensable: true, assistance0km: false, protectionConducteur: true, brisGlace: false, accompagnementLitige: false, priorite: 'PROTECTION_LARGE' },
+        { formuleConseillee: 'TOUS_RISQUES', raisons: ['Vehicule indispensable.'], prixMensuel: 45.00 },
+      );
+      expect(TestBed.runInInjectionContext(() => besoinsRenseignesGuard(route, etat))).toBe(true);
     });
   });
 });

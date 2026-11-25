@@ -16,6 +16,7 @@ import net.checkconsulting.assuranceiard.api.client.siv.VehiculeInfoSiv;
 import net.checkconsulting.assuranceiard.api.dto.CriteresEligibiliteResponse;
 import net.checkconsulting.assuranceiard.api.dto.MarqueResponse;
 import net.checkconsulting.assuranceiard.api.dto.ModeleResponse;
+import net.checkconsulting.assuranceiard.api.service.BesoinsAutoService;
 import net.checkconsulting.assuranceiard.api.service.DevisAutoCreationService;
 import net.checkconsulting.assuranceiard.api.service.EligibiliteAutoService;
 import net.checkconsulting.assuranceiard.api.service.ReferentielVehiculeService;
@@ -49,6 +50,9 @@ class DevisAutoResourceTest {
 
     @MockitoBean
     private DevisAutoCreationService devisAutoCreationService;
+
+    @MockitoBean
+    private BesoinsAutoService besoinsAutoService;
 
     @Test
     void laRechercheParPlaqueTrouveLeVehicule() throws Exception {

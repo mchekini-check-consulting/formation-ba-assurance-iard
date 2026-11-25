@@ -19,11 +19,16 @@
   <nav class="progression" aria-label="Avancement du devis auto">
     <div class="conteneur">
       <ol class="progression__liste">
-        <li class="progression__etape progression__etape--active" aria-current="step">
+        <li class="progression__etape"
+            [class.progression__etape--active]="etape1Active()"
+            [class.progression__etape--faite]="etape1Faite()"
+            [attr.aria-current]="etape1Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 1</span>
           <span class="progression__nom">Mon v&#233;hicule</span>
         </li>
-        <li class="progression__etape">
+        <li class="progression__etape"
+            [class.progression__etape--active]="etape2Active()"
+            [attr.aria-current]="etape2Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 2</span>
           <span class="progression__nom">Mes besoins</span>
         </li>
@@ -48,6 +53,7 @@
   </nav>
 
   <!-- SOUS-ÉTAPES dynamiques -->
+  @if (montrerSousEtapes()) {
   <div class="sous-etapes">
     <div class="sous-etapes__liste">
       @if (etape11Terminee()) {
@@ -71,4 +77,5 @@
       <span class="sous-etape" [class.sous-etape--active]="sousEtape() === '1.4'">1.4 Conducteurs et ant&#233;c&#233;dents</span>
     </div>
   </div>
+  }
 </header>
