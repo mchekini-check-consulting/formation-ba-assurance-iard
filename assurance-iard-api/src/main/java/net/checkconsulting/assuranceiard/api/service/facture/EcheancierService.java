@@ -119,32 +119,55 @@ public class EcheancierService {
         if (annuel || mensuelle == null) {
             return lignes;
         }
-        LocalDate aujourdhui = aujourdhui();
         Set<YearMonth> moisEnBase = lignes.stream().map(ligne -> YearMonth.from(ligne.date()))
                 .collect(Collectors.toSet());
         Set<LocalDate> anneesEnBase = lignes.stream().map(ligne -> debutAnnee(effet, ligne.date()))
                 .collect(Collectors.toCollection(TreeSet::new));
         for (LocalDate debut : anneesEnBase) {
-            // Jour de prélèvement du contrat, à défaut celui des échéances enregistrées de l'année.
-            int jour = contrat.paiement().jourPrelevement() != null ? contrat.paiement().jourPrelevement()
-                    : lignes.stream().filter(ligne -> debutAnnee(effet, ligne.date()).equals(debut))
-                            .findFirst().orElseThrow().date().getDayOfMonth();
-            LocalDate finAnnee = debut.plusYears(1).minusDays(1);
-            LocalDate premiere = jourDuMois(debut, jour);
-            if (premiere.isBefore(debut)) {
-                premiere = jourDuMois(debut.plusMonths(1), jour);
-            }
-            for (int rang = 0;; rang++) {
-                LocalDate date = jourDuMois(premiere.plusMonths(rang), jour);
-                if (date.isAfter(finAnnee) || fin != null && !date.isBefore(fin)) {
-                    break;
-                }
-                if (moisEnBase.add(YearMonth.from(date))) {
-                    lignes.add(ligne(date, mensuelle, date.isBefore(aujourdhui) ? PAYEE : A_VENIR, false, fin));
-                }
-            }
+            int jour = jourDePrelevement(contrat, lignes, effet, debut);
+            completerAnnee(debut, jour, mensuelle, fin, moisEnBase, lignes);
         }
         return lignes;
+    }
+
+    /** Jour de prélèvement du contrat, à défaut celui des échéances enregistrées de cette année d'assurance. */
+    private static int jourDePrelevement(DonneesContrat contrat, List<LigneEcheance> lignes, LocalDate effet,
+            LocalDate debutAnnee) {
+        Integer jour = contrat.paiement().jourPrelevement();
+        if (jour != null) {
+            return jour;
+        }
+        return lignes.stream().filter(ligne -> debutAnnee(effet, ligne.date()).equals(debutAnnee))
+                .findFirst().orElseThrow().date().getDayOfMonth();
+    }
+
+    /**
+     * Ajoute à {@code lignes} les échéances calculées des mois de cette année d'assurance qui n'en ont pas encore
+     * (le mois est alors ajouté à {@code moisEnBase}) : une par mois, ce jour-là, sans dépasser la fin de l'année ni
+     * celle du contrat.
+     */
+    private void completerAnnee(LocalDate debutAnnee, int jour, BigDecimal mensuelle, LocalDate fin,
+            Set<YearMonth> moisEnBase, List<LigneEcheance> lignes) {
+        LocalDate aujourdhui = aujourdhui();
+        LocalDate finAnnee = debutAnnee.plusYears(1).minusDays(1);
+        LocalDate premiere = jourDuMois(debutAnnee, jour);
+        if (premiere.isBefore(debutAnnee)) {
+            premiere = jourDuMois(debutAnnee.plusMonths(1), jour);
+        }
+        int rang = 0;
+        LocalDate date = premiere;
+        while (avantLesFins(date, finAnnee, fin)) {
+            if (moisEnBase.add(YearMonth.from(date))) {
+                lignes.add(ligne(date, mensuelle, date.isBefore(aujourdhui) ? PAYEE : A_VENIR, false, fin));
+            }
+            rang++;
+            date = jourDuMois(premiere.plusMonths(rang), jour);
+        }
+    }
+
+    /** Vrai si la date ne dépasse pas la fin de l'année d'assurance et tombe avant la fin du contrat (s'il en a une). */
+    private static boolean avantLesFins(LocalDate date, LocalDate finAnnee, LocalDate finContrat) {
+        return !date.isAfter(finAnnee) && (finContrat == null || date.isBefore(finContrat));
     }
 
     /** Ce jour du mois de la date (le dernier jour du mois s'il est plus court). */

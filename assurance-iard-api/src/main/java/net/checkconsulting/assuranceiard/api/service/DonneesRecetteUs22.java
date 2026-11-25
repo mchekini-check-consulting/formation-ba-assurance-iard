@@ -1,15 +1,11 @@
 package net.checkconsulting.assuranceiard.api.service;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -34,15 +30,7 @@ public class DonneesRecetteUs22 implements ApplicationRunner {
     @Override
     @Transactional
     public void run(ApplicationArguments arguments) {
-        jdbc.execute(lireScript());
+        jdbc.execute(ScriptsDonneesTest.lire(SCRIPT));
         log.info("Données de recette US-22 vérifiées");
-    }
-
-    static String lireScript() {
-        try {
-            return new ClassPathResource(SCRIPT).getContentAsString(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Script de données de test introuvable : " + SCRIPT, e);
-        }
     }
 }
