@@ -24,7 +24,7 @@ import net.checkconsulting.assuranceiard.api.repository.VehiculeRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-/** US-29 étape 3 : prix des 3 formules et enregistrement de la formule choisie. */
+/** US-29 étape 3 : prix des 3 formules et enregistrement de la formule choisie (deployed). */
 @Slf4j
 @Service
 @RequiredArgsConstructor
