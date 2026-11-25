@@ -1,8 +1,5 @@
 package net.checkconsulting.assuranceiard.api.service;
 
-import java.io.IOException;
-import java.io.UncheckedIOException;
-import java.nio.charset.StandardCharsets;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.config.DonneesTestProperties;
@@ -10,7 +7,6 @@ import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.core.annotation.Order;
-import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
@@ -45,10 +41,6 @@ public class DonneesRecetteSprint2 implements ApplicationRunner {
     }
 
     static String lireScript() {
-        try {
-            return new ClassPathResource(SCRIPT).getContentAsString(StandardCharsets.UTF_8);
-        } catch (IOException e) {
-            throw new UncheckedIOException("Script de données de test introuvable : " + SCRIPT, e);
-        }
+        return ScriptsDonneesTest.lire(SCRIPT);
     }
 }
