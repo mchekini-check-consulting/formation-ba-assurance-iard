@@ -1,7 +1,9 @@
 package net.checkconsulting.assuranceiard.api.resource;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -16,11 +18,15 @@ import net.checkconsulting.assuranceiard.api.client.siv.VehiculeInfoSiv;
 import net.checkconsulting.assuranceiard.api.dto.CriteresEligibiliteResponse;
 import net.checkconsulting.assuranceiard.api.dto.MarqueResponse;
 import net.checkconsulting.assuranceiard.api.dto.ModeleResponse;
+import net.checkconsulting.assuranceiard.api.model.Document;
 import net.checkconsulting.assuranceiard.api.service.BesoinsAutoService;
 import net.checkconsulting.assuranceiard.api.service.DevisAutoCreationService;
+import net.checkconsulting.assuranceiard.api.service.DocumentService;
 import net.checkconsulting.assuranceiard.api.service.EligibiliteAutoService;
+import net.checkconsulting.assuranceiard.api.service.FormuleAutoService;
 import net.checkconsulting.assuranceiard.api.service.ReferentielVehiculeService;
 import net.checkconsulting.assuranceiard.api.service.TarificateurAutoService;
+import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
@@ -53,6 +59,12 @@ class DevisAutoResourceTest {
 
     @MockitoBean
     private BesoinsAutoService besoinsAutoService;
+
+    @MockitoBean
+    private FormuleAutoService formuleAutoService;
+
+    @MockitoBean
+    private DocumentsGeneresService documentsGeneresService;
 
     @Test
     void laRechercheParPlaqueTrouveLeVehicule() throws Exception {
@@ -119,6 +131,20 @@ class DevisAutoResourceTest {
     })
     void laNormalisationDePlaqueFonctionne(String saisie, String attendu) {
         assertThat(DevisAutoResource.normaliserPlaque(saisie.strip())).isEqualTo(attendu.strip());
+    }
+
+    @Test
+    void laFicheConseilTelechargeUnPdf() throws Exception {
+        Document doc = mock(Document.class);
+        when(doc.getId()).thenReturn(99L);
+        when(documentsGeneresService.generer(any())).thenReturn(doc);
+        when(documentsGeneresService.telecharger(99L)).thenReturn(
+                new DocumentService.Fichier("fiche-conseil-1.pdf", "pdf", new byte[] {7}));
+
+        mockMvc.perform(get("/v1/devis/auto/1/fiche-conseil"))
+                .andExpect(status().isOk())
+                .andExpect(result -> assertThat(result.getResponse().getContentType())
+                        .startsWith("application/pdf"));
     }
 
     @Test

@@ -1,0 +1,897 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.fond-beige {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 60px;
+}
+
+.contenu-etape {
+  margin: 32px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Titre ── */
+
+.titre-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.titre-ligne {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 26px;
+  color: var(--texte);
+}
+
+.sous-titre-page {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+}
+
+.nom-conseille {
+  color: var(--rouge);
+}
+
+.rouge { color: var(--rouge); }
+.texte-discret { color: var(--texte-discret); }
+
+/* ── Toggle mensuel/annuel ── */
+
+.toggle-periodicite {
+  display: flex;
+  border: 1.5px solid var(--gris);
+  border-radius: 8px;
+  overflow: hidden;
+
+  &__btn {
+    padding: 6px 18px;
+    border: none;
+    background: #fff;
+    color: var(--texte-doux);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+
+    &:hover { background: #f6e9e9; color: var(--rouge); }
+    &:focus-visible { outline: 2px solid var(--rouge); outline-offset: -2px; }
+
+    &--actif {
+      background: var(--rouge);
+      color: #fff;
+      font-weight: 600;
+    }
+  }
+}
+
+/* ── Grille 2 colonnes ── */
+
+.grille-devis {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.colonne-principale {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── Chargement / Erreur ── */
+
+.message-attente {
+  font-size: 14px;
+  color: var(--texte-discret);
+  padding: 24px 0;
+}
+
+.alerte-bloquante {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px 20px;
+  background: #fdf2f2;
+  border: 1px solid #f0c0bc;
+  border-radius: 12px;
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    color: #7a1f1f;
+    line-height: 1.5;
+  }
+}
+
+.lien-retour-erreur {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+}
+
+/* ── Grille des 3 cartes de formule ── */
+
+.grille-formules {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+}
+
+/* ── Carte formule ── */
+
+.carte-formule {
+  position: relative;
+  background: #fff;
+  border-radius: 16px;
+  border: 2px solid var(--bordure-claire);
+  padding: 20px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+
+  &--active {
+    border-color: var(--rouge);
+    box-shadow: 0 2px 12px rgba(168, 43, 39, 0.12);
+  }
+
+  &--conseillee {
+    border-color: var(--rouge);
+  }
+
+  &__nom {
+    margin: 0;
+    font-size: 17px;
+    color: var(--texte);
+  }
+
+  &__description {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-doux);
+    line-height: 1.4;
+  }
+
+  &__garanties {
+    margin: 0;
+    padding: 0 0 0 1.1rem;
+    list-style: disc;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    li {
+      font-size: 12px;
+      color: var(--texte);
+      line-height: 1.35;
+    }
+  }
+
+  &__franchise {
+    display: flex;
+    gap: 4px;
+    font-size: 12px;
+    color: var(--texte-discret);
+    padding-top: 4px;
+    border-top: 1px solid var(--bordure-claire);
+  }
+
+  &__franchise-libelle { font-weight: 500; }
+  &__franchise-valeur { color: var(--texte); }
+
+  &__prix {
+    display: flex;
+    align-items: baseline;
+    gap: 4px;
+    margin-top: 4px;
+
+    strong {
+      font-size: 22px;
+      color: var(--rouge);
+      line-height: 1;
+    }
+  }
+
+  &__unite {
+    font-size: 12px;
+    color: var(--texte-doux);
+  }
+}
+
+.badge-conseillee {
+  position: absolute;
+  top: -1px;
+  left: 12px;
+  background: var(--rouge);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 0 0 8px 8px;
+}
+
+.btn-choisir {
+  width: 100%;
+  min-height: 38px;
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1.5px solid var(--rouge);
+  background: #fff;
+  color: var(--rouge);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+
+  &:hover { background: #f6e9e9; }
+  &:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+
+  &--actif {
+    background: var(--rouge);
+    color: #fff;
+    &:hover { background: var(--rouge-fonce); }
+  }
+}
+
+.btn-exclusions {
+  background: none;
+  border: none;
+  padding: 0;
+  font-size: 11px;
+  color: var(--texte-discret);
+  cursor: pointer;
+  text-decoration: underline;
+  text-align: left;
+
+  &:hover { color: var(--texte); }
+}
+
+.exclusions {
+  font-size: 12px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--bordure-claire);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  &__titre {
+    margin: 0;
+    font-weight: 600;
+    color: var(--texte);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+
+    &--commune { margin-top: 4px; }
+  }
+
+  &__liste {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+
+    li {
+      color: var(--texte-doux);
+      line-height: 1.4;
+    }
+  }
+}
+
+/* ── Alerte choix moins couvrant (B3) ── */
+
+.alerte-choix {
+  background: #fff8e6;
+  border: 1px solid #e6c46a;
+  border-radius: 12px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    color: #5a3c00;
+    line-height: 1.5;
+  }
+
+  &__confirme {
+    margin: 0;
+    font-size: 13px;
+    color: #2F6B3A;
+    font-weight: 600;
+  }
+}
+
+.btn-confirmer-alerte {
+  align-self: flex-start;
+  height: 36px;
+  padding: 0 20px;
+  border-radius: 8px;
+  border: 1.5px solid #8A5300;
+  background: #fff;
+  color: #8A5300;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+
+  &:hover { background: #fff3d6; }
+  &:focus-visible { outline: 2px solid #8A5300; outline-offset: 2px; }
+}
+
+/* ── Cartes communes ── */
+
+.carte {
+  background: #fff;
+  border-radius: 16px;
+  border: 1px solid var(--bordure-claire);
+  padding: 24px 28px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.carte-sous-titre {
+  margin: 0;
+  font-size: 18px;
+  color: var(--texte);
+}
+
+/* ── Carte Pourquoi ── */
+
+.carte--pourquoi {
+  background: #fdfaf5;
+
+  .carte__titre {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--texte);
+  }
+}
+
+.liste-raisons {
+  margin: 0;
+  padding: 0 0 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+
+  li {
+    font-size: 14px;
+    color: var(--texte);
+    line-height: 1.5;
+  }
+}
+
+.besoins-actifs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  &__titre {
+    margin: 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texte-doux);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+
+  &__liste {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+}
+
+.besoin-ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  font-size: 13px;
+
+  &__libelle { color: var(--texte); }
+
+  &__statut {
+    font-weight: 500;
+    white-space: nowrap;
+  }
+}
+
+.statut--vert { color: #2F6B3A; }
+.statut--rouge { color: var(--rouge); }
+.statut--orange { color: #8A5300; }
+
+/* ── Options ── */
+
+.liste-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.option-ligne {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 0;
+  border-top: 1px solid var(--bordure-claire);
+
+  &:first-child { border-top: none; }
+
+  &--inactive {
+    opacity: 0.55;
+  }
+
+  &__label {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    cursor: pointer;
+    flex: 1;
+    min-width: 0;
+  }
+
+  &__case {
+    width: 18px;
+    height: 18px;
+    flex-shrink: 0;
+    margin-top: 2px;
+    accent-color: var(--rouge);
+    cursor: pointer;
+  }
+
+  &__contenu {
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+  }
+
+  &__libelle {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--texte);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  &__description {
+    font-size: 12px;
+    color: var(--texte-discret);
+    line-height: 1.4;
+  }
+
+  &__prix {
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--texte);
+    white-space: nowrap;
+    padding-top: 2px;
+  }
+}
+
+.badge-besoin {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 600;
+  background: #fdf0f0;
+  color: var(--rouge);
+  border: 1px solid #f0c0bc;
+  border-radius: 999px;
+  padding: 1px 8px;
+  vertical-align: middle;
+  line-height: 1.6;
+}
+
+.message-info {
+  margin: 0;
+  font-size: 13px;
+  color: #8A5300;
+  background: #fff8e6;
+  border: 1px solid #e6c46a;
+  border-radius: 8px;
+  padding: 8px 14px;
+}
+
+/* ── Franchise ── */
+
+.carte--franchise {
+  .carte-sous-titre { font-size: 16px; }
+}
+
+.franchise-valeur {
+  margin: 0;
+  font-size: 14px;
+  color: var(--texte);
+}
+
+.franchise-aide {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+}
+
+/* ── Bas de page ── */
+
+.bas-page {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0 16px;
+}
+
+.lien-bas-retour {
+  font-size: 14px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover { text-decoration: none; }
+}
+
+.btn-suivant {
+  height: 48px;
+  padding: 0 32px;
+  border-radius: 999px;
+  background: var(--rouge);
+  color: #fff;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--rouge-fonce); }
+  &:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+/* ── Encart "Mon devis" ── */
+
+.encart-devis {
+  position: sticky;
+  top: 80px;
+
+  &__conteneur {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--bordure-claire);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &__titre {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    font-family: var(--font-serif, Georgia, serif);
+    color: var(--texte);
+  }
+
+  &__formule {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  &__options {
+    margin: 0;
+    padding: 0 0 0 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 3px;
+
+    li {
+      font-size: 13px;
+      color: var(--texte-doux);
+    }
+  }
+
+  &__separateur {
+    height: 1px;
+    background: var(--bordure-claire);
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  &__total-libelle {
+    font-size: 13px;
+    color: var(--texte-doux);
+  }
+
+  &__prix {
+    text-align: right;
+
+    strong {
+      display: block;
+      font-size: 26px;
+      color: var(--rouge);
+      line-height: 1;
+    }
+
+    span {
+      font-size: 12px;
+      color: var(--texte-doux);
+    }
+  }
+
+  &__actions {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-top: 4px;
+  }
+}
+
+.btn-enregistrer {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  background: var(--rouge);
+  color: #fff;
+  border: none;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: var(--rouge-fonce); }
+  &:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+  &:disabled { opacity: 0.6; cursor: not-allowed; }
+}
+
+.btn-telecharger {
+  width: 100%;
+  height: 44px;
+  border-radius: 999px;
+  background: #fff;
+  color: var(--rouge);
+  border: 1.5px solid var(--rouge);
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+
+  &:hover { background: #fdf0f0; }
+  &:focus-visible { outline: 2px solid var(--rouge); outline-offset: 2px; }
+}
+
+.note-devis {
+  margin: 0;
+  font-size: 11px;
+  color: var(--texte-discret);
+  text-align: center;
+  line-height: 1.4;
+}
+
+/* ── Sous-titre conseil ── */
+
+.sous-titre-conseil {
+  margin: 0;
+  font-size: 15px;
+  color: var(--texte-doux);
+
+  strong { color: var(--rouge); }
+}
+
+/* ── Pictogramme voiture ── */
+
+.pictogramme-auto {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  background: #fdf0f0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  align-self: flex-start;
+
+  svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--rouge);
+    fill: none;
+    stroke-width: 1.8;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+}
+
+/* ── Note sous la grille de formules ── */
+
+.note-grille {
+  font-size: 11px;
+  color: var(--texte-discret);
+  text-align: center;
+  margin: 0;
+  padding-top: 4px;
+}
+
+/* ── IPID link ── */
+
+.lien-ipid {
+  font-size: 11px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover { text-decoration: none; }
+}
+
+/* ── Encart franchise ── */
+
+.encart-franchise {
+  background: #fdf8f8;
+  border: 1px solid #f0c0bc;
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &--tiers {
+    background: #f8f8f8;
+    border-color: var(--bordure-claire);
+  }
+
+  p {
+    margin: 0;
+    font-size: 14px;
+    color: var(--texte);
+    line-height: 1.5;
+  }
+}
+
+.franchise-note {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-discret);
+  line-height: 1.4;
+}
+
+/* ── Pourquoi 2 colonnes ── */
+
+.pourquoi-grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: start;
+}
+
+.pourquoi-colonne {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.pourquoi-titre {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+.lien-modifier-besoins {
+  font-size: 13px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover { text-decoration: none; }
+}
+
+/* ── Options intro ── */
+
+.options-intro {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texte-doux);
+  padding-bottom: 4px;
+}
+
+/* ── Encart devis : lignes formule + options ── */
+
+.encart-devis__ligne {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  color: var(--texte);
+  gap: 8px;
+
+  &--formule { font-weight: 600; }
+  &--option { color: var(--texte-doux); }
+
+  .ligne-prix { white-space: nowrap; }
+}
+
+.encart-devis__total-label {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+@media (max-width: 680px) {
+  .pourquoi-grille { grid-template-columns: 1fr; }
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 1050px) {
+  .grille-formules {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 900px) {
+  .grille-devis {
+    grid-template-columns: 1fr;
+  }
+
+  .encart-devis {
+    position: static;
+    order: -1;
+  }
+}
+
+@media (max-width: 680px) {
+  .grille-formules {
+    grid-template-columns: 1fr;
+  }
+
+  .bas-page {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .btn-suivant { width: 100%; }
+}
+
+@media (max-width: 480px) {
+  .carte { padding: 20px 16px; }
+  .carte-formule { padding: 16px 12px; }
+  .contenu-etape { margin-top: 20px; }
+}

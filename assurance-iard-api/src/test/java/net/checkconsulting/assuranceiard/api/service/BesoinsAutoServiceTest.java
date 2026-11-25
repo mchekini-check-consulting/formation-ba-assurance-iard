@@ -223,7 +223,7 @@ class BesoinsAutoServiceTest {
         vehicule.setDateMiseCirculation(LocalDate.now().minusYears(11));
         BesoinsAutoRequest r = new BesoinsAutoRequest(10000, false, false, false, false, false, "PRIX");
         List<String> raisons = service.genererRaisons("TIERS", r, vehicule);
-        assertThat(raisons).anyMatch(s -> s.contains("privilegiez le prix"));
+        assertThat(raisons).anyMatch(s -> s.contains("privilégiez le prix"));
         assertThat(raisons).anyMatch(s -> s.contains("plus de 10 ans"));
     }
 

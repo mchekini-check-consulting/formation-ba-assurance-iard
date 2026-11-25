@@ -7,6 +7,7 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -78,4 +79,29 @@ public class DevisAuto extends EntiteHorodatee {
 
     @Column(name = "prix_mensuel_estime", precision = 10, scale = 2)
     private BigDecimal prixMensuelEstime;
+
+    // US-29 étape 3 : formule choisie, options, dérogation, prix finaux, validité
+    @Column(name = "formule_choisie", length = 30)
+    private String formuleChoisie;
+
+    @Column(name = "options_choisies", columnDefinition = "text")
+    private String optionsChoisies;
+
+    @Column(name = "choix_different_du_conseil", nullable = false)
+    private Boolean choixDifferentDuConseil = false;
+
+    @Column(name = "date_confirmation_choix_different")
+    private Instant dateConfirmationChoixDifferent;
+
+    @Column(name = "prix_mensuel_ttc", precision = 10, scale = 2)
+    private BigDecimal prixMensuelTtc;
+
+    @Column(name = "prix_annuel_ttc", precision = 10, scale = 2)
+    private BigDecimal prixAnnuelTtc;
+
+    @Column(name = "version_grille", length = 50)
+    private String versionGrille;
+
+    @Column(name = "date_fin_validite")
+    private LocalDate dateFinValidite;
 }

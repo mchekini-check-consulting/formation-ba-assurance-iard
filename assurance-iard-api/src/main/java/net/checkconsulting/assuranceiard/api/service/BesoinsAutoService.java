@@ -102,15 +102,15 @@ public class BesoinsAutoService {
         boolean loaOuLld = estLoaOuLld(vehicule);
         switch (formule) {
             case "TOUS_RISQUES" -> {
-                if (age < SEUIL_RECENTS_ANS) raisons.add("Votre vehicule a moins de 5 ans");
-                if (r.valeurVehicule() != null && r.valeurVehicule() > SEUIL_VALEUR_HAUTE) raisons.add("Votre vehicule vaut plus de 15 000 €");
-                if (loaOuLld) raisons.add("Votre vehicule est en LOA ou LLD");
+                if (age < SEUIL_RECENTS_ANS) raisons.add("Votre véhicule a moins de 5 ans");
+                if (r.valeurVehicule() != null && r.valeurVehicule() > SEUIL_VALEUR_HAUTE) raisons.add("Votre véhicule vaut plus de 15 000 €");
+                if (loaOuLld) raisons.add("Votre véhicule est en LOA ou LLD");
                 if ("PROTECTION_LARGE".equals(r.priorite())) raisons.add("Vous recherchez la protection la plus large");
             }
             case "TIERS" -> {
-                raisons.add("Vous privilegiez le prix");
-                if (age > SEUIL_ANCIENS_ANS) raisons.add("Votre vehicule a plus de 10 ans");
-                if (r.valeurVehicule() != null && r.valeurVehicule() < SEUIL_VALEUR_BASSE) raisons.add("Votre vehicule vaut moins de 3 000 €");
+                raisons.add("Vous privilégiez le prix");
+                if (age > SEUIL_ANCIENS_ANS) raisons.add("Votre véhicule a plus de 10 ans");
+                if (r.valeurVehicule() != null && r.valeurVehicule() < SEUIL_VALEUR_BASSE) raisons.add("Votre véhicule vaut moins de 3 000 €");
             }
             default -> raisons.add("Vous recherchez l'équilibre prix / protection");
         }

@@ -36,3 +36,10 @@ export const besoinsRenseignesGuard: CanActivateFn = () => {
   if (devisAuto.conducteur() === null) return inject(Router).parseUrl('/devis-auto/conducteur');
   return devisAuto.recommandation() !== null ? true : inject(Router).parseUrl('/devis-auto/besoins');
 };
+
+export const formuleChoisieAutoGuard: CanActivateFn = () => {
+  const devisAuto = inject(DevisAutoService);
+  if (devisAuto.vehicule() === null) return inject(Router).parseUrl('/devis-auto/vehicule');
+  if (devisAuto.recommandation() === null) return inject(Router).parseUrl('/devis-auto/besoins');
+  return devisAuto.formuleChoisie() !== null ? true : inject(Router).parseUrl('/devis-auto/formule');
+};

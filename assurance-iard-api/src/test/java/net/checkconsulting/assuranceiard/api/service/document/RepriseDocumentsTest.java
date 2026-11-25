@@ -43,6 +43,9 @@ class RepriseDocumentsTest {
         when(catalogue.typesGeres()).thenReturn(Set.of("CONDITIONS_PARTICULIERES", "CONDITIONS_GENERALES"));
         when(documents.enVigueur(eq(0L), eq("CONDITIONS_GENERALES"), anyString()))
                 .thenReturn(Optional.of(new Document()));
+        // Les IPID auto existent déjà par défaut, pour ne pas interférer avec les tests CG.
+        when(documents.enVigueur(eq(0L), eq("IPID"), anyString()))
+                .thenReturn(Optional.of(new Document()));
     }
 
     @Test

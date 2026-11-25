@@ -1,24 +1,350 @@
-<main style="padding: 48px 24px; max-width: 700px; margin: 0 auto; font-family: sans-serif;">
-  <h1>&#201;tape 3 &#8211; Ma formule conseill&#233;e <span style="font-size: 0.7em; color: #888;">(&#224; venir)</span></h1>
+<iard-devis-auto-layout sousEtape="3"></iard-devis-auto-layout>
 
-  @if (devisAutoService.recommandation(); as reco) {
-    <div style="background: #fff; border-radius: 16px; border: 1px solid #e5e5e5; padding: 24px; margin: 24px 0;">
-      <p>Formule conseill&#233;e re&#231;ue : <strong style="color: #a82b27; font-size: 1.25rem;">{{ libelle(reco.formuleConseillee) }}</strong></p>
-      @if (reco.prixMensuel) {
-        <p>Tarif estim&#233; : <strong>{{ formaterPrix(reco.prixMensuel) }} &#8364;/mois</strong></p>
-      }
-      <ul style="padding-left: 1.25rem; margin: 12px 0 0;">
-        @for (raison of reco.raisons; track raison) {
-          <li style="margin: 4px 0;">{{ raison }}</li>
-        }
-      </ul>
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <div class="titre-zone">
+        <div class="titre-ligne">
+          <h1 class="titre-page serif">Ma formule</h1>
+          <div class="toggle-periodicite" role="group" aria-label="Période de paiement">
+            <button
+              type="button"
+              class="toggle-periodicite__btn"
+              [class.toggle-periodicite__btn--actif]="periodicite() === 'mensuel'"
+              [attr.aria-pressed]="periodicite() === 'mensuel'"
+              (click)="choisirPeriodicite('mensuel')"
+            >Par mois</button>
+            <button
+              type="button"
+              class="toggle-periodicite__btn"
+              [class.toggle-periodicite__btn--actif]="periodicite() === 'annuel'"
+              [attr.aria-pressed]="periodicite() === 'annuel'"
+              (click)="choisirPeriodicite('annuel')"
+            >Par an</button>
+          </div>
+        </div>
+        <p class="sous-titre-conseil">
+          Nous vous conseillons la formule <strong>{{ nomFormuleConseille() }}</strong>.
+        </p>
+      </div>
+
+      @if (chargement()) {
+        <p class="message-attente" aria-live="polite">Chargement des tarifs…</p>
+      } @else if (erreurChargement()) {
+        <div class="alerte-bloquante" role="alert">
+          <p class="alerte-bloquante__texte">
+            Impossible de charger les tarifs. Veuillez actualiser la page ou revenir à l'étape précédente.
+          </p>
+          <a class="lien-retour-erreur" routerLink="/devis-auto/besoins">← Retour à mes besoins</a>
+        </div>
+      } @else {
+
+        <div class="grille-devis">
+
+          <!-- COLONNE PRINCIPALE -->
+          <div class="colonne-principale">
+
+            <!-- A3 : 3 cartes de formule -->
+            <section aria-label="Choisir une formule">
+              <div class="grille-formules">
+                @for (carte of cartes(); track carte.code) {
+                  <article
+                    class="carte-formule"
+                    [class.carte-formule--active]="formuleSelectionnee() === carte.code"
+                    [class.carte-formule--conseillee]="carte.conseillee"
+                  >
+                    @if (carte.conseillee) {
+                      <div class="badge-conseillee" aria-label="Formule conseillée">Conseillée</div>
+                    }
+
+                    <div class="pictogramme-auto" aria-hidden="true">
+                      <svg viewBox="0 0 24 24" aria-hidden="true">
+                        <path d="M5 11l1.5-4.5h11L19 11M5 11H3v3h1m15-3h2v3h-1M5 11h14M7 17a1 1 0 100-2 1 1 0 000 2zm10 0a1 1 0 100-2 1 1 0 000 2z"/>
+                      </svg>
+                    </div>
+
+                    <h2 class="carte-formule__nom serif">{{ carte.nom }}</h2>
+                    <p class="carte-formule__description">{{ carte.description }}</p>
+
+                    <ul class="carte-formule__garanties">
+                      @for (g of carte.garanties; track g) {
+                        <li>{{ g }}</li>
+                      }
+                    </ul>
+
+                    @if (carte.code !== 'TIERS') {
+                      <div class="carte-formule__franchise">
+                        <span class="carte-formule__franchise-libelle">Franchise&nbsp;</span>
+                        <span class="carte-formule__franchise-valeur">{{ franchisePourFormule(carte.code) }}</span>
+                      </div>
+                    }
+
+                    <div class="carte-formule__prix">
+                      @if (prixPourFormule(carte.code) !== null) {
+                        <strong>{{ formaterPrix(prixPourFormule(carte.code)) }}&nbsp;€</strong>
+                        <span class="carte-formule__unite">{{ unitePrix() }}</span>
+                      } @else {
+                        <span class="texte-discret">Prix non disponible</span>
+                      }
+                    </div>
+
+                    <button
+                      type="button"
+                      class="btn-choisir"
+                      [class.btn-choisir--actif]="formuleSelectionnee() === carte.code"
+                      (click)="choisir(carte.code)"
+                      [attr.aria-pressed]="formuleSelectionnee() === carte.code"
+                    >
+                      @if (formuleSelectionnee() === carte.code) { Sélectionnée } @else { Choisir }
+                    </button>
+
+                    <button
+                      type="button"
+                      class="btn-exclusions"
+                      (click)="toggleExclusions(carte.code)"
+                      [attr.aria-expanded]="exclusionsOuvertes().has(carte.code)"
+                    >
+                      {{ exclusionsOuvertes().has(carte.code) ? 'Masquer ce qui n\'est pas couvert' : 'Ce qui n\'est pas couvert' }}
+                    </button>
+
+                    <a class="lien-ipid" [href]="ipidUrl(carte.code)" target="_blank" rel="noopener">
+                      Document d'information (IPID)
+                    </a>
+
+                    @if (exclusionsOuvertes().has(carte.code)) {
+                      <div class="exclusions">
+                        <p class="exclusions__titre">Exclusions spécifiques</p>
+                        <ul class="exclusions__liste">
+                          @for (e of carte.exclusionsSpecifiques; track e) {
+                            <li>{{ e }}</li>
+                          }
+                        </ul>
+                        <p class="exclusions__titre exclusions__titre--commune">Exclusions communes</p>
+                        <ul class="exclusions__liste">
+                          @for (e of EXCLUSIONS_COMMUNES; track e) {
+                            <li>{{ e }}</li>
+                          }
+                        </ul>
+                      </div>
+                    }
+                  </article>
+                }
+              </div>
+              <p class="note-grille">Prix TTC avant options. Devis valable 30 jours.</p>
+            </section>
+
+            <!-- A4 : alerte choix moins couvrant (règle B3) -->
+            @if (alerteChoixMoinsCourant()) {
+              <div class="alerte-choix" role="alert">
+                <p class="alerte-choix__texte">
+                  Vous choisissez une formule <strong>moins couvrante</strong> que la formule conseillée
+                  (<strong>{{ nomFormuleConseille() }}</strong>).
+                  Conformément à notre devoir de conseil, nous vous invitons à confirmer ce choix.
+                </p>
+                @if (!alerteConfirmee()) {
+                  <button type="button" class="btn-confirmer-alerte" (click)="confirmerAlerte()">
+                    Je confirme mon choix
+                  </button>
+                } @else {
+                  <p class="alerte-choix__confirme">✓ Choix confirmé</p>
+                }
+              </div>
+            }
+
+            <!-- A5 : Pourquoi cette recommandation -->
+            @if (svc.recommandation()) {
+              <section class="carte carte--pourquoi" aria-labelledby="titre-pourquoi">
+                <div class="pourquoi-grille">
+                  <div class="pourquoi-colonne">
+                    <h2 id="titre-pourquoi" class="pourquoi-titre">
+                      Pourquoi la formule <span class="rouge">{{ nomFormuleConseille() }}</span> ?
+                    </h2>
+                    @if (svc.recommandation()!.raisons.length > 0) {
+                      <ul class="liste-raisons">
+                        @for (raison of svc.recommandation()!.raisons; track raison) {
+                          <li>{{ raison }}</li>
+                        }
+                      </ul>
+                    }
+                  </div>
+                  <div class="pourquoi-colonne">
+                    <p class="pourquoi-titre">Vos besoins (étape 2)</p>
+                    @if (lignesBesoinsActifs().length > 0) {
+                      <ul class="besoins-actifs__liste">
+                        @for (l of lignesBesoinsActifs(); track l.cle) {
+                          <li class="besoin-ligne">
+                            <span class="besoin-ligne__libelle">{{ l.libelle }}</span>
+                            <span
+                              class="besoin-ligne__statut"
+                              [class.statut--vert]="statutBesoin(l.cle).couleur === 'vert'"
+                              [class.statut--rouge]="statutBesoin(l.cle).couleur === 'rouge'"
+                              [class.statut--orange]="statutBesoin(l.cle).couleur === 'orange'"
+                            >{{ statutBesoin(l.cle).texte }}</span>
+                          </li>
+                        }
+                      </ul>
+                    }
+                    <a class="lien-modifier-besoins" routerLink="/devis-auto/besoins">Modifier mes besoins</a>
+                  </div>
+                </div>
+              </section>
+            }
+
+            <!-- A5b : Options -->
+            <section class="carte" aria-labelledby="titre-options">
+              <h2 id="titre-options" class="carte-sous-titre serif">Options</h2>
+              <p class="options-intro">Ajoutez les options qui vous intéressent. Aucune n'est cochée d'office.</p>
+              <div class="liste-options">
+                @for (opt of OPTIONS; track opt.code) {
+                  <div
+                    class="option-ligne"
+                    [class.option-ligne--inactive]="!optionCompatible(opt.code)"
+                  >
+                    <label class="option-ligne__label" [for]="'opt-' + opt.code">
+                      <input
+                        [id]="'opt-' + opt.code"
+                        type="checkbox"
+                        class="option-ligne__case"
+                        [checked]="optionsChoisies().includes(opt.code)"
+                        [disabled]="!optionCompatible(opt.code)"
+                        (change)="toggleOption(opt.code)"
+                        [attr.aria-describedby]="'desc-opt-' + opt.code"
+                      />
+                      <span class="option-ligne__contenu">
+                        <span class="option-ligne__libelle">
+                          {{ opt.libelle }}
+                          @if (badgeOption(opt.code)) {
+                            <span class="badge-besoin">{{ badgeOption(opt.code) }}</span>
+                          }
+                        </span>
+                        <span [id]="'desc-opt-' + opt.code" class="option-ligne__description">
+                          {{ opt.description }}
+                        </span>
+                      </span>
+                    </label>
+                    <span class="option-ligne__prix">
+                      @if (!optionCompatible(opt.code)) {
+                        <span class="texte-discret">Non disponible en Tiers</span>
+                      } @else if (prixPourOption(opt.code) !== null) {
+                        +&nbsp;{{ formaterPrix(prixPourOption(opt.code)) }}&nbsp;€{{ unitePrix() }}
+                      }
+                    </span>
+                  </div>
+                }
+              </div>
+              @if (messageVehiculeRemplacement()) {
+                <p class="message-info" role="alert">{{ messageVehiculeRemplacement() }}</p>
+              }
+            </section>
+
+            <!-- A5c : Franchise -->
+            <section class="carte carte--franchise" aria-labelledby="titre-franchise">
+              <h2 id="titre-franchise" class="carte-sous-titre serif">Franchise</h2>
+              @if (formuleSelectionnee() === 'TIERS') {
+                <div class="encart-franchise encart-franchise--tiers">
+                  <p>Pas de franchise : la formule Tiers ne couvre pas les dommages à votre propre véhicule.</p>
+                </div>
+              } @else {
+                <div class="encart-franchise">
+                  <p>
+                    Franchise pour la formule <strong>{{ nomFormuleSelectionnee() }}</strong> :
+                    <strong class="rouge">{{ franchisePourFormule(formuleSelectionnee()) }}</strong>
+                  </p>
+                  <p class="franchise-note">
+                    La franchise est la part restant à votre charge en cas de sinistre indemnisé.
+                    Les catastrophes naturelles reconnues par arrêté font l'objet d'une franchise légale distincte.
+                  </p>
+                </div>
+              }
+            </section>
+
+            @if (erreurSouscription()) {
+              <div class="alerte-bloquante" role="alert">
+                <p class="alerte-bloquante__texte">{{ erreurSouscription() }}</p>
+              </div>
+            }
+
+            <!-- A6 : bas de page -->
+            <div class="bas-page">
+              <a class="lien-bas-retour" routerLink="/devis-auto/besoins">← Retour à mes besoins</a>
+              <button
+                type="button"
+                class="btn-suivant"
+                [disabled]="!peutSouscrire()"
+                (click)="soumettre()"
+              >
+                @if (envoi()) { Enregistrement… } @else { Souscrire cette formule }
+              </button>
+            </div>
+
+          </div><!-- /colonne-principale -->
+
+          <!-- COLONNE DROITE : Mon devis -->
+          <aside class="encart-devis" aria-label="Mon devis">
+            <div class="encart-devis__conteneur">
+              <p class="encart-devis__titre serif">Mon devis</p>
+
+              <div class="encart-devis__ligne encart-devis__ligne--formule">
+                <span>Formule {{ nomFormuleSelectionnee() }}</span>
+                <span class="ligne-prix">
+                  @if (prixPourFormule(formuleSelectionnee()) !== null) {
+                    {{ formaterPrix(prixPourFormule(formuleSelectionnee())) }}&nbsp;€
+                  }
+                </span>
+              </div>
+
+              @for (opt of OPTIONS; track opt.code) {
+                @if (optionsChoisies().includes(opt.code)) {
+                  <div class="encart-devis__ligne encart-devis__ligne--option">
+                    <span>{{ opt.libelle }}</span>
+                    <span class="ligne-prix">
+                      @if (prixPourOption(opt.code) !== null) {
+                        +&nbsp;{{ formaterPrix(prixPourOption(opt.code)) }}&nbsp;€
+                      }
+                    </span>
+                  </div>
+                }
+              }
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__total">
+                <span class="encart-devis__total-label">Total TTC</span>
+                <div class="encart-devis__prix">
+                  <strong>{{ totalFormate() }}&nbsp;€</strong>
+                  <span>{{ unitePrix() }}</span>
+                </div>
+              </div>
+
+              <div class="encart-devis__actions">
+                <button
+                  type="button"
+                  class="btn-enregistrer"
+                  [disabled]="!peutSouscrire()"
+                  (click)="soumettre()"
+                >
+                  @if (envoi()) { Enregistrement… } @else { Enregistrer mon devis }
+                </button>
+                @if (alerteChoixMoinsCourant() && !alerteConfirmee()) {
+                  <p class="note-devis">Confirmez votre choix pour enregistrer.</p>
+                }
+                <button
+                  type="button"
+                  class="btn-telecharger"
+                  (click)="telechargerDevis()"
+                >
+                  Télécharger mon devis (PDF)
+                </button>
+                <p class="note-devis">Votre devis est valable 30 jours.</p>
+              </div>
+            </div>
+          </aside>
+
+        </div><!-- /grille-devis -->
+
+      }<!-- /chargement -->
+
     </div>
-    <p style="color: #666; font-size: 0.875rem;">
-      Cette &#233;tape est provisoire. La s&#233;lection de formule et le d&#233;tail des garanties seront d&#233;velopp&#233;s prochainement (US-29).
-    </p>
-  } @else {
-    <p>Aucune recommandation disponible. <a routerLink="/devis-auto/besoins">Retour aux besoins</a></p>
-  }
-
-  <a routerLink="/devis-auto/besoins" style="display: inline-block; margin-top: 24px; color: #a82b27; text-decoration: underline;">&#8592; Retour &#224; mes besoins</a>
+  </div>
 </main>

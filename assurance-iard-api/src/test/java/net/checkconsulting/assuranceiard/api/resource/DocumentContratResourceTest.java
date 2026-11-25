@@ -1,5 +1,6 @@
 package net.checkconsulting.assuranceiard.api.resource;
 
+import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -7,10 +8,13 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.exception.DocumentAltereException;
 import net.checkconsulting.assuranceiard.api.exception.DocumentIndisponibleException;
 import net.checkconsulting.assuranceiard.api.exception.DocumentInconnuException;
 import net.checkconsulting.assuranceiard.api.exception.GestionErreurs;
+import net.checkconsulting.assuranceiard.api.model.Document;
+import net.checkconsulting.assuranceiard.api.repository.DocumentRepository;
 import net.checkconsulting.assuranceiard.api.service.DocumentService;
 import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
 import org.hamcrest.Matchers;
@@ -33,6 +37,9 @@ class DocumentContratResourceTest {
     @MockitoBean
     private DocumentsGeneresService service;
 
+    @MockitoBean
+    private DocumentRepository documents;
+
     @Test
     void telechargeLePdf() throws Exception {
         when(service.telecharger(5L)).thenReturn(new DocumentService.Fichier(
@@ -45,6 +52,25 @@ class DocumentContratResourceTest {
                         Matchers.startsWith("attachment;"),
                         Matchers.containsString("conditions-particulieres-AE-2026-000001-v2.pdf"))))
                 .andExpect(content().bytes(new byte[] {1, 2}));
+    }
+
+    @Test
+    void ipidRetourneLePdfDeLaFormule() throws Exception {
+        Document doc = mock(Document.class);
+        when(doc.getId()).thenReturn(42L);
+        when(documents.enVigueur(0L, "IPID", "INTER")).thenReturn(Optional.of(doc));
+        when(service.telecharger(42L)).thenReturn(new DocumentService.Fichier("ipid-inter.pdf", "pdf", new byte[] {5}));
+
+        mockMvc.perform(get("/documents-contrat/ipid/INTER"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_PDF))
+                .andExpect(content().bytes(new byte[] {5}));
+    }
+
+    @Test
+    void ipidReferenceInconnueEst404() throws Exception {
+        mockMvc.perform(get("/documents-contrat/ipid/INCONNU"))
+                .andExpect(status().isNotFound());
     }
 
     @Test
