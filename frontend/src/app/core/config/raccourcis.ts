@@ -12,8 +12,8 @@ export const LIVRAISONS = {
   modifierGaranties: false,
   /** US-21 : livrée (régénération depuis la section « Versions » de la fiche contrat) */
   regenerer: true,
-  /** US-22 : Mes factures, Générer une facture */
-  factures: false,
+  /** US-22 : livrée (Mes factures, Générer une facture) */
+  factures: true,
   /** US-24 : Mes sinistres, Déclarer un sinistre */
   sinistres: false,
   /** Page « Mon compte » (pas encore développée) */
@@ -24,6 +24,8 @@ export const LIVRAISONS = {
 export const ADRESSES: Partial<Record<keyof typeof LIVRAISONS, string>> = {
   /** US-21 : la régénération se fait sur la fiche du contrat (section « Versions »), sous cette adresse. */
   regenerer: '/espace-client/contrats',
+  /** US-22 : échéancier et factures ; « Générer une facture » d'un contrat ouvre la page sur ce contrat. */
+  factures: '/espace-client/factures',
 };
 
 /** US-21 : ancre de la section « Versions » de la fiche contrat. */
@@ -83,7 +85,14 @@ export const RACCOURCIS: Record<
         ? { commandes: [ADRESSES.regenerer, contrat.numero], fragment: ANCRE_VERSIONS }
         : null,
   },
-  genererFacture: { libelle: 'Générer une facture', livre: LIVRAISONS.factures, produits: ['HABITATION', 'AUTO'] },
+  genererFacture: {
+    libelle: 'Générer une facture',
+    livre: LIVRAISONS.factures,
+    produits: ['HABITATION', 'AUTO'],
+    // US-22 : ouvre « Mes factures » sur ce contrat (ancre contrat-<numéro>), où se trouvent les boutons.
+    lien: (contrat) =>
+      ADRESSES.factures ? { commandes: [ADRESSES.factures], fragment: `contrat-${contrat.numero}` } : null,
+  },
   declarerSinistre: { libelle: 'Déclarer un sinistre', livre: LIVRAISONS.sinistres, produits: ['HABITATION', 'AUTO'] },
 };
 

@@ -10,9 +10,16 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import java.math.BigDecimal;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+import net.checkconsulting.assuranceiard.api.dto.DemandeFactureRequest;
+import net.checkconsulting.assuranceiard.api.dto.FactureGenereeResponse;
+import net.checkconsulting.assuranceiard.api.dto.MesFacturesResponse;
+import net.checkconsulting.assuranceiard.api.exception.FactureImpossibleException;
+import net.checkconsulting.assuranceiard.api.exception.PeriodeFacturationInconnueException;
+import net.checkconsulting.assuranceiard.api.service.facture.FactureService;
 import net.checkconsulting.assuranceiard.api.dto.ContratResponse;
 import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.EnvoyerCodeSignatureResponse;
@@ -66,6 +73,55 @@ class ContratResourceTest {
 
     @MockitoBean
     private RegenerationContratService regenerationService;
+
+    @MockitoBean
+    private FactureService factureService;
+
+    private ResultActions genererFacture(String corps) throws Exception {
+        return mockMvc.perform(post("/contrats/AE-2026-000001/factures")
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.AUTHORIZATION, JETON)
+                .content(corps));
+    }
+
+    @Test
+    void us22GenereLaFactureDUneEcheance() throws Exception {
+        DemandeFactureRequest demande = new DemandeFactureRequest(DemandeFactureRequest.Periode.ECHEANCE,
+                LocalDate.of(2026, 11, 10));
+        when(factureService.generer("AE-2026-000001", demande)).thenReturn(new FactureGenereeResponse(
+                new MesFacturesResponse.Facture("FAC-2026-000042", LocalDate.of(2026, 11, 10),
+                        LocalDate.of(2026, 12, 9), new BigDecimal("16.97"), new BigDecimal("1.53"),
+                        new BigDecimal("18.50"), Instant.parse("2026-11-25T10:00:00Z"), 7L),
+                true, false));
+
+        genererFacture("{\"periode\":\"ECHEANCE\",\"date\":\"2026-11-10\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.facture.numero").value("FAC-2026-000042"))
+                .andExpect(jsonPath("$.facture.documentId").value(7))
+                .andExpect(jsonPath("$.disponible").value(true))
+                .andExpect(jsonPath("$.existante").value(false));
+    }
+
+    @Test
+    void us22UneDemandeDeFactureIncompleteEstRefusee() throws Exception {
+        genererFacture("{\"periode\":\"ECHEANCE\"}").andExpect(status().isBadRequest());
+        verifyNoInteractions(factureService);
+    }
+
+    @Test
+    void us22PeriodeInconnue404() throws Exception {
+        when(factureService.generer(eq("AE-2026-000001"), any())).thenThrow(new PeriodeFacturationInconnueException());
+
+        genererFacture("{\"periode\":\"ANNEE\",\"date\":\"2026-01-01\"}").andExpect(status().isNotFound());
+    }
+
+    @Test
+    void us22FactureImpossible422() throws Exception {
+        when(factureService.generer(eq("AE-2026-000001"), any())).thenThrow(new FactureImpossibleException());
+
+        genererFacture("{\"periode\":\"ANNEE\",\"date\":\"2026-01-01\"}")
+                .andExpect(status().isUnprocessableContent());
+    }
 
     private ResultActions generer(String corps) throws Exception {
         return mockMvc.perform(post("/devis/contrat")

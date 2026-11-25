@@ -110,8 +110,9 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
       expect(echeance.querySelector('.iban')?.textContent).toBe('•••• 7788');
       expect(contenu).toContain('FAC-1 · 45,00 €');
       expect(contenu).toContain('PDF bientôt disponible');
-      // US-22 pas livrée : pas de lien « Voir mes factures ».
-      expect(contenu).not.toContain('Voir mes factures');
+      // US-22 livrée : lien « Voir mes factures ».
+      const lien = Array.from(echeance.querySelectorAll('a')).find((a) => a.textContent?.includes('Voir mes factures'));
+      expect(lien?.getAttribute('href')).toBe('/espace-client/factures');
     });
 
     it('« Devis en cours » : le plus récent, sans « Voir mon devis » pour un devis auto (AC4 auto reporté)', () => {
@@ -132,11 +133,12 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
       expect(contenu).not.toContain('Voir mes sinistres');
     });
 
-    it('« Que voulez-vous faire ? » : seule la tuile « Faire un nouveau devis » est livrée', () => {
+    it('« Que voulez-vous faire ? » : tuiles « Mes factures » (US-22) et « Faire un nouveau devis »', () => {
       const tuiles = Array.from(page.querySelectorAll('.tuile'));
-      expect(tuiles.map((t) => t.textContent?.trim())).toEqual(['Faire un nouveau devis']);
+      expect(tuiles.map((t) => t.textContent?.trim())).toEqual(['Mes factures', 'Faire un nouveau devis']);
+      expect(tuiles[0].getAttribute('href')).toBe('/espace-client/factures');
       // Page d'accueil, qui propose habitation et auto (US-26).
-      expect(tuiles[0].getAttribute('href')).toBe('/');
+      expect(tuiles[1].getAttribute('href')).toBe('/');
     });
 
     it('télécharge une facture, ou signale qu’elle est en préparation (409)', () => {

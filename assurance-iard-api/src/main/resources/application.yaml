@@ -104,6 +104,19 @@ assurance:
       intervalle: 5m
       delai-initial: 1m
       lot: 50
+  # US-22, RG1 : taux de la taxe sur les conventions d'assurance (TSCA) imprimés sur les factures (exonérées de TVA).
+  # PROVISOIRE, À VALIDER PAR LE PO : T-04 ne fournit aucun taux. Formule (garanties de base) : taux du produit ;
+  # option : son taux propre, sinon celui du produit. Valeurs décimales (0.09 = 9 %).
+  facturation:
+    taux-par-produit:
+      HABITATION: 0.09
+      AUTO: 0.18
+    taux-par-garantie:
+      "[protection-juridique]": 0.134
+      "[PROTECTION_JURIDIQUE]": 0.134
+      "[assistance-depannage]": 0.09
+      "[ASSISTANCE_0KM]": 0.09
+      "[ASSISTANCE_PANNE]": 0.09
 
 moteur-tarifaire:
   url: ${MOTEUR_TARIFAIRE_URL:http://localhost:8081}

@@ -107,11 +107,17 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
   });
 
   describe('navigation client (ordre de la maquette, droits du profil)', () => {
-    it('un assuré voit Tableau de bord, Mes contrats, Mes devis, Mes documents ; factures, sinistres et compte pas encore livrés', () => {
+    it('un assuré voit Tableau de bord, Mes contrats, Mes devis, Mes documents, Mes factures (US-22) ; sinistres et compte pas encore livrés', () => {
       afficherAvec('ASSURE', ['CONTRATS:CONSULTER', 'DEVIS:CONSULTER', 'DOCUMENTS:CONSULTER', 'SINISTRES:CONSULTER']);
       http.expectOne(URL_TABLEAU).flush({ prenom: 'Alice', nom: 'Martin' });
 
-      expect(liens('.barre__navigation')).toEqual(['Tableau de bord', 'Mes contrats', 'Mes devis', 'Mes documents']);
+      expect(liens('.barre__navigation')).toEqual([
+        'Tableau de bord',
+        'Mes contrats',
+        'Mes devis',
+        'Mes documents',
+        'Mes factures',
+      ]);
     });
 
     it('une rubrique dont le droit est retiré disparaît (US-04, AC5)', () => {

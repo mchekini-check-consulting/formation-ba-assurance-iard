@@ -161,7 +161,8 @@ Taille maximale des pièces jointes 5 Mo (contrôlée en base) ; format de factu
 base) ; franchises 400 € (Intermédiaire) et 500 € (Tous risques) (données T-04) ; conducteur de 17 ans en conduite
 accompagnée non géré. T-03 : taille maximale d'un PDF 5 Mo ; mentions de l'assureur, garanties par formule,
 exclusions et conditions générales **provisoires et fictives** (`application.yaml`, `assurance.documents`), à
-remplacer par les éléments du PO.
+remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance.facturation` : habitation 9 %, auto
+18 %, protection juridique 13,4 %, assistance 9 %).
 
 ## Points pour le sprint 2
 
@@ -187,8 +188,17 @@ remplacer par les éléments du PO.
 - **Données de test** : le contrat auto `AE-RECETTE-A10` est au statut `RENONCE`, alors que la renonciation ne
   s'applique pas à l'assurance auto obligatoire (art. L112-2-1 du Code des assurances). Affiché tel quel par US-18,
   à corriger dans le jeu de données de test (à valider PO).
-- **Factures** : aucun modèle ne produit encore le PDF d'une facture (T-03 : conditions particulières et générales
-  seulement). Le tableau de bord affiche la facture sans lien de téléchargement tant que son PDF n'est pas stocké.
+- ~~**Factures** : aucun modèle ne produit encore le PDF d'une facture.~~ US-22 : modèle « Facture » (type `FACTURE`,
+  `document.reference` = numéro de facture ; la facture de test `FAC-RECETTE-0001`, sans référence, est retrouvée
+  par `facture.document_id` et stockée par la reprise de T-03). Aucune migration.
+- **US-22, échéancier** : aucun traitement ne crée encore les lignes `echeance`. Les échéances enregistrées (données de
+  test) priment ; sinon l'échéancier est calculé depuis le contrat (premier prélèvement de RG3/RG4 d'US-14, puis
+  chaque mois, ou chaque année en paiement annuel, jusqu'à la fin de l'année d'assurance en cours). Statut « Payée »
+  si la date est passée, « À venir » sinon : simulation de prototype, **à valider PO** (pas de système de paiement).
+- **US-22, factures** : une facture par contrat et par période (`periode_debut`, `periode_fin`), contrôlée par le code
+  (verrou sur le contrat) et non par la base ; numéro `FAC-AAAA-NNNNNN` = année de génération + compteur de la table
+  `facture` (jamais réutilisé, mais pas remis à zéro chaque année et sans garantie d'absence de trou). HT et TSCA
+  calculés depuis le TTC, par garantie, avec les taux **provisoires** de `assurance.facturation` (`application.yaml`).
 
 ---
 

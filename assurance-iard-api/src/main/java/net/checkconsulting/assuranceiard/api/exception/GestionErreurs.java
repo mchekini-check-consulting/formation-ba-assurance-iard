@@ -97,6 +97,18 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.TOO_MANY_REQUESTS, exception.getMessage());
     }
 
+    /** US-22 : contrat en attente de signature, ou période postérieure à la fin d'un contrat Résilié ou Renoncé. */
+    @ExceptionHandler(FactureImpossibleException.class)
+    public ProblemDetail factureImpossible(FactureImpossibleException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
+    /** US-22 : la date demandée n'est ni une échéance ni une année de cotisation du contrat. */
+    @ExceptionHandler(PeriodeFacturationInconnueException.class)
+    public ProblemDetail periodeFacturationInconnue(PeriodeFacturationInconnueException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
     @ExceptionHandler(MandatNonSigneException.class)
     public ProblemDetail mandatNonSigne(MandatNonSigneException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());

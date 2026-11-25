@@ -37,7 +37,9 @@ describe('statuts du contrat (US-18, RG3 et AC5)', () => {
     expect(STATUTS_CONTRAT.IMPAYE.actions).not.toContain('modifierGaranties');
     expect(STATUTS_CONTRAT.SUSPENDU.actions).not.toContain('regenerer');
     expect(STATUTS_CONTRAT.RESILIE.actions).not.toContain('declarerSinistre');
-    expect(STATUTS_CONTRAT.RENONCE.actions).toEqual(['detail']);
+    // US-22 : un contrat renoncé garde ses factures des périodes antérieures (décision BA).
+    expect(STATUTS_CONTRAT.RENONCE.actions).toEqual(['detail', 'genererFacture']);
+    expect(STATUTS_CONTRAT.EN_ATTENTE_DE_SIGNATURE.actions).not.toContain('genererFacture');
     expect(STATUTS_CONTRAT.ACTIF.actions).toHaveLength(5);
   });
 

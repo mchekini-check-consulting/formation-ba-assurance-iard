@@ -52,8 +52,12 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
     afficher(CONTRAT_AUTO);
 
     const liens = Array.from(carte.querySelectorAll('a'));
-    // US-21 livrée : « Régénérer mon contrat » ; garanties, factures et sinistres pas encore livrés.
-    expect(liens.map((lien) => lien.textContent?.trim())).toEqual(['Voir mon contrat', 'Régénérer mon contrat']);
+    // US-21 et US-22 livrées : « Régénérer mon contrat », « Générer une facture » ; garanties et sinistres pas encore.
+    expect(liens.map((lien) => lien.textContent?.trim())).toEqual([
+      'Voir mon contrat',
+      'Régénérer mon contrat',
+      'Générer une facture',
+    ]);
     expect(liens[0].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03');
     expect(liens[0].classList).not.toContain('btn--contour');
   });
@@ -71,7 +75,15 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
 
     expect(Array.from(carte.querySelectorAll('a')).map((lien) => lien.textContent?.trim())).toEqual([
       'Voir mon contrat',
+      'Générer une facture',
     ]);
+  });
+
+  it('US-22 : « Générer une facture » ouvre Mes factures sur ce contrat', () => {
+    afficher(CONTRAT_AUTO);
+
+    const facture = Array.from(carte.querySelectorAll('a')).find((lien) => lien.textContent?.includes('facture'));
+    expect(facture?.getAttribute('href')).toBe('/espace-client/factures#contrat-AE-RECETTE-A03');
   });
 
   it('« Signer » (contour) pour un contrat habitation en attente de signature', () => {
