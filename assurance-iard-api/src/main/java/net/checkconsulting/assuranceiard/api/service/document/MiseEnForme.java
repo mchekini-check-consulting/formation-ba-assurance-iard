@@ -17,14 +17,18 @@ public final class MiseEnForme {
     private static final Map<String, String> FORMULES = Map.of(
             "essentielle", "Essentielle", "confort", "Confort", "serenite", "Sérénité",
             "TIERS", "Tiers", "INTER", "Intermédiaire", "TR", "Tous risques");
-    private static final Map<String, String> OPTIONS = Map.of(
-            "objets-valeur", "Objets de valeur",
-            "assistance-depannage", "Assistance dépannage",
-            "protection-juridique", "Protection juridique",
-            "RC", "Responsabilité civile",
-            "BRIS_GLACE", "Bris de glace",
-            "ASSISTANCE_0KM", "Assistance 0 km",
-            "CONDUCTEUR", "Protection du conducteur");
+    private static final Map<String, String> OPTIONS = Map.ofEntries(
+            Map.entry("objets-valeur", "Objets de valeur"),
+            Map.entry("assistance-depannage", "Assistance dépannage"),
+            Map.entry("protection-juridique", "Protection juridique"),
+            Map.entry("RC", "Responsabilité civile"),
+            Map.entry("BRIS_GLACE", "Bris de glace"),
+            Map.entry("ASSISTANCE_0KM", "Assistance dès 0 km"),
+            Map.entry("CONDUCTEUR", "Protection du conducteur"),
+            // US-29 étape 3 : codes options moteur auto
+            Map.entry("VEHICULE_REMPLACEMENT", "Véhicule de remplacement"),
+            Map.entry("PROTECTION_CONDUCTEUR", "Protection du conducteur renforcée"),
+            Map.entry("PROTECTION_JURIDIQUE", "Protection juridique"));
 
     private MiseEnForme() {
     }

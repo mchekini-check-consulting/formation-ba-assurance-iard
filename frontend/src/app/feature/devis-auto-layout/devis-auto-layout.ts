@@ -1,7 +1,7 @@
 import { Component, computed, input } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-type SousEtape = '1.1' | '1.2' | '1.3' | '1.4' | '2';
+type SousEtape = '1.1' | '1.2' | '1.3' | '1.4' | '2' | '3';
 
 @Component({
   selector: 'iard-devis-auto-layout',
@@ -26,7 +26,9 @@ export class DevisAutoLayout {
   protected readonly etape1Active = computed(() =>
     ['1.1', '1.2', '1.3', '1.4'].includes(this.sousEtape()),
   );
-  protected readonly etape1Faite = computed(() => this.sousEtape() === '2');
+  protected readonly etape1Faite = computed(() => ['2', '3'].includes(this.sousEtape()));
   protected readonly etape2Active = computed(() => this.sousEtape() === '2');
-  protected readonly montrerSousEtapes = computed(() => this.sousEtape() !== '2');
+  protected readonly etape2Faite = computed(() => this.sousEtape() === '3');
+  protected readonly etape3Active = computed(() => this.sousEtape() === '3');
+  protected readonly montrerSousEtapes = computed(() => !['2', '3'].includes(this.sousEtape()));
 }

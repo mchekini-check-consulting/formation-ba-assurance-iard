@@ -28,11 +28,14 @@
         </li>
         <li class="progression__etape"
             [class.progression__etape--active]="etape2Active()"
+            [class.progression__etape--faite]="etape2Faite()"
             [attr.aria-current]="etape2Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 2</span>
           <span class="progression__nom">Mes besoins</span>
         </li>
-        <li class="progression__etape">
+        <li class="progression__etape"
+            [class.progression__etape--active]="etape3Active()"
+            [attr.aria-current]="etape3Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 3</span>
           <span class="progression__nom">Ma formule</span>
         </li>

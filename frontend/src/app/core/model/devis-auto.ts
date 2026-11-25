@@ -100,6 +100,10 @@ export interface CriteresEligibilite {
 export type PrioriteAuto = 'PRIX' | 'EQUILIBRE' | 'PROTECTION_LARGE';
 export type FormuleConseillee = 'TOUS_RISQUES' | 'INTERMEDIAIRE' | 'TIERS';
 
+// US-29 étape 3 : formule et options (codes moteur tarifaire)
+export type FormuleMoteur = 'TIERS' | 'INTER' | 'TR';
+export type OptionAuto = 'ASSISTANCE_0KM' | 'VEHICULE_REMPLACEMENT' | 'PROTECTION_CONDUCTEUR' | 'PROTECTION_JURIDIQUE';
+
 export interface BesoinsAuto {
   valeurVehicule: number;
   vehiculeIndispensable: boolean;
@@ -114,4 +118,35 @@ export interface RecommandationAuto {
   formuleConseillee: FormuleConseillee;
   raisons: string[];
   prixMensuel: number | null;
+}
+
+// Réponse GET /prix-formules
+export interface PrixFormuleAuto {
+  formule: FormuleMoteur;
+  mensuel: number;
+  annuel: number;
+  franchise: number | null;
+}
+
+export interface PrixOptionAuto {
+  option: OptionAuto;
+  mensuel: number;
+}
+
+export interface PrixFormuleAutoResponse {
+  idTarif: string | null;
+  versionGrille: string | null;
+  dateValidite: string | null;
+  prix: PrixFormuleAuto[];
+  prixOptions: PrixOptionAuto[];
+}
+
+// Formule choisie en local
+export interface FormuleAutoChoisie {
+  formuleMoteur: FormuleMoteur;
+  options: OptionAuto[];
+  choixDifferentDuConseil: boolean;
+  prixMensuelTtc: number | null;
+  prixAnnuelTtc: number | null;
+  versionGrille: string | null;
 }

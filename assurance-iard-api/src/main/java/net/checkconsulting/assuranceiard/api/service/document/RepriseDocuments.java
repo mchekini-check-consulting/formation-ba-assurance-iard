@@ -45,6 +45,7 @@ public class RepriseDocuments {
     public int reprendre() {
         ModeleConditionsGenerales.FORMULES_PAR_PRODUIT.keySet().stream().sorted()
                 .forEach(this::creerConditionsGenerales);
+        ModeleIPIDauto.FORMULES_AUTO.stream().sorted().forEach(this::creerIPIDauto);
         List<Long> aStocker = documents.aStocker(catalogue.typesGeres(), reglages.reprise().lot());
         int stockes = 0;
         for (Long id : aStocker) {
@@ -71,6 +72,19 @@ public class RepriseDocuments {
                     DemandeDocument.commun(TypeDocument.CONDITIONS_GENERALES, produit, MOTIF_CG)));
         } catch (DataIntegrityViolationException dejaCreees) {
             log.info("Conditions générales {} déjà créées par une autre instance", produit);
+        }
+    }
+
+    private void creerIPIDauto(String formule) {
+        String type = TypeDocument.IPID.name();
+        if (documents.enVigueur(0, type, formule).isPresent()) {
+            return;
+        }
+        try {
+            transaction.executeWithoutResult(etat -> service.generer(
+                    DemandeDocument.commun(TypeDocument.IPID, formule, "IPID auto provisoire (US-29)")));
+        } catch (DataIntegrityViolationException dejaCreees) {
+            log.info("IPID auto {} déjà créé par une autre instance", formule);
         }
     }
 }

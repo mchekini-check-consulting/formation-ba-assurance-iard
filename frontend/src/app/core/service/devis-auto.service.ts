@@ -1,5 +1,5 @@
 import { Injectable, signal } from '@angular/core';
-import { AchatAuto, BesoinsAuto, ConducteurAuto, RecommandationAuto, UsageAutoSaisie, VehiculeAuto } from '../model/devis-auto';
+import { AchatAuto, BesoinsAuto, ConducteurAuto, FormuleAutoChoisie, RecommandationAuto, UsageAutoSaisie, VehiculeAuto } from '../model/devis-auto';
 import { TarifAutoReponse } from './tarif-auto.service';
 
 @Injectable({ providedIn: 'root' })
@@ -12,6 +12,7 @@ export class DevisAutoService {
   readonly besoins = signal<BesoinsAuto | null>(null);
   readonly recommandation = signal<RecommandationAuto | null>(null);
   readonly tarifEtape1 = signal<TarifAutoReponse | null>(null);
+  readonly formuleChoisie = signal<FormuleAutoChoisie | null>(null);
 
   enregistrerVehicule(vehicule: VehiculeAuto): void {
     this.vehicule.set(vehicule);
@@ -56,6 +57,11 @@ export class DevisAutoService {
   enregistrerBesoinsEtRecommandation(besoins: BesoinsAuto, recommandation: RecommandationAuto): void {
     this.besoins.set(besoins);
     this.recommandation.set(recommandation);
+    this.formuleChoisie.set(null);
+  }
+
+  enregistrerFormule(formule: FormuleAutoChoisie): void {
+    this.formuleChoisie.set(formule);
   }
 
   enregistrerTarifEtape1(tarif: TarifAutoReponse | null): void {

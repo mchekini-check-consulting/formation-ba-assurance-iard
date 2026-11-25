@@ -33,7 +33,7 @@ class CalculFactureTest {
 
         // L'option sans prix (contrats du sprint 1) reste dans la formule.
         assertThat(garanties).extracting(Garantie::libelle)
-                .containsExactly("Formule Tous risques (garanties de base)", "Bris de glace", "PROTECTION_JURIDIQUE");
+                .containsExactly("Formule Tous risques (garanties de base)", "Bris de glace", "Protection juridique");
         assertThat(garanties).extracting(Garantie::poids).containsExactly(new BigDecimal("31.00"),
                 new BigDecimal("3.50"), new BigDecimal("5.50"));
         assertThat(garanties).extracting(Garantie::taux).containsExactly(new BigDecimal("0.18"),
