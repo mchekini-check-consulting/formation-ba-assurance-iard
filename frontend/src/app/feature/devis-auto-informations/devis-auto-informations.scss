@@ -1,0 +1,414 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.conteneur {
+  width: 100%;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+}
+
+.fond-beige {
+  flex: 1;
+  background: var(--beige);
+  padding-bottom: 60px;
+}
+
+.contenu-etape {
+  margin: 32px auto 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Titre ── */
+
+.titre-zone {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding-top: 4px;
+}
+
+.titre-page {
+  margin: 0;
+  font-size: 26px;
+  color: var(--texte);
+}
+
+.sous-titre-page {
+  margin: 0;
+  color: var(--texte-doux);
+  font-size: 15px;
+}
+
+.note-champs {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-doux);
+}
+
+.asterisque {
+  color: var(--rouge);
+  font-weight: 700;
+}
+
+/* ── Grille 2 colonnes ── */
+
+.grille-devis {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 24px;
+  align-items: start;
+}
+
+.colonne-principale {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-width: 0;
+}
+
+/* ── Formulaire ── */
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.carte {
+  background: white;
+  border-radius: 10px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.07);
+
+  &__titre {
+    margin: 0 0 4px;
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--texte);
+  }
+}
+
+/* ── Champs ── */
+
+.champ {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &--etroit {
+    max-width: 220px;
+  }
+}
+
+.champ-grille {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+
+  @media (max-width: 540px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.champ-grille--3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.libelle {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+.aide {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-doux);
+}
+
+.saisie {
+  padding: 10px 12px;
+  border: 1.5px solid var(--bordure);
+  border-radius: 6px;
+  font-size: 15px;
+  color: var(--texte);
+  background: white;
+  transition: border-color 0.15s;
+
+  &::placeholder {
+    color: var(--gris);
+  }
+
+  &:focus {
+    outline: none;
+    border-color: var(--rouge);
+  }
+
+  &--erreur {
+    border-color: var(--erreur);
+  }
+}
+
+/* ── Civilité 50/50 ── */
+
+.choix {
+  display: flex;
+  gap: 8px;
+
+  &--moitie {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+
+  &__option {
+    padding: 8px 20px;
+    border: 1.5px solid var(--bordure);
+    border-radius: 6px;
+    background: white;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-align: center;
+
+    &--actif {
+      border-color: var(--rouge);
+      background: var(--rose);
+      color: var(--rouge);
+      font-weight: 600;
+    }
+  }
+}
+
+.erreur {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--erreur);
+}
+
+/* ── Encadré Vos justificatifs ── */
+
+.justificatifs {
+  background: var(--rose);
+  border: 1px solid rgba(168, 43, 39, 0.25);
+  border-radius: 10px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__titre {
+    margin: 0;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--rouge);
+  }
+
+  &__texte {
+    margin: 0;
+    font-size: 14px;
+    color: var(--texte);
+    line-height: 1.5;
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-doux);
+    line-height: 1.4;
+  }
+
+  &__lien {
+    color: var(--texte-doux);
+    text-decoration: underline;
+
+    &:hover {
+      color: var(--texte);
+    }
+  }
+}
+
+/* ── Alertes ── */
+
+.alerte {
+  border-radius: 8px;
+  padding: 14px 16px;
+
+  p {
+    margin: 0;
+    font-size: 14px;
+  }
+
+  &--bloquant {
+    background: #fff3f3;
+    border: 1px solid #f5c6c6;
+    color: var(--erreur);
+  }
+
+  &--champ {
+    background: #fff8e1;
+    border: 1px solid #ffe082;
+    color: #7a5c00;
+  }
+}
+
+/* ── Actions ── */
+
+.actions {
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  padding-top: 8px;
+
+  &--deux {
+    justify-content: space-between;
+    align-items: center;
+  }
+}
+
+.lien-retour {
+  font-size: 15px;
+  color: var(--rouge);
+  text-decoration: underline;
+
+  &:hover {
+    text-decoration: none;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--rouge);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+}
+
+/* ── Encart "Mon devis" (colonne droite) ── */
+
+.encart-devis {
+  position: sticky;
+  top: 80px;
+
+  &__conteneur {
+    background: #fff;
+    border-radius: 16px;
+    border: 1px solid var(--bordure-claire);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  }
+
+  &__titre {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--texte);
+  }
+
+  &__vehicule {
+    padding-bottom: 2px;
+
+    &-nom {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--texte);
+    }
+
+    &-plaque {
+      margin: 2px 0 0;
+      font-size: 12px;
+      color: var(--texte-doux);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+  }
+
+  &__ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    font-size: 13px;
+    color: var(--texte);
+    gap: 8px;
+
+    &--formule { font-weight: 600; }
+    &--option { color: var(--texte-doux); }
+    &--franchise { color: var(--texte-doux); font-size: 12px; }
+  }
+
+  &__separateur {
+    height: 1px;
+    background: var(--bordure-claire);
+  }
+
+  &__total {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+  }
+
+  &__total-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--texte);
+  }
+
+  &__prix {
+    text-align: right;
+
+    strong {
+      display: block;
+      font-size: 26px;
+      color: var(--rouge);
+      line-height: 1;
+    }
+
+    span {
+      font-size: 12px;
+      color: var(--texte-doux);
+    }
+  }
+}
+
+.ligne-prix {
+  white-space: nowrap;
+}
+
+/* ── Responsive ── */
+
+@media (max-width: 900px) {
+  .grille-devis {
+    grid-template-columns: 1fr;
+  }
+
+  .encart-devis {
+    position: static;
+  }
+}
+
+@media (max-width: 540px) {
+  .champ--etroit {
+    max-width: 100%;
+  }
+
+  .contenu-etape {
+    margin-top: 20px;
+  }
+}

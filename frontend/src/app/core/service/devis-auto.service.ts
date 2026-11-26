@@ -13,6 +13,7 @@ export class DevisAutoService {
   readonly recommandation = signal<RecommandationAuto | null>(null);
   readonly tarifEtape1 = signal<TarifAutoReponse | null>(null);
   readonly formuleChoisie = signal<FormuleAutoChoisie | null>(null);
+  readonly souscripteurEnregistre = signal(false);
 
   enregistrerVehicule(vehicule: VehiculeAuto): void {
     this.vehicule.set(vehicule);
@@ -58,10 +59,16 @@ export class DevisAutoService {
     this.besoins.set(besoins);
     this.recommandation.set(recommandation);
     this.formuleChoisie.set(null);
+    this.souscripteurEnregistre.set(false);
   }
 
   enregistrerFormule(formule: FormuleAutoChoisie): void {
     this.formuleChoisie.set(formule);
+    this.souscripteurEnregistre.set(false);
+  }
+
+  enregistrerSouscripteur(): void {
+    this.souscripteurEnregistre.set(true);
   }
 
   enregistrerTarifEtape1(tarif: TarifAutoReponse | null): void {

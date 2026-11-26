@@ -43,3 +43,8 @@ export const formuleChoisieAutoGuard: CanActivateFn = () => {
   if (devisAuto.recommandation() === null) return inject(Router).parseUrl('/devis-auto/besoins');
   return devisAuto.formuleChoisie() !== null ? true : inject(Router).parseUrl('/devis-auto/formule');
 };
+
+export const souscripteurEnregistreAutoGuard: CanActivateFn = () => {
+  const devisAuto = inject(DevisAutoService);
+  return devisAuto.souscripteurEnregistre() ? true : inject(Router).parseUrl('/devis-auto/informations');
+};
