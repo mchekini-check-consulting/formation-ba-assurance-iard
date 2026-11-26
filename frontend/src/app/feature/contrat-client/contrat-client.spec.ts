@@ -322,6 +322,123 @@ describe('ContratClient (US-18, AC3)', () => {
     });
   });
 
+  describe('US-23 : avenant en attente et historique des avenants', () => {
+    const EN_ATTENTE = {
+      numero: 'AV-2026-000012',
+      rang: 2,
+      statut: 'EN_ATTENTE',
+      dateEffet: '2026-11-27',
+      ancienneCotisationMensuelle: 47.5,
+      nouvelleCotisationMensuelle: 48.5,
+      ajouts: [{ code: 'ASSISTANCE_0KM', libelle: 'Assistance dès 0 km', prixMensuelTtc: 3.5 }],
+      retraits: [{ code: 'PROTECTION_JURIDIQUE', libelle: 'Protection juridique', prixMensuelTtc: 2.5 }],
+      accepteLe: null,
+      documentId: null,
+    };
+    const ACCEPTE = {
+      ...EN_ATTENTE,
+      numero: 'AV-2026-000005',
+      rang: 1,
+      statut: 'ACCEPTE',
+      dateEffet: '2026-10-02',
+      ajouts: [{ code: 'PROTECTION_JURIDIQUE', libelle: 'Protection juridique', prixMensuelTtc: 2.5 }],
+      retraits: [],
+      accepteLe: '2026-10-01T09:00:00Z',
+      documentId: 70,
+    };
+    const FICHE_EN_ATTENTE = { ...FICHE_AUTO, statut: 'AVENANT_EN_ATTENTE', avenants: [EN_ATTENTE, ACCEPTE] };
+
+    it('un contrat actif propose « Modifier mes garanties »', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_AUTO);
+
+      const lien = Array.from(page.querySelectorAll('a.btn')).find((a) => a.textContent?.includes('Modifier mes garanties'));
+      expect(lien?.getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03/garanties');
+      expect(page.querySelector('.avenant-attente')).toBeNull();
+    });
+
+    it('AC5 : « Avenant en attente » : couvert aux conditions actuelles, relire et accepter ou abandonner', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_EN_ATTENTE);
+
+      expect(page.querySelector('.badge-statut')?.textContent?.trim()).toBe('Avenant en attente');
+      const bandeau = page.querySelector('.avenant-attente')?.textContent?.replace(/\s+/g, ' ') ?? '';
+      expect(bandeau).toContain('AV-2026-000012');
+      expect(bandeau).toContain('48,50 € TTC / mois au lieu de 47,50 € TTC');
+      expect(bandeau).toContain('vous restez couvert aux conditions actuelles');
+      expect(page.querySelector('.avenant-attente a')?.getAttribute('href')).toBe(
+        '/espace-client/contrats/AE-RECETTE-A03/avenant',
+      );
+      // Pas de doublon dans les raccourcis de la fiche.
+      expect(Array.from(page.querySelectorAll('a.btn')).filter((a) => a.textContent?.includes('Relire'))).toHaveLength(1);
+    });
+
+    it('AC5 : abandonner met la fiche à jour sans recharger la page', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_EN_ATTENTE);
+      Array.from(page.querySelectorAll<HTMLButtonElement>('.avenant-attente button'))
+        .find((b) => b.textContent?.includes('Abandonner'))!
+        .click();
+
+      http
+        .expectOne('/api/assurance-iard-api/contrats/AE-RECETTE-A03/avenants/en-attente/abandon')
+        .flush({ ...EN_ATTENTE, statut: 'ABANDONNE' });
+      repondreFiche('AE-RECETTE-A03', { ...FICHE_AUTO, avenants: [{ ...EN_ATTENTE, statut: 'ABANDONNE' }, ACCEPTE] });
+
+      expect(page.querySelector('.fiche__confirmation')?.textContent).toContain('AV-2026-000012 est abandonné');
+      expect(page.querySelector('.avenant-attente')).toBeNull();
+      expect(page.querySelector('.badge-statut')?.textContent?.trim()).toBe('Actif');
+    });
+
+    it('un abandon refusé affiche le message du serveur', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_EN_ATTENTE);
+      (page.querySelector('.avenant-attente button') as HTMLButtonElement).click();
+      http
+        .expectOne('/api/assurance-iard-api/contrats/AE-RECETTE-A03/avenants/en-attente/abandon')
+        .flush({ detail: "Aucun avenant n'attend votre réponse sur ce contrat." }, { status: 404, statusText: 'x' });
+      fixture.detectChanges();
+
+      expect(page.querySelector('.fiche__confirmation--erreur')?.textContent).toContain('Aucun avenant');
+    });
+
+    it('recette : un avenant abandonné ou en attente n’a pas de bouton « Télécharger », même avec un document', () => {
+      ouvrir('AE-RECETTE-H01');
+      // AV-2026-000001 de H01 : abandonné, il garde le projet d'avenant des données T-05.
+      repondreFiche('AE-RECETTE-H01', {
+        ...FICHE_AUTO,
+        avenants: [
+          { ...ACCEPTE, numero: 'AV-2026-000003' },
+          { ...EN_ATTENTE, numero: 'AV-2026-000002', documentId: 41 },
+          { ...EN_ATTENTE, numero: 'AV-2026-000001', statut: 'ABANDONNE', documentId: 40 },
+        ],
+      });
+
+      const lignes = Array.from(page.querySelectorAll('.avenants li'));
+      expect(lignes.map((li) => li.querySelectorAll('button').length)).toEqual([1, 0, 0]);
+      expect(lignes[2].textContent).toContain('Abandonné');
+      expect(lignes[2].textContent).not.toContain('Télécharger');
+    });
+
+    it('historique : numéro, date d’effet, garanties changées, statut ; l’avenant accepté se télécharge', () => {
+      ouvrir('AE-RECETTE-A03');
+      repondreFiche('AE-RECETTE-A03', FICHE_EN_ATTENTE);
+
+      const lignes = Array.from(page.querySelectorAll('.avenants li')).map((li) => li.textContent?.replace(/\s+/g, ' '));
+      expect(lignes[0]).toContain('AV-2026-000012');
+      expect(lignes[0]).toContain('En attente');
+      expect(lignes[0]).toContain('+ Assistance dès 0 km');
+      expect(lignes[0]).toContain('− Protection juridique');
+      expect(lignes[1]).toContain('Accepté');
+      expect(lignes[1]).toContain('Effet le 02/10/2026');
+
+      (page.querySelector('.avenants button') as HTMLButtonElement).click();
+      http.expectOne('/api/assurance-iard-api/documents-contrat/70').flush(new Blob(), { status: 409, statusText: 'x' });
+      fixture.detectChanges();
+      expect(page.querySelector('.avenants')?.textContent).toContain('Document en préparation');
+    });
+  });
+
   describe('non-régression : ancienne adresse par référence de devis', () => {
     it('redirige vers la fiche par numéro du même contrat, sans garder l’ancienne adresse dans l’historique', () => {
       ouvrir(REFERENCE);

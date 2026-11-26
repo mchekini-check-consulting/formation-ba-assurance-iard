@@ -248,4 +248,61 @@ class TarifDevisServiceTest {
         assertThatThrownBy(() -> service.cotisationDuContrat(contrat)).isInstanceOf(TarifDevisIncoherentException.class);
         verify(moteur, never()).reprendre(any());
     }
+
+    private static net.checkconsulting.assuranceiard.api.dto.DonneesContrat contratHabitation() {
+        return new net.checkconsulting.assuranceiard.api.dto.DonneesContrat(1L, "AE-RECETTE-H01", "HABITATION",
+                "confort", null,
+                new net.checkconsulting.assuranceiard.api.dto.DonneesContrat.Logement("appartement", 55,
+                        "3 rue de la Recette", "33000", "Bordeaux"),
+                null, null,
+                new net.checkconsulting.assuranceiard.api.dto.DonneesContrat.Tarif(new BigDecimal("300.00"),
+                        new BigDecimal("18.50"), new BigDecimal("222.00"), null, null),
+                null, null, List.of());
+    }
+
+    @Test
+    void us23PrixDesOptionsHabitationAvecLaGrilleDuSprint1() {
+        TarifResponse.Detail detail = new TarifResponse.Detail("CONFORT", new BigDecimal("13.19"), List.of(
+                new TarifResponse.PrixOption("OBJETS_VALEUR", new BigDecimal("2.50")),
+                new TarifResponse.PrixOption("ASSISTANCE", new BigDecimal("1.50")),
+                new TarifResponse.PrixOption("PROTECTION_JURIDIQUE", new BigDecimal("2.90"))),
+                BigDecimal.ZERO, new BigDecimal("20.09"), new BigDecimal("241.08"));
+        when(moteur.calculer(any())).thenReturn(new TarifResponse(ID_TARIF, "2026.1", true, null, null, null, detail,
+                null, null, null, null, null, null));
+
+        assertThat(service.prixDesOptions(contratHabitation())).containsExactly(
+                java.util.Map.entry("objets-valeur", new BigDecimal("2.50")),
+                java.util.Map.entry("assistance-depannage", new BigDecimal("1.50")),
+                java.util.Map.entry("protection-juridique", new BigDecimal("2.90")));
+        ArgumentCaptor<TarifRequest> requete = ArgumentCaptor.forClass(TarifRequest.class);
+        verify(moteur).calculer(requete.capture());
+        // Profil neutre (le contrat ne garde pas tout le profil du devis), formule et franchise du contrat.
+        assertThat(requete.getValue().formule()).isEqualTo("CONFORT");
+        assertThat(requete.getValue().franchise()).isEqualTo(300);
+        assertThat(requete.getValue().pieces()).isEqualTo(2);
+        assertThat(requete.getValue().options()).containsExactly("OBJETS_VALEUR", "ASSISTANCE", "PROTECTION_JURIDIQUE");
+        // Recette US-23 (KO « champs invalides ») : le moteur exige l'étage d'un appartement et les dépendances d'une
+        // maison (ChampsConditionnelsValidator) ; le profil neutre les renseigne (coefficient 1).
+        assertThat(requete.getValue().typeLogement()).isEqualTo("APPARTEMENT");
+        assertThat(requete.getValue().etage()).isEqualTo("INTERMEDIAIRE");
+        assertThat(requete.getValue().dependances()).isEqualTo("AUCUNE");
+    }
+
+    @Test
+    void us23RecetteUnRefusDuMoteurNAfficheJamaisChampsInvalidesAuClient() {
+        when(moteur.calculer(any())).thenThrow(new MoteurDonneesInvalidesException(
+                List.of(new net.checkconsulting.assuranceiard.api.dto.ErreurChampMoteur("etage", "obligatoire"))));
+
+        assertThatThrownBy(() -> service.prixDesOptions(contratHabitation()))
+                .isInstanceOf(net.checkconsulting.assuranceiard.api.exception.MoteurIndisponibleException.class)
+                .hasMessageNotContaining("champs invalides");
+    }
+
+    @Test
+    void us23PrixDesOptionsHabitationIndisponiblesSiLeMoteurNeTarifePas() {
+        when(moteur.calculer(any())).thenReturn(tarif(false));
+
+        assertThatThrownBy(() -> service.prixDesOptions(contratHabitation()))
+                .isInstanceOf(net.checkconsulting.assuranceiard.api.exception.MoteurIndisponibleException.class);
+    }
 }

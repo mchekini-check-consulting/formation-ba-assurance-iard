@@ -46,6 +46,7 @@ import net.checkconsulting.assuranceiard.api.repository.FactureRepository;
 import net.checkconsulting.assuranceiard.api.repository.PermissionRepository;
 import net.checkconsulting.assuranceiard.api.repository.SinistreRepository;
 import net.checkconsulting.assuranceiard.api.repository.VehiculeRepository;
+import net.checkconsulting.assuranceiard.api.service.avenant.HistoriqueAvenants;
 import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
 import net.checkconsulting.assuranceiard.api.service.document.GabaritPdf;
 import org.junit.jupiter.api.BeforeEach;
@@ -70,8 +71,10 @@ class EspaceClientServiceTest {
     private final Clock horloge = Clock.fixed(Instant.parse("2026-11-24T09:00:00Z"), ZoneOffset.UTC);
 
     private final DocumentsGeneresService documentsGeneres = mock(DocumentsGeneresService.class);
+    private final HistoriqueAvenants historiqueAvenants = mock(HistoriqueAvenants.class);
     private final EspaceClientService service = new EspaceClientService(sessions, permissions, contrats, devis,
-            devisAuto, vehicules, factures, sinistres, documents, donnees, documentsGeneres, horloge);
+            devisAuto, vehicules, factures, sinistres, documents, donnees, documentsGeneres, historiqueAvenants,
+            horloge);
 
     private Compte compte;
 
@@ -348,6 +351,27 @@ class EspaceClientServiceTest {
         when(contrats.parNumero("AE-INCONNU")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.fiche("AE-INCONNU")).isInstanceOf(ContratInconnuException.class);
+    }
+
+    @Test
+    void us23MesContratsListeLesAvenantsAcceptesAvecLeurPdfPourMesDocuments() {
+        Contrat auto = auto(3L, "AE-RECETTE-A03", "ACTIF");
+        when(contrats.duClient(compte)).thenReturn(List.of(auto, habitation()));
+        net.checkconsulting.assuranceiard.api.dto.AvenantResponse accepte =
+                new net.checkconsulting.assuranceiard.api.dto.AvenantResponse("AV-2026-000009", 2, "ACCEPTE",
+                        LocalDate.of(2026, 11, 27), new BigDecimal("47.50"), new BigDecimal("48.50"), List.of(),
+                        List.of(), Instant.parse("2026-11-26T10:00:00Z"), 70L);
+        net.checkconsulting.assuranceiard.api.dto.AvenantResponse abandonne =
+                new net.checkconsulting.assuranceiard.api.dto.AvenantResponse("AV-2026-000004", 1, "ABANDONNE",
+                        LocalDate.of(2026, 11, 20), new BigDecimal("45.00"), new BigDecimal("47.50"), List.of(),
+                        List.of(), null, null);
+        when(historiqueAvenants.duContrat(3L)).thenReturn(List.of(accepte, abandonne));
+        when(historiqueAvenants.duContrat(1L)).thenReturn(List.of());
+
+        List<ContratResumeResponse> resultat = service.contrats(JETON);
+
+        assertThat(resultat.getFirst().avenants()).containsExactly(accepte);
+        assertThat(resultat.get(1).avenants()).isEmpty();
     }
 
     @Test

@@ -15,6 +15,7 @@ import java.time.ZoneId;
 import java.util.List;
 import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.model.Echeance;
+import net.checkconsulting.assuranceiard.api.repository.AvenantRepository;
 import net.checkconsulting.assuranceiard.api.repository.DonneesContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.EcheanceRepository;
 import net.checkconsulting.assuranceiard.api.service.PremierPrelevementService;
@@ -40,11 +41,14 @@ class EcheancierServiceTest {
     @Mock
     private DonneesContratRepository donneesContrat;
 
+    @Mock
+    private AvenantRepository avenants;
+
     private EcheancierService service;
 
     @BeforeEach
     void preparer() {
-        service = new EcheancierService(echeances, donneesContrat, new PremierPrelevementService(), HORLOGE);
+        service = new EcheancierService(echeances, avenants, donneesContrat, new PremierPrelevementService(), HORLOGE);
     }
 
     private static LocalDate date(int annee, int mois, int jour) {
@@ -58,6 +62,33 @@ class EcheancierServiceTest {
         assertThat(echeancier.estVide()).isTrue();
         assertThat(echeancier.annees()).isEmpty();
         verifyNoInteractions(echeances, donneesContrat);
+    }
+
+    @Test
+    void us23Rg3ApresUnAvenantAccepteLesMensualitesSuivantLaDateDEffetSontALaNouvelleCotisation() {
+        when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID)).thenReturn(List.of());
+        when(donneesContrat.dateSignature(ID)).thenReturn(Optional.of(date(2026, 2, 20)));
+        net.checkconsulting.assuranceiard.api.model.Avenant avenant =
+                new net.checkconsulting.assuranceiard.api.model.Avenant();
+        avenant.setDateEffet(date(2026, 11, 27));
+        avenant.setPrimeAvantTtc(new BigDecimal("18.50"));
+        avenant.setPrimeApresTtc(new BigDecimal("21.00"));
+        when(avenants.findByContratIdAndStatutOrderByDateEffetAscIdAsc(ID, "ACCEPTE")).thenReturn(List.of(avenant));
+
+        // Cotisation du contrat après l'avenant : 21,00 € par mois.
+        Echeancier echeancier = service.de("ACTIF", contrat("HABITATION", EFFET, null, "MENSUEL", 10, "21.00",
+                List.of()));
+
+        assertThat(echeancier.echeances()).filteredOn(ligne -> ligne.date().isBefore(date(2026, 11, 27)))
+                .hasSize(9).allSatisfy(ligne -> assertThat(ligne.montantTtc()).isEqualByComparingTo("18.50"));
+        // Première mensualité après la date d'effet (10/12), sans prorata.
+        assertThat(echeancier.echeances()).filteredOn(ligne -> ligne.date().isAfter(date(2026, 11, 27)))
+                .extracting(LigneEcheance::date).containsExactly(date(2027, 2, 10), date(2027, 1, 10),
+                        date(2026, 12, 10));
+        assertThat(echeancier.echeances().getFirst().montantTtc()).isEqualByComparingTo("21.00");
+        // L'année reste la somme de ses mensualités : 9 × 18,50 + 3 × 21,00 = 229,50 €.
+        assertThat(echeancier.annees()).singleElement()
+                .satisfies(annee -> assertThat(annee.montantTtc()).isEqualByComparingTo("229.50"));
     }
 
     @Test

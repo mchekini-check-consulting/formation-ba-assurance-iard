@@ -2,13 +2,17 @@ package net.checkconsulting.assuranceiard.api.service;
 
 import java.math.BigDecimal;
 import java.time.Clock;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import net.checkconsulting.assuranceiard.api.dto.BesoinsDevis;
+import net.checkconsulting.assuranceiard.api.dto.DonneesContrat;
+import net.checkconsulting.assuranceiard.api.exception.MoteurIndisponibleException;
 import net.checkconsulting.assuranceiard.api.logging.LogMetier;
 import net.checkconsulting.assuranceiard.api.dto.DemandeTarif;
 import net.checkconsulting.assuranceiard.api.dto.ErreurChampMoteur;
@@ -35,6 +39,15 @@ public class TarifDevisService {
 
     private static final String CHAMP_FORMULE = "formule";
     private static final String CHAMP_OBLIGATOIRE = "Ce champ est obligatoire.";
+    /** US-23 : les options habitation de la grille du sprint 1 (codes de l'écran). */
+    static final List<String> OPTIONS_HABITATION = List.of("objets-valeur", "assistance-depannage",
+            "protection-juridique");
+    private static final String PROFIL_STATUT = "locataire";
+    private static final String PROFIL_RESIDENCE = "principale";
+    private static final String PROFIL_PIECES = "2";
+    private static final String PROFIL_SINISTRES = "0";
+    private static final String PROFIL_ETAGE = "intermediaire";
+    private static final String PROFIL_DEPENDANCES = "aucune";
 
     private final MoteurTarifaireService moteur;
     private final TarifDevisRepository tarifs;
@@ -87,6 +100,39 @@ public class TarifDevisService {
             throw new TarifDevisIncoherentException();
         }
         return tarif.detail().totalMensuel();
+    }
+
+    /**
+     * US-23 : prix mensuel TTC de chaque option habitation (codes de l'écran : objets-valeur...) pour la formule et
+     * le logement du contrat, avec la grille du sprint 1. Le contrat ne garde pas tout le profil du devis (statut,
+     * pièces, sinistres) : le moteur reçoit un profil neutre (locataire, résidence principale, 2 pièces, aucun
+     * sinistre). Sans effet sur le prix des options, fixe dans la grille 2026.1 (hypothèse à valider PO).
+     */
+    public Map<String, BigDecimal> prixDesOptions(DonneesContrat contrat) {
+        DonneesContrat.Logement logement = contrat.logement();
+        // Le moteur exige l'étage d'un appartement et les dépendances d'une maison : valeurs neutres (coefficient 1).
+        LogementDevis profil = new LogementDevis(PROFIL_STATUT, PROFIL_RESIDENCE, logement.type(), logement.adresse(),
+                logement.codePostal(), logement.ville(), String.valueOf(logement.surface()), PROFIL_PIECES, null,
+                null, null, PROFIL_ETAGE, PROFIL_DEPENDANCES, null, null, PROFIL_SINISTRES);
+        String franchise = contrat.tarif().franchise() == null ? null
+                : String.valueOf(contrat.tarif().franchise().intValue());
+        TarifResponse tarif;
+        try {
+            tarif = traduction.versEcran(moteur.calculer(traduction.versMoteur(
+                    profil, null, contrat.formule(), OPTIONS_HABITATION, franchise)));
+        } catch (MoteurDonneesInvalidesException refus) {
+            // Jamais « champs invalides » au client : le contrat est en base, il n'a rien saisi.
+            log.warn("Prix des options habitation refusés par le moteur : champs={}",
+                    refus.getErreurs().stream().map(ErreurChampMoteur::champ).toList());
+            throw new MoteurIndisponibleException();
+        }
+        if (!tarif.tarifable() || tarif.detail() == null || tarif.detail().options() == null) {
+            log.warn("Prix des options habitation indisponibles : idTarif={}", tarif.idTarif());
+            throw new MoteurIndisponibleException();
+        }
+        Map<String, BigDecimal> prix = new LinkedHashMap<>();
+        tarif.detail().options().forEach(option -> prix.put(option.option(), option.prixMensuel()));
+        return prix;
     }
 
     public TarifResponse.Detail cotisationDuContrat(GenerationContratRequest contrat) {

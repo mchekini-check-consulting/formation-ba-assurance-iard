@@ -1,0 +1,62 @@
+<section class="mes-devis" aria-labelledby="accepte-titre">
+  <a [routerLink]="lienFiche()">← Mon contrat</a>
+  <h1 id="accepte-titre" class="serif">Avenant accepté</h1>
+
+  @if (fiche(); as f) {
+    @if (avenant(); as a) {
+      <p class="fiche__confirmation" role="status">
+        Votre avenant {{ a.numero }} est accepté. Vos nouvelles garanties prennent effet le {{ dateJjMmAaaa(a.dateEffet) }}.
+      </p>
+      @if (messageEnvoi(); as envoi) {
+        <p class="avenant__intro">{{ envoi }}</p>
+      }
+
+      <div class="devis-ligne">
+        <h2 class="serif">Contrat {{ LIBELLES_PRODUIT[f.produit] }} {{ f.numero }}</h2>
+        <dl class="fiche">
+          <dt>Acceptation</dt>
+          <dd>le {{ dateHeureFrancaise(a.accepteLe) }}</dd>
+          <dt>Date d'effet</dt>
+          <dd>{{ dateJjMmAaaa(a.dateEffet) }}</dd>
+          <dt>Nouvelle cotisation</dt>
+          <dd>
+            <strong>{{ montantTtc(a.nouvelleCotisationMensuelle) }} / mois</strong>
+            (au lieu de {{ montantTtc(a.ancienneCotisationMensuelle) }})
+          </dd>
+          <dt>Mes garanties</dt>
+          <dd>
+            @if (f.garanties.length === 0) {
+              Aucune option
+            } @else {
+              <ul class="changements">
+                @for (garantie of f.garanties; track garantie.code) {
+                  <li>{{ libelleGarantie(garantie.code) }}</li>
+                }
+              </ul>
+            }
+          </dd>
+          @if (versionConditionsParticulieres(); as version) {
+            <dt>Conditions particulières</dt>
+            <dd>Version {{ version }} en vigueur, à jour de cet avenant</dd>
+          }
+        </dl>
+        <div class="devis-ligne__actions">
+          @if (a.documentId !== null) {
+            <button type="button" class="btn" (click)="telecharger(a)">Télécharger mon avenant</button>
+          }
+          <a class="btn btn--contour" [routerLink]="lienFiche()">Voir mon contrat</a>
+        </div>
+        @if (messageTelechargement(); as texte) {
+          <p class="mes-devis__erreur" role="status">{{ texte }}</p>
+        }
+      </div>
+    } @else {
+      <p>Aucun avenant accepté sur ce contrat.</p>
+      <p><a [routerLink]="lienFiche()">Retour à mon contrat</a></p>
+    }
+  } @else if (erreur(); as texte) {
+    <p class="mes-devis__erreur" role="alert">{{ texte }}</p>
+  } @else {
+    <p>Chargement…</p>
+  }
+</section>

@@ -133,12 +133,18 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
       expect(contenu).not.toContain('Voir mes sinistres');
     });
 
-    it('« Que voulez-vous faire ? » : tuiles « Mes factures » (US-22) et « Faire un nouveau devis »', () => {
+    it('« Que voulez-vous faire ? » : tuiles « Modifier mes garanties » (US-23), « Mes factures » (US-22) et « Faire un nouveau devis »', () => {
       const tuiles = Array.from(page.querySelectorAll('.tuile'));
-      expect(tuiles.map((t) => t.textContent?.trim())).toEqual(['Mes factures', 'Faire un nouveau devis']);
-      expect(tuiles[0].getAttribute('href')).toBe('/espace-client/factures');
+      expect(tuiles.map((t) => t.textContent?.trim())).toEqual([
+        'Modifier mes garanties',
+        'Mes factures',
+        'Faire un nouveau devis',
+      ]);
+      // US-23 : choix du contrat dans « Mes contrats ».
+      expect(tuiles[0].getAttribute('href')).toBe('/espace-client/contrats');
+      expect(tuiles[1].getAttribute('href')).toBe('/espace-client/factures');
       // Page d'accueil, qui propose habitation et auto (US-26).
-      expect(tuiles[1].getAttribute('href')).toBe('/');
+      expect(tuiles[2].getAttribute('href')).toBe('/');
     });
 
     it('télécharge une facture, ou signale qu’elle est en préparation (409)', () => {

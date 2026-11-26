@@ -44,4 +44,45 @@
       }
     </div>
   }
+
+  <!-- US-23 : avenants acceptés de mes contrats -->
+  @if (!chargement() && avenants().length) {
+    <div class="documents">
+      <section class="documents__groupe" aria-labelledby="avenants-titre">
+        <h2 class="documents__titre" id="avenants-titre">Avenants de mes contrats</h2>
+        <ul class="documents__liste">
+          @for (ligne of avenants(); track ligne.avenant.numero) {
+            <li class="document">
+              <svg class="document__icone" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                <path
+                  d="M6 2h8l6 6v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm7 1.5V9h5.5M8 13h8M8 17h6"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="1.6"
+                  stroke-linejoin="round"
+                />
+              </svg>
+              <div class="document__texte">
+                <span class="document__type">Avenant {{ ligne.avenant.numero }}</span>
+                <span class="document__fichier"
+                  >Contrat {{ ligne.numeroContrat }} · effet le {{ dateJjMmAaaa(ligne.avenant.dateEffet) }}</span
+                >
+                @if (ligne.avenant.documentId !== null && messagesAvenants()[ligne.avenant.documentId]; as texte) {
+                  <span class="mes-devis__erreur" role="status">{{ texte }}</span>
+                }
+              </div>
+              <button
+                type="button"
+                class="document__ouvrir"
+                [attr.aria-label]="'Télécharger : avenant ' + ligne.avenant.numero"
+                (click)="telechargerAvenant(ligne)"
+              >
+                Télécharger
+              </button>
+            </li>
+          }
+        </ul>
+      </section>
+    </div>
+  }
 </section>

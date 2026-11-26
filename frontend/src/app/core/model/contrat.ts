@@ -1,3 +1,5 @@
+import type { Avenant } from './avenant';
+
 /** T-05 / US-18 (RG3) : les 10 statuts qu'un contrat peut avoir en base. */
 export type StatutContrat =
   | 'EN_ATTENTE_DE_SIGNATURE'
@@ -71,6 +73,8 @@ export interface ContratResume {
   dateFin: string | null;
   /** IBAN du mandat, toujours masqué (« •••• 4821 »). */
   ibanMasque: string | null;
+  /** US-23 : avenants acceptés, avec leur PDF (« Mes documents ») ; absent sur le tableau de bord. */
+  avenants?: Avenant[];
 }
 
 /** US-18, AC3 : document téléchargeable par /documents-contrat/{id}. */
@@ -104,6 +108,8 @@ export interface FicheContrat {
   versionsConditionsParticulieres: VersionDocument[];
   /** US-21 : vrai si aucune donnée des conditions particulières n'a changé depuis la version en vigueur. */
   conditionsParticulieresAJour: boolean;
+  /** US-23 : historique des avenants, le plus récent d'abord (avenant en attente compris). */
+  avenants?: Avenant[];
 }
 
 /** US-21, AC2 : une version des conditions particulières. */
@@ -179,6 +185,10 @@ const LIBELLES_GARANTIE: Record<string, string> = {
   INCENDIE: 'Incendie',
   ASSISTANCE: 'Assistance',
   PROTECTION_JURIDIQUE: 'Protection juridique',
+  // US-23 : options auto de la grille AUTO-2026.1.
+  ASSISTANCE_0KM: 'Assistance dès 0 km',
+  VEHICULE_REMPLACEMENT: 'Véhicule de remplacement',
+  PROTECTION_CONDUCTEUR: 'Protection du conducteur renforcée',
 };
 
 export function libelleFormule(code: string | null): string {

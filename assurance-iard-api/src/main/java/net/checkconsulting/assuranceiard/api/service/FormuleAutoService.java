@@ -2,6 +2,7 @@ package net.checkconsulting.assuranceiard.api.service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -103,6 +104,23 @@ public class FormuleAutoService {
         return new FormuleAutoResponse(devisAuto.getFormuleChoisie(),
                 options.isEmpty() ? List.of() : options,
                 devisAuto.getPrixMensuelTtc(), devisAuto.getPrixAnnuelTtc(), devisAuto.getDateFinValidite());
+    }
+
+    /**
+     * US-23 : prix mensuel TTC de chaque option compatible avec la formule, par code, pour ce véhicule et ce
+     * conducteur (grille de T-04). Même calcul que l'étape 3 du devis : le moteur ne garde que les options
+     * compatibles avec la formule.
+     */
+    public Map<String, BigDecimal> prixDesOptions(Vehicule vehicule, Conducteur conducteur, String formule) {
+        TarifAutoResponse catalogue = appelerMoteur(vehicule, conducteur, formule, null);
+        List<String> codes = catalogue.prixOptions() == null ? List.of()
+                : catalogue.prixOptions().stream().map(TarifAutoResponse.PrixOption::option).toList();
+        TarifAutoResponse tarif = appelerMoteur(vehicule, conducteur, formule, codes);
+        Map<String, BigDecimal> prix = new LinkedHashMap<>();
+        if (tarif.detail() != null && tarif.detail().options() != null) {
+            tarif.detail().options().forEach(option -> prix.put(option.option(), option.prixMensuel()));
+        }
+        return prix;
     }
 
     private TarifAutoResponse appelerMoteur(Vehicule vehicule, Conducteur conducteur,

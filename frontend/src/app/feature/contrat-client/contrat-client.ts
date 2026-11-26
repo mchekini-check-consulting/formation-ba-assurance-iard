@@ -1,7 +1,9 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ANCRE_VERSIONS, raccourcisDuContrat } from '../../core/config/raccourcis';
+import { ANCRE_VERSIONS, CHEMIN_AVENANT, raccourcisDuContrat } from '../../core/config/raccourcis';
+import { Avenant, LIBELLES_STATUT_AVENANT, dateJjMmAaaa, montantTtc } from '../../core/model/avenant';
+import { AvenantService } from '../../core/service/avenant.service';
 import {
   DocumentContrat,
   FicheContrat,
@@ -43,6 +45,7 @@ const REFERENCE_DEVIS = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-
 })
 export class ContratClient {
   private readonly contrats = inject(ContratService);
+  private readonly avenants = inject(AvenantService);
   private readonly documents = inject(DocumentsContratService);
   private readonly router = inject(Router);
 
@@ -62,10 +65,22 @@ export class ContratClient {
   protected readonly raccourcis = computed(() => {
     const fiche = this.fiche();
     if (!fiche) return [];
+    // US-23 : l'avenant en attente a son propre bandeau (Relire et accepter, Abandonner).
     return raccourcisDuContrat(fiche).filter(
-      (raccourci) => raccourci.action !== 'detail' && raccourci.action !== 'regenerer',
+      (raccourci) => !['detail', 'regenerer', 'relireAvenant'].includes(raccourci.action),
     );
   });
+  /** US-23, AC5 : l'avenant en attente du contrat. */
+  protected readonly avenantEnAttente = computed(
+    () => this.fiche()?.avenants?.find((avenant) => avenant.statut === 'EN_ATTENTE') ?? null,
+  );
+  protected readonly abandonEnCours = signal(false);
+  /** US-23 : message après l'abandon d'un avenant. */
+  protected readonly messageAvenant = signal<{ succes: boolean; texte: string } | null>(null);
+  protected readonly CHEMIN_AVENANT = CHEMIN_AVENANT;
+  protected readonly LIBELLES_STATUT_AVENANT = LIBELLES_STATUT_AVENANT;
+  protected readonly montantTtc = montantTtc;
+  protected readonly dateJjMmAaaa = dateJjMmAaaa;
   /** US-21, RG2 : régénération possible seulement si le réglage la dit livrée et si le statut la permet (RG3). */
   protected readonly peutRegenerer = computed(() => {
     const fiche = this.fiche();
@@ -110,6 +125,7 @@ export class ContratClient {
     this.erreur.set(null);
     this.messages.set({});
     this.messageRegeneration.set(null);
+    this.messageAvenant.set(null);
     if (REFERENCE_DEVIS.test(identifiant)) {
       this.redirigerVersLeNumero(identifiant);
       return;
@@ -169,6 +185,43 @@ export class ContratClient {
           texte: "La régénération n'a pas pu aboutir. Réessayez dans quelques instants.",
         });
       }
+    });
+  }
+
+  /** US-23, AC5 : abandonne l'avenant en attente, puis relit la fiche (sans recharger la page). */
+  protected abandonnerAvenant(): void {
+    const fiche = this.fiche();
+    if (!fiche || this.abandonEnCours()) return;
+    this.abandonEnCours.set(true);
+    this.messageAvenant.set(null);
+    this.avenants.abandonner(fiche.numero).subscribe((resultat) => {
+      this.abandonEnCours.set(false);
+      if (resultat.statut === 'abandonne') {
+        this.messageAvenant.set({
+          succes: true,
+          texte: `Votre avenant ${resultat.avenant.numero} est abandonné : votre contrat reste aux conditions actuelles.`,
+        });
+        this.charger(fiche.numero, false);
+      } else {
+        this.messageAvenant.set({ succes: false, texte: resultat.message });
+      }
+    });
+  }
+
+  /** Recette US-23 : seul un avenant accepté (avec son PDF) se télécharge. */
+  protected avenantTelechargeable(avenant: Avenant): boolean {
+    return avenant.statut === 'ACCEPTE' && avenant.documentId !== null;
+  }
+
+  /** US-23 : le PDF d'un avenant accepté. */
+  protected telechargerAvenant(avenant: Avenant): void {
+    if (!this.avenantTelechargeable(avenant) || avenant.documentId === null) return;
+    this.telecharger({
+      id: avenant.documentId,
+      type: 'AVENANT',
+      libelle: `Avenant ${avenant.numero}`,
+      version: 1,
+      dateCreation: avenant.accepteLe,
     });
   }
 

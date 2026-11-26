@@ -5,6 +5,8 @@ export type ActionContrat =
   | 'detail'
   | 'signer'
   | 'modifierGaranties'
+  /** US-23, AC5 : relire et accepter (ou abandonner) l'avenant en attente. */
+  | 'relireAvenant'
   | 'regenerer'
   | 'genererFacture'
   | 'declarerSinistre';
@@ -51,13 +53,16 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Actif · justificatifs attendus',
     ton: 'bleu',
     message: 'Votre contrat est actif. Pensez à nous envoyer les justificatifs demandés.',
-    actions: ['detail', 'modifierGaranties', 'regenerer', 'genererFacture', 'declarerSinistre'],
+    // US-23, AC6 (décision BA, à valider PO) : garanties modifiables seulement pour un contrat Actif.
+    actions: ['detail', 'regenerer', 'genererFacture', 'declarerSinistre'],
   },
   AVENANT_EN_ATTENTE: {
     libelle: 'Avenant en attente',
     ton: 'orange',
-    message: 'Une modification de votre contrat attend votre réponse.',
-    actions: ['detail', 'regenerer', 'genererFacture', 'declarerSinistre'],
+    // US-23, AC5 : couvert aux conditions actuelles ; accepter ou abandonner l'avenant.
+    message:
+      'Une modification de vos garanties attend votre réponse. Vous restez couvert aux conditions actuelles tant que vous ne l’avez pas acceptée.',
+    actions: ['detail', 'relireAvenant', 'regenerer', 'genererFacture', 'declarerSinistre'],
   },
   IMPAYE: {
     libelle: 'Impayé',

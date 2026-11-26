@@ -97,6 +97,17 @@ describe('règle : les pages de la barre latérale s’affichent dans le cadre c
     expect(horsCadre).toEqual([]);
   });
 
+  it.each([
+    ['Modifier mes garanties', '/espace-client/contrats/AE-RECETTE-A03/garanties'],
+    ["Relire et accepter l'avenant", '/espace-client/contrats/AE-RECETTE-A03/avenant'],
+    ['Avenant accepté', '/espace-client/contrats/AE-RECETTE-A03/avenant-accepte'],
+  ])('US-23 : « %s » (%s) s’affiche dans le cadre, avec la barre latérale', async (_libelle, adresse) => {
+    const chemin = routeDe(adresse);
+    expect(chemin, `aucune route pour ${adresse}`).toBeDefined();
+    expect(await dansLeCadre(chemin!)).toBe(true);
+    expect(chemin!.route.canActivate?.length).toBeGreaterThan(0);
+  });
+
   it('les gardes de droits sont conservées sur chaque page (US-04)', () => {
     const pages = aplatir(routes).filter(
       (chemin) => /^(espace-client|back-office|admin)\//.test(chemin.adresse + '/') && chemin.parents.length > 0,

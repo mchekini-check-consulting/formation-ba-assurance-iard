@@ -1,11 +1,24 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { RouterLink } from '@angular/router';
 import { forkJoin, of } from 'rxjs';
+import { Avenant, dateJjMmAaaa } from '../../core/model/avenant';
 import { ContratResume } from '../../core/model/contrat';
 import { DocumentClient, libelleCategorie } from '../../core/model/document';
 import { ConnexionService } from '../../core/service/connexion.service';
 import { ContratService } from '../../core/service/contrat.service';
+import {
+  DocumentsContratService,
+  MESSAGE_EN_PREPARATION,
+  MESSAGE_ERREUR_TELECHARGEMENT,
+  enregistrerFichier,
+} from '../../core/service/documents-contrat.service';
 import { DocumentsService } from '../../core/service/documents.service';
+
+/** US-23 : un avenant accepté et son contrat. */
+interface AvenantDuContrat {
+  numeroContrat: string;
+  avenant: Avenant;
+}
 
 /** Documents d'une même souscription (même référence de devis). */
 interface GroupeDocuments {
@@ -35,6 +48,11 @@ export class MesDocuments {
   protected readonly libelleCategorie = libelleCategorie;
   /** Numéro de contrat par référence de devis de souscription. */
   private readonly contratsParDevis = signal(new Map<string, string>());
+  private readonly documentsContrat = inject(DocumentsContratService);
+  /** US-23 : avenants acceptés des contrats du client, avec leur PDF. */
+  protected readonly avenants = signal<AvenantDuContrat[]>([]);
+  protected readonly messagesAvenants = signal<Record<number, string>>({});
+  protected readonly dateJjMmAaaa = dateJjMmAaaa;
 
   /** Groupes dans l'ordre du serveur (premier document de chaque souscription). */
   protected readonly groupes = computed<GroupeDocuments[]>(() => {
@@ -65,8 +83,28 @@ export class MesDocuments {
       this.contratsParDevis.set(
         new Map((contrats ?? []).filter((c) => c.referenceDevis).map((c) => [c.referenceDevis!, c.numero])),
       );
+      this.avenants.set(
+        (contrats ?? []).flatMap((contrat) =>
+          (contrat.avenants ?? []).map((avenant) => ({ numeroContrat: contrat.numero, avenant })),
+        ),
+      );
       this.chargement.set(false);
       this.liste.set(documents);
+    });
+  }
+
+  /** US-23 : télécharge le PDF d'un avenant accepté (route de T-03, contrôle du propriétaire). */
+  protected telechargerAvenant(ligne: AvenantDuContrat): void {
+    const id = ligne.avenant.documentId;
+    if (id === null) return;
+    this.messagesAvenants.update((messages) => ({ ...messages, [id]: '' }));
+    this.documentsContrat.telecharger(id).subscribe((resultat) => {
+      if (resultat.statut === 'telecharge') {
+        enregistrerFichier(resultat.contenu, `avenant-${ligne.avenant.numero}.pdf`);
+        return;
+      }
+      const texte = resultat.statut === 'en-preparation' ? MESSAGE_EN_PREPARATION : MESSAGE_ERREUR_TELECHARGEMENT;
+      this.messagesAvenants.update((messages) => ({ ...messages, [id]: texte }));
     });
   }
 }

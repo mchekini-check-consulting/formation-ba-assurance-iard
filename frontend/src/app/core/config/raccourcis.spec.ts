@@ -15,10 +15,36 @@ const actions = (c: ContratResume, reglage = RACCOURCIS): string[] =>
 
 describe('raccourcis du contrat (US-18, AC2)', () => {
   it('masque les fonctions pas encore livrées', () => {
-    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'regenerer', 'genererFacture']);
-    expect(RACCOURCIS.modifierGaranties.livre).toBe(false);
+    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'modifierGaranties', 'regenerer', 'genererFacture']);
+    expect(RACCOURCIS.modifierGaranties.livre).toBe(true);
     expect(RACCOURCIS.genererFacture.livre).toBe(true);
     expect(RACCOURCIS.declarerSinistre.livre).toBe(false);
+  });
+
+  it('US-23, AC6 : « Modifier mes garanties » seulement pour un contrat Actif, vers ses garanties', () => {
+    const modifier = raccourcisDuContrat(contrat('ACTIF')).find((r) => r.action === 'modifierGaranties');
+    expect(modifier?.libelle).toBe('Modifier mes garanties');
+    expect(modifier?.lien).toEqual({ commandes: ['/espace-client/contrats', 'AE-1', 'garanties'] });
+    for (const statut of [
+      'EN_ATTENTE_DE_SIGNATURE',
+      'EN_ATTENTE_EFFET',
+      'ACTIF_JUSTIFICATIFS_ATTENDUS',
+      'AVENANT_EN_ATTENTE',
+      'IMPAYE',
+      'SUSPENDU',
+      'RESILIATION_EN_COURS',
+      'RESILIE',
+      'RENONCE',
+    ] as const) {
+      expect(actions(contrat(statut))).not.toContain('modifierGaranties');
+    }
+  });
+
+  it('US-23, AC5 : un contrat « Avenant en attente » propose de relire et accepter son avenant', () => {
+    const relire = raccourcisDuContrat(contrat('AVENANT_EN_ATTENTE')).find((r) => r.action === 'relireAvenant');
+    expect(relire?.libelle).toBe('Relire et accepter mon avenant');
+    expect(relire?.lien).toEqual({ commandes: ['/espace-client/contrats', 'AE-1', 'avenant'] });
+    expect(actions(contrat('ACTIF'))).not.toContain('relireAvenant');
   });
 
   it('affiche une fonction dès que le réglage la dit livrée, si le statut la permet', () => {
@@ -26,13 +52,19 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
       ...RACCOURCIS,
       declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true, lien: () => ({ commandes: ['/sinistres'] }) },
     };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'genererFacture', 'declarerSinistre']);
+    expect(actions(contrat('ACTIF'), reglage)).toEqual([
+      'detail',
+      'modifierGaranties',
+      'regenerer',
+      'genererFacture',
+      'declarerSinistre',
+    ]);
     expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail', 'genererFacture']);
   });
 
   it('une fonction livrée sans adresse reste masquée', () => {
     const reglage = { ...RACCOURCIS, declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true } };
-    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'regenerer', 'genererFacture']);
+    expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'modifierGaranties', 'regenerer', 'genererFacture']);
   });
 
   it('« Voir le détail » ouvre la fiche par numéro', () => {
@@ -113,7 +145,9 @@ describe('navigation et tuiles (US-18, maquette)', () => {
   });
 
   it('« Faire un nouveau devis » est toujours proposé, les autres tuiles selon les livraisons', () => {
-    expect(tuiles().map((t) => t.libelle)).toEqual(['Mes factures', 'Faire un nouveau devis']);
+    // US-23 : « Modifier mes garanties » ouvre Mes contrats (choix du contrat).
+    expect(tuiles().map((t) => t.libelle)).toEqual(['Modifier mes garanties', 'Mes factures', 'Faire un nouveau devis']);
+    expect(tuiles().find((t) => t.libelle === 'Modifier mes garanties')?.adresse).toBe('/espace-client/contrats');
     expect(tuiles(tout, adresses).map((t) => t.libelle)).toEqual([
       'Déclarer un sinistre',
       'Modifier mes garanties',

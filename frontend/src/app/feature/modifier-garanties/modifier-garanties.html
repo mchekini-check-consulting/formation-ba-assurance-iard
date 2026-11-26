@@ -1,0 +1,81 @@
+<section class="mes-devis" aria-labelledby="garanties-titre">
+  <a [routerLink]="lienFiche()">← Mon contrat</a>
+  <h1 id="garanties-titre" class="serif">Modifier mes garanties</h1>
+
+  @if (contrat(); as c) {
+    <p class="avenant__intro">
+      @if (prenom()) {
+        {{ prenom() }}, choisissez
+      } @else {
+        Choisissez
+      }
+      les garanties de votre contrat {{ LIBELLES_PRODUIT[c.produit] }} {{ c.numero }} (formule
+      {{ libelleFormule(c.formule) }}).
+    </p>
+
+    @if (c.avenantEnAttente; as enAttente) {
+      <p class="avenant__note" role="status">
+        Un avenant ({{ enAttente.avenant.numero }}) attend déjà votre réponse. Si vous continuez, il sera remplacé par
+        ce nouveau choix.
+        <a [routerLink]="lienAvenant()">Relire l'avenant en attente</a>
+      </p>
+    }
+
+    <div class="devis-ligne">
+      <h2 class="serif">Mes garanties</h2>
+      <ul class="garanties">
+        @for (garantie of c.garanties; track garantie.code) {
+          <li class="garantie" [class.garantie--verrouillee]="!garantie.modifiable">
+            <label class="garantie__choix">
+              <input
+                type="checkbox"
+                [checked]="choisie(garantie)"
+                [disabled]="!garantie.modifiable"
+                [attr.aria-describedby]="garantie.raison ? 'raison-' + garantie.code : null"
+                (change)="basculer(garantie)"
+              />
+              <span class="garantie__libelle">{{ garantie.libelle }}</span>
+              @if (garantie.obligatoire) {
+                <span class="garantie__badge">Obligatoire</span>
+              } @else if (garantie.souscrite) {
+                <span class="garantie__badge garantie__badge--souscrite">Dans mon contrat</span>
+              }
+              <span class="garantie__prix">{{ prix(garantie) }}</span>
+            </label>
+            @if (garantie.raison) {
+              <p class="garantie__raison" [id]="'raison-' + garantie.code">{{ garantie.raison }}</p>
+            }
+          </li>
+        }
+      </ul>
+    </div>
+
+    <div class="devis-ligne">
+      <dl class="fiche">
+        <dt>Cotisation actuelle</dt>
+        <dd>{{ montantTtc(c.cotisationMensuelle) }} / mois</dd>
+        <dt>Après modification</dt>
+        <dd>
+          <strong>{{ montantTtc(nouvelleCotisation()) }} / mois</strong>
+        </dd>
+      </dl>
+      @if (!change()) {
+        <p class="avenant__aide">Cochez ou décochez au moins une garantie pour continuer.</p>
+      }
+      @if (messageEnvoi(); as message) {
+        <p class="fiche__confirmation fiche__confirmation--erreur" role="alert">{{ message }}</p>
+      }
+      <div class="devis-ligne__actions">
+        <button type="button" class="btn" [disabled]="!change() || envoiEnCours()" (click)="continuer()">
+          {{ envoiEnCours() ? 'Préparation de votre avenant…' : 'Continuer' }}
+        </button>
+        <a class="btn btn--contour" [routerLink]="lienFiche()">Annuler</a>
+      </div>
+    </div>
+  } @else if (erreur(); as message) {
+    <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    <p><a [routerLink]="lienFiche()">Retour à mon contrat</a></p>
+  } @else {
+    <p>Chargement de vos garanties…</p>
+  }
+</section>

@@ -8,8 +8,8 @@ import { ActionContrat, decrireStatut } from '../model/statut-contrat';
  * raccourci de contrat, son `lien` dans RACCOURCIS.
  */
 export const LIVRAISONS = {
-  /** US-23 */
-  modifierGaranties: false,
+  /** US-23 : livrée (Modifier mes garanties, Relire et accepter l'avenant, depuis la fiche du contrat) */
+  modifierGaranties: true,
   /** US-21 : livrée (régénération depuis la section « Versions » de la fiche contrat) */
   regenerer: true,
   /** US-22 : livrée (Mes factures, Générer une facture) */
@@ -26,7 +26,17 @@ export const ADRESSES: Partial<Record<keyof typeof LIVRAISONS, string>> = {
   regenerer: '/espace-client/contrats',
   /** US-22 : échéancier et factures ; « Générer une facture » d'un contrat ouvre la page sur ce contrat. */
   factures: '/espace-client/factures',
+  /**
+   * US-23 : la tuile « Modifier mes garanties » ouvre « Mes contrats » (choix du contrat) ; le raccourci d'un contrat
+   * ouvre directement <adresse>/<numéro>/garanties.
+   */
+  modifierGaranties: '/espace-client/contrats',
 };
+
+/** US-23 : écrans de l'avenant, sous la fiche du contrat. */
+export const CHEMIN_GARANTIES = 'garanties';
+export const CHEMIN_AVENANT = 'avenant';
+export const CHEMIN_AVENANT_ACCEPTE = 'avenant-accepte';
 
 /** US-21 : ancre de la section « Versions » de la fiche contrat. */
 export const ANCRE_VERSIONS = 'versions';
@@ -74,6 +84,19 @@ export const RACCOURCIS: Record<
     libelle: 'Modifier mes garanties',
     livre: LIVRAISONS.modifierGaranties,
     produits: ['HABITATION', 'AUTO'],
+    // US-23 : écran « Modifier mes garanties » du contrat (AC6 : proposé seulement si le statut le permet).
+    lien: (contrat) =>
+      ADRESSES.modifierGaranties
+        ? { commandes: [ADRESSES.modifierGaranties, contrat.numero, CHEMIN_GARANTIES] }
+        : null,
+  },
+  relireAvenant: {
+    libelle: 'Relire et accepter mon avenant',
+    livre: LIVRAISONS.modifierGaranties,
+    produits: ['HABITATION', 'AUTO'],
+    // US-23, AC5 : écran « Relire et accepter l'avenant » du contrat.
+    lien: (contrat) =>
+      ADRESSES.modifierGaranties ? { commandes: [ADRESSES.modifierGaranties, contrat.numero, CHEMIN_AVENANT] } : null,
   },
   regenerer: {
     libelle: 'Régénérer mon contrat',

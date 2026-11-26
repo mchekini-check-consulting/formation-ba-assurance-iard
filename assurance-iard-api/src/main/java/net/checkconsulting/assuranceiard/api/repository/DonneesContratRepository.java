@@ -38,15 +38,20 @@ public class DonneesContratRepository {
                                WHERE r.contrat_id = c.id ORDER BY r.id DESC LIMIT 1) rh ON TRUE
             WHERE c.id = ?""";
 
-    /** Options en cours ; à défaut (contrats du sprint 1), celles du devis, sans prix. */
+    /**
+     * Options en cours ; à défaut (contrats du sprint 1 sans aucune ligne contrat_option), celles du devis, sans prix.
+     * US-23 : dès qu'un avenant a enregistré les options du contrat, le devis n'est plus lu (même si toutes ont été
+     * retirées). Une option retirée par un avenant accepté (date de fin = veille de sa date d'effet) n'apparaît plus :
+     * la fiche et les nouvelles conditions particulières montrent les garanties de l'avenant (AC4, AC7).
+     */
     private static final String OPTIONS = """
             SELECT code_option, prix_mensuel_ttc FROM contrat_option
-            WHERE contrat_id = ? AND (date_fin IS NULL OR date_fin >= CURRENT_DATE)
+            WHERE contrat_id = ? AND (date_fin IS NULL OR date_fin > CURRENT_DATE)
             ORDER BY id""";
     private static final String OPTIONS_DU_DEVIS = """
             SELECT UNNEST(de.options) AS code_option, NULL::NUMERIC AS prix_mensuel_ttc
             FROM contrat c JOIN devis_enregistre de ON de.id = c.devis_id
-            WHERE c.id = ?""";
+            WHERE c.id = ? AND NOT EXISTS (SELECT 1 FROM contrat_option o WHERE o.contrat_id = c.id)""";
 
     private final JdbcTemplate jdbc;
 
@@ -75,6 +80,14 @@ public class DonneesContratRepository {
         return jdbc.queryForList("""
                 SELECT (signe_le AT TIME ZONE 'Europe/Paris')::DATE FROM contrat
                 WHERE id = ? AND signe_le IS NOT NULL""", LocalDate.class, contratId).stream().findFirst();
+    }
+
+    /** US-23 : conducteur principal d'un contrat auto (tarif des options) ; vide pour l'habitation. */
+    @LogMetier
+    public Optional<Long> conducteurPrincipal(long contratId) {
+        return jdbc.queryForList("""
+                SELECT conducteur_principal_id FROM contrat
+                WHERE id = ? AND conducteur_principal_id IS NOT NULL""", Long.class, contratId).stream().findFirst();
     }
 
     private List<DonneesContrat.Option> options(long contratId) {
