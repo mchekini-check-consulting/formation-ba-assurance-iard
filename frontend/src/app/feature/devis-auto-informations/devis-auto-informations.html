@@ -1,0 +1,269 @@
+<iard-devis-auto-layout sousEtape="4"></iard-devis-auto-layout>
+
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <div class="titre-zone">
+        <h1 class="titre-page serif">Mes informations</h1>
+        <p class="sous-titre-page">Pour établir votre contrat à votre nom, sans envoi par courrier.</p>
+        <p class="note-champs"><span class="asterisque">*</span> Champs obligatoires</p>
+      </div>
+
+      <div class="grille-devis">
+
+        <div class="colonne-principale">
+          <form class="formulaire" novalidate aria-label="Mes informations personnelles" (submit)="continuer($event)">
+
+            <section class="carte" aria-labelledby="titre-identite">
+              <h2 id="titre-identite" class="carte__titre">Mon identit&#233;</h2>
+
+              <div class="champ">
+                <span id="libelle-civilite" class="libelle">Civilit&#233; <span class="asterisque">*</span></span>
+                <div class="choix choix--moitie" role="group" aria-labelledby="libelle-civilite">
+                  <button
+                    id="civilite"
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="saisie().civilite === 'madame'"
+                    [attr.aria-pressed]="saisie().civilite === 'madame'"
+                    (click)="choisirCivilite('madame')"
+                  >
+                    Madame
+                  </button>
+                  <button
+                    type="button"
+                    class="choix__option"
+                    [class.choix__option--actif]="saisie().civilite === 'monsieur'"
+                    [attr.aria-pressed]="saisie().civilite === 'monsieur'"
+                    (click)="choisirCivilite('monsieur')"
+                  >
+                    Monsieur
+                  </button>
+                </div>
+                @if (erreur('civilite'); as message) {
+                  <p class="erreur" role="alert">{{ message }}</p>
+                }
+              </div>
+
+              <div class="champ-grille champ-grille--3">
+                <div class="champ">
+                  <label class="libelle" for="nom">Nom <span class="asterisque">*</span></label>
+                  <input
+                    id="nom"
+                    class="saisie"
+                    type="text"
+                    autocomplete="family-name"
+                    maxlength="100"
+                    [class.saisie--erreur]="erreur('nom')"
+                    [attr.aria-invalid]="erreur('nom') ? true : null"
+                    [attr.aria-describedby]="erreur('nom') ? 'erreur-nom' : null"
+                    [value]="saisie().nom"
+                    (input)="saisirTexte('nom', $event)"
+                  />
+                  @if (erreur('nom'); as message) {
+                    <p id="erreur-nom" class="erreur" role="alert">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="champ">
+                  <label class="libelle" for="prenom">Pr&#233;nom <span class="asterisque">*</span></label>
+                  <input
+                    id="prenom"
+                    class="saisie"
+                    type="text"
+                    autocomplete="given-name"
+                    maxlength="100"
+                    [class.saisie--erreur]="erreur('prenom')"
+                    [attr.aria-invalid]="erreur('prenom') ? true : null"
+                    [attr.aria-describedby]="erreur('prenom') ? 'erreur-prenom' : null"
+                    [value]="saisie().prenom"
+                    (input)="saisirTexte('prenom', $event)"
+                  />
+                  @if (erreur('prenom'); as message) {
+                    <p id="erreur-prenom" class="erreur" role="alert">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="champ">
+                  <label class="libelle" for="date-naissance">Date de naissance <span class="asterisque">*</span></label>
+                  <p id="aide-date" class="aide">Au format JJ/MM/AAAA</p>
+                  <input
+                    id="date-naissance"
+                    class="saisie"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="bday"
+                    maxlength="10"
+                    placeholder="JJ/MM/AAAA"
+                    [class.saisie--erreur]="erreur('date-naissance')"
+                    [attr.aria-invalid]="erreur('date-naissance') ? true : null"
+                    [attr.aria-describedby]="erreur('date-naissance') ? 'aide-date erreur-date-naissance' : 'aide-date'"
+                    [value]="saisie().dateNaissance"
+                    (input)="saisirDate($event)"
+                  />
+                  @if (erreur('date-naissance'); as message) {
+                    <p id="erreur-date-naissance" class="erreur" role="alert">{{ message }}</p>
+                  }
+                </div>
+              </div>
+
+              <div class="champ champ--etroit">
+                <label class="libelle" for="telephone">T&#233;l&#233;phone mobile <span class="asterisque">*</span></label>
+                <p id="aide-telephone" class="aide">06 ou 07, 10 chiffres</p>
+                <input
+                  id="telephone"
+                  class="saisie"
+                  type="tel"
+                  inputmode="tel"
+                  autocomplete="tel-national"
+                  maxlength="14"
+                  placeholder="06 12 34 56 78"
+                  [class.saisie--erreur]="erreur('telephone')"
+                  [attr.aria-invalid]="erreur('telephone') ? true : null"
+                  [attr.aria-describedby]="erreur('telephone') ? 'aide-telephone erreur-telephone' : 'aide-telephone'"
+                  [value]="telephoneAffichage()"
+                  (input)="saisirTelephone($event)"
+                />
+                @if (erreur('telephone'); as message) {
+                  <p id="erreur-telephone" class="erreur" role="alert">{{ message }}</p>
+                }
+              </div>
+
+              <div class="champ">
+                <label class="libelle" for="adresse">Adresse <span class="asterisque">*</span></label>
+                <input
+                  id="adresse"
+                  class="saisie"
+                  type="text"
+                  autocomplete="street-address"
+                  maxlength="255"
+                  placeholder="Ex. 12 rue de la Paix"
+                  [class.saisie--erreur]="erreur('adresse')"
+                  [attr.aria-invalid]="erreur('adresse') ? true : null"
+                  [attr.aria-describedby]="erreur('adresse') ? 'erreur-adresse' : null"
+                  [value]="saisie().adresse"
+                  (input)="saisirTexte('adresse', $event)"
+                />
+                @if (erreur('adresse'); as message) {
+                  <p id="erreur-adresse" class="erreur" role="alert">{{ message }}</p>
+                }
+              </div>
+
+              <div class="champ-grille">
+                <div class="champ">
+                  <label class="libelle" for="code-postal">Code postal <span class="asterisque">*</span></label>
+                  <input
+                    id="code-postal"
+                    class="saisie"
+                    type="text"
+                    inputmode="numeric"
+                    autocomplete="postal-code"
+                    maxlength="5"
+                    [class.saisie--erreur]="erreur('code-postal')"
+                    [attr.aria-invalid]="erreur('code-postal') ? true : null"
+                    [attr.aria-describedby]="erreur('code-postal') ? 'erreur-code-postal' : null"
+                    [value]="saisie().codePostal"
+                    (input)="saisirTexte('codePostal', $event)"
+                  />
+                  @if (erreur('code-postal'); as message) {
+                    <p id="erreur-code-postal" class="erreur" role="alert">{{ message }}</p>
+                  }
+                </div>
+
+                <div class="champ">
+                  <label class="libelle" for="ville">Ville <span class="asterisque">*</span></label>
+                  <input
+                    id="ville"
+                    class="saisie"
+                    type="text"
+                    autocomplete="address-level2"
+                    maxlength="100"
+                    [class.saisie--erreur]="erreur('ville')"
+                    [attr.aria-invalid]="erreur('ville') ? true : null"
+                    [attr.aria-describedby]="erreur('ville') ? 'erreur-ville' : null"
+                    [value]="saisie().ville"
+                    (input)="saisirTexte('ville', $event)"
+                  />
+                  @if (erreur('ville'); as message) {
+                    <p id="erreur-ville" class="erreur" role="alert">{{ message }}</p>
+                  }
+                </div>
+              </div>
+
+            </section>
+
+            <div class="justificatifs" role="note">
+              <p class="justificatifs__titre">Vos justificatifs</p>
+              <p class="justificatifs__texte">Rien &#224; d&#233;poser maintenant. Apr&#232;s la signature de votre contrat, nous vous demanderons &#233;ventuellement un justificatif d&#8217;identit&#233; et un relev&#233; d&#8217;information.</p>
+              <p class="justificatifs__note">Vos documents servent uniquement &#224; v&#233;rifier votre identit&#233;. <a class="justificatifs__lien" routerLink="/cgu">En savoir plus sur vos donn&#233;es</a></p>
+            </div>
+
+            @if (erreurServeur()) {
+              <div class="alerte alerte--champ" role="alert">
+                <p>{{ erreurServeur() }}</p>
+              </div>
+            }
+
+            @if (erreurEnvoi()) {
+              <div class="alerte alerte--bloquant" role="alert">
+                <p>Vos informations n'ont pas pu &#234;tre enregistr&#233;es. Veuillez r&#233;essayer.</p>
+              </div>
+            }
+
+            <div class="actions actions--deux">
+              <a class="lien-retour" routerLink="/devis-auto/formule">&#8592; Retour &#224; ma formule</a>
+              <button type="submit" class="btn btn--large" [disabled]="envoi()">Continuer vers le paiement</button>
+            </div>
+
+          </form>
+        </div><!-- /colonne-principale -->
+
+        <!-- COLONNE DROITE : Mon devis -->
+        @if (vehiculeEncart() && formuleEncart()) {
+          <aside class="encart-devis" aria-label="Mon devis">
+            <div class="encart-devis__conteneur">
+              <p class="encart-devis__titre serif">Mon devis</p>
+
+              <div class="encart-devis__vehicule">
+                <p class="encart-devis__vehicule-nom">{{ vehiculeEncart()!.nom }}</p>
+                @if (vehiculeEncart()!.plaque) {
+                  <p class="encart-devis__vehicule-plaque">{{ vehiculeEncart()!.plaque }}</p>
+                }
+              </div>
+
+              <div class="encart-devis__ligne encart-devis__ligne--formule">
+                <span>Formule {{ nomFormule(formuleEncart()!.formuleMoteur) }}</span>
+              </div>
+
+              @for (opt of formuleEncart()!.options; track opt) {
+                <div class="encart-devis__ligne encart-devis__ligne--option">
+                  <span>{{ libelleOption(opt) }}</span>
+                </div>
+              }
+
+              @if (franchiseMontant(formuleEncart()!.formuleMoteur); as franchise) {
+                <div class="encart-devis__ligne encart-devis__ligne--franchise">
+                  <span>Franchise</span>
+                  <span class="ligne-prix">{{ formaterPrix(franchise) }}&nbsp;&#8364;</span>
+                </div>
+              }
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__total">
+                <span class="encart-devis__total-label">Total TTC</span>
+                <div class="encart-devis__prix">
+                  <strong>{{ formaterPrix(formuleEncart()!.prixMensuelTtc) }}&nbsp;&#8364;</strong>
+                  <span>/mois</span>
+                </div>
+              </div>
+            </div>
+          </aside>
+        }
+
+      </div><!-- /grille-devis -->
+
+    </div>
+  </div>
+</main>
