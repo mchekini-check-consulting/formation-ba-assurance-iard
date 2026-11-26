@@ -10,6 +10,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import lombok.RequiredArgsConstructor;
+import net.checkconsulting.assuranceiard.api.dto.AvenantResponse;
 import net.checkconsulting.assuranceiard.api.dto.ContratResumeResponse;
 import net.checkconsulting.assuranceiard.api.dto.DonneesContrat;
 import net.checkconsulting.assuranceiard.api.dto.FicheContratResponse;
@@ -36,6 +37,7 @@ import net.checkconsulting.assuranceiard.api.repository.FactureRepository;
 import net.checkconsulting.assuranceiard.api.repository.PermissionRepository;
 import net.checkconsulting.assuranceiard.api.repository.SinistreRepository;
 import net.checkconsulting.assuranceiard.api.repository.VehiculeRepository;
+import net.checkconsulting.assuranceiard.api.service.avenant.HistoriqueAvenants;
 import net.checkconsulting.assuranceiard.api.service.document.DocumentsGeneresService;
 import net.checkconsulting.assuranceiard.api.service.document.GabaritPdf;
 import net.checkconsulting.assuranceiard.api.utils.EcheanceAnnuelle;
@@ -60,6 +62,7 @@ public class EspaceClientService {
             TypeDocument.MEMO_VEHICULE);
     static final String SINISTRE_DECLARE = "DECLARE";
     private static final String EN_VIGUEUR = "EN_VIGUEUR";
+    private static final String AVENANT_ACCEPTE = "ACCEPTE";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
 
     private final SessionService sessionService;
@@ -73,6 +76,7 @@ public class EspaceClientService {
     private final DocumentRepository documents;
     private final DonneesContratRepository donneesContrat;
     private final DocumentsGeneresService documentsGeneres;
+    private final HistoriqueAvenants historiqueAvenants;
     private final Clock horloge;
 
     /** US-04, AC1 / US-18 : « Mes contrats », habitation et auto. */
@@ -80,7 +84,7 @@ public class EspaceClientService {
     @Transactional(readOnly = true)
     public List<ContratResumeResponse> contrats(String authorization) {
         Compte compte = sessionService.compteConnecte(authorization);
-        return contrats.duClient(compte).stream().map(this::resume).toList();
+        return contrats.duClient(compte).stream().map(this::resumeAvecAvenants).toList();
     }
 
     /**
@@ -147,7 +151,8 @@ public class EspaceClientService {
                 documentsDeLaFiche(contrat),
                 versions.stream().map(this::version).toList(),
                 versions.stream().filter(document -> EN_VIGUEUR.equals(document.getStatut())).findFirst()
-                        .map(documentsGeneres::contenuAJour).orElse(false));
+                        .map(documentsGeneres::contenuAJour).orElse(false),
+                historiqueAvenants.duContrat(contrat.getId()));
     }
 
     /** US-21, AC2 : une version des conditions particulières, avec la date de production de son PDF. */
@@ -161,6 +166,18 @@ public class EspaceClientService {
     private boolean peut(Compte compte, Rubrique rubrique) {
         return permissions.existsByProfilAndRubriqueAndDroitAndValeurTrue(compte.getProfil(), rubrique,
                 Droit.CONSULTER);
+    }
+
+    /** US-23 : « Mes contrats » et « Mes documents » : le résumé, avec les avenants acceptés et leur PDF. */
+    private ContratResumeResponse resumeAvecAvenants(Contrat contrat) {
+        ContratResumeResponse resume = resume(contrat);
+        List<AvenantResponse> acceptes = historiqueAvenants.duContrat(contrat.getId()).stream()
+                .filter(avenant -> AVENANT_ACCEPTE.equals(avenant.statut()) && avenant.documentId() != null)
+                .toList();
+        return acceptes.isEmpty() ? resume : new ContratResumeResponse(resume.referenceDevis(), resume.numero(),
+                resume.produit(), resume.statut(), resume.formule(), resume.bienAssure(), resume.typeLogement(),
+                resume.ville(), resume.cotisationMensuelle(), resume.dateEffet(), resume.dateEcheance(),
+                resume.dateFin(), resume.ibanMasque(), acceptes);
     }
 
     private ContratResumeResponse resume(Contrat contrat) {
@@ -253,8 +270,11 @@ public class EspaceClientService {
                 .toList();
     }
 
-    /** Documents en vigueur du contrat, puis les conditions générales en vigueur de son produit. */
-    private List<FicheContratResponse.Document> documentsDeLaFiche(Contrat contrat) {
+    /**
+     * Documents en vigueur du contrat, puis les conditions générales en vigueur de son produit. US-23 : relus par
+     * l'écran « Relire et accepter l'avenant » ; les avenants ont leur propre section (historique des avenants).
+     */
+    public List<FicheContratResponse.Document> documentsDeLaFiche(Contrat contrat) {
         List<String> types = DOCUMENTS_FICHE.stream().filter(type -> type != TypeDocument.CONDITIONS_GENERALES)
                 .map(Enum::name).toList();
         Stream<Document> duContrat = documents.enVigueurDuContrat(contrat.getId(), types).stream();

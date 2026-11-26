@@ -116,6 +116,28 @@ export const routes: Routes = [
         canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
         title: "Mon contrat – Assur'Easy",
       },
+      {
+        // US-23, AC1-AC3 : garanties du contrat (le serveur refuse un contrat qui n'est pas actif, AC6).
+        path: 'contrats/:numero/garanties',
+        loadComponent: () =>
+          import('./feature/modifier-garanties/modifier-garanties').then((m) => m.ModifierGaranties),
+        canActivate: [droitGuard('CONTRATS', 'MODIFIER')],
+        title: "Modifier mes garanties – Assur'Easy",
+      },
+      {
+        // US-23, AC3-AC5 : relire, accepter ou abandonner l'avenant en attente.
+        path: 'contrats/:numero/avenant',
+        loadComponent: () => import('./feature/relire-avenant/relire-avenant').then((m) => m.RelireAvenant),
+        canActivate: [droitGuard('CONTRATS', 'MODIFIER')],
+        title: "Relire et accepter l'avenant – Assur'Easy",
+      },
+      {
+        // US-23, AC4 : confirmation de l'avenant accepté.
+        path: 'contrats/:numero/avenant-accepte',
+        loadComponent: () => import('./feature/avenant-accepte/avenant-accepte').then((m) => m.AvenantAccepte),
+        canActivate: [droitGuard('CONTRATS', 'CONSULTER')],
+        title: "Avenant accepté – Assur'Easy",
+      },
     ],
   },
   {

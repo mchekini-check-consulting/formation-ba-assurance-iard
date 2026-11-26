@@ -108,6 +108,38 @@ describe('MesDocuments (US-04, AC1)', () => {
       expect(page.textContent?.toUpperCase()).not.toContain('RÉF.');
     });
 
+    it('US-23 : les avenants acceptés de mes contrats apparaissent et se téléchargent', () => {
+      afficherAvecContrats([
+        {
+          ...CONTRAT_AUTO,
+          numero: 'AE-RECETTE-A03',
+          avenants: [
+            {
+              numero: 'AV-2026-000009',
+              rang: 1,
+              statut: 'ACCEPTE',
+              dateEffet: '2026-11-27',
+              ancienneCotisationMensuelle: 47.5,
+              nouvelleCotisationMensuelle: 48.5,
+              ajouts: [],
+              retraits: [],
+              accepteLe: '2026-11-26T14:05:00Z',
+              documentId: 70,
+            },
+          ],
+        },
+      ]);
+
+      expect(titres()).toContain('Avenants de mes contrats');
+      const ligne = Array.from(page.querySelectorAll('.document')).find((d) => d.textContent?.includes('AV-2026-000009'))!;
+      expect(ligne.textContent?.replace(/\s+/g, ' ')).toContain('Contrat AE-RECETTE-A03 · effet le 27/11/2026');
+
+      ligne.querySelector<HTMLButtonElement>('button')!.click();
+      http.expectOne('/api/assurance-iard-api/documents-contrat/70').flush(new Blob(), { status: 500, statusText: 'x' });
+      fixture.detectChanges();
+      expect(ligne.textContent).toContain("Le document n'a pas pu être téléchargé");
+    });
+
     it('si les contrats n’ont pas pu être lus, les documents restent affichés', () => {
       afficherAvecContrats(null);
       expect(titres()).toEqual(['Souscription en cours', 'Souscription en cours']);

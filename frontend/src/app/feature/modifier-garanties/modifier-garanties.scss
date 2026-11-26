@@ -1,0 +1,123 @@
+// US-23 : écrans de l'avenant (Modifier mes garanties, Relire et accepter, Avenant accepté). RG5 : aucun
+// défilement horizontal sur mobile (les lignes passent à la ligne).
+.avenant {
+  &__intro {
+    margin: 0;
+    color: var(--texte-doux);
+  }
+
+  &__note,
+  &__conseil {
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--rose);
+    color: var(--texte);
+  }
+
+  &__conseil {
+    border-left: 4px solid var(--rouge);
+
+    ul {
+      margin: 8px 0 0;
+      padding-left: 20px;
+    }
+  }
+
+  &__aide {
+    margin: 0;
+    color: var(--texte-discret);
+    font-size: 14px;
+  }
+
+  &__acceptation {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    font-weight: 600;
+
+    input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      flex: none;
+    }
+  }
+}
+
+.garanties {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.garantie {
+  padding: 12px 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+
+  &--verrouillee {
+    background: var(--beige);
+  }
+
+  &__choix {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px 12px;
+    cursor: pointer;
+
+    input {
+      width: 20px;
+      height: 20px;
+      margin: 0;
+      flex: none;
+    }
+  }
+
+  &--verrouillee &__choix {
+    cursor: not-allowed;
+  }
+
+  &__libelle {
+    flex: 1 1 160px;
+    font-weight: 600;
+  }
+
+  &__badge {
+    padding: 2px 10px;
+    border: 1px solid currentcolor;
+    border-radius: 999px;
+    color: var(--rouge);
+    font-size: 13px;
+    font-weight: 600;
+
+    &--souscrite {
+      color: #1e6b34;
+    }
+  }
+
+  &__prix {
+    margin-left: auto;
+    white-space: nowrap;
+    font-variant-numeric: tabular-nums;
+  }
+
+  &__raison {
+    margin: 8px 0 0 32px;
+    color: var(--texte-doux);
+    font-size: 14px;
+  }
+}
+
+.changements {
+  margin: 0;
+  padding-left: 20px;
+
+  li + li {
+    margin-top: 4px;
+  }
+}

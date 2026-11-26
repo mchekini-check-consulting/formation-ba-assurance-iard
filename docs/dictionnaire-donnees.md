@@ -151,7 +151,7 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 | Compte | Contenu |
 |---|---|
 | `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE. US-22 : effet un an avant le 26 du mois courant, 3 échéances payées et 1 à venir |
-| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON |
+| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON. US-23 : avenant de H01 sur `objets-valeur` (18,50 → 21,00 €), `A03` avec la protection juridique (47,50 €) |
 | `recette.prospect@assureasy.fr` (T-05) | prospect sans aucun contrat |
 | `recette.assure2`, `recette.gestionnaire`, `recette.admin` (US-04) | inchangés |
 
@@ -211,6 +211,50 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
   (verrou sur le contrat) et non par la base ; numéro `FAC-AAAA-NNNNNN` = année de génération + compteur de la table
   `facture` (jamais réutilisé, mais pas remis à zéro chaque année et sans garantie d'absence de trou). HT et TSCA
   calculés depuis le TTC, par garantie, avec les taux **provisoires** de `assurance.facturation` (`application.yaml`).
+- **US-23, avenant** (IA-86) : aucune nouvelle table ; tables `avenant`, `avenant_ligne` et `contrat_option` de T-05.
+  Seule migration : **V34** (droit `CONTRATS/MODIFIER` accordé au profil `ASSURE`, tracé dans `historique_permission` ;
+  le droit n'était utilisé par aucune route). Décisions BA, **à valider PO** :
+  - **Statuts** : « Modifier mes garanties » seulement pour un contrat `ACTIF` (refusé, aussi par le serveur — 422 —,
+    pour Impayé, Suspendu, Résiliation en cours, Résilié, Renoncé, En attente de signature, En attente d'effet et
+    Actif · justificatifs attendus). Un contrat `AVENANT_EN_ATTENTE` (contrat actif avec un avenant en attente) peut
+    préparer un nouvel avenant, qui remplace l'ancien.
+  - **Garanties obligatoires** : celles marquées `contrat_option.obligatoire` et toujours la responsabilité civile
+    (`RC`) ; la grille du moteur (`ref_option.obligatoire`) n'en marque aucune. Non modifiables, avec la raison à
+    l'écran. Les garanties incluses dans la formule (habitation, auto) ne sont pas des options et ne changent pas.
+  - **Prix** : grille AUTO-2026.1 (T-04, véhicule et conducteur du contrat) en auto, grille 2026.1 du sprint 1 en
+    habitation, par les services existants (`FormuleAutoService`, `TarifDevisService`). Le contrat ne garde pas tout le
+    profil du devis habitation : le moteur reçoit un profil neutre (locataire, résidence principale, 2 pièces, aucun
+    sinistre), sans effet sur le prix des options (fixe dans la grille). Une garantie souscrite garde le prix payé.
+  - **Nouvelle cotisation** = ancienne + prix des garanties ajoutées − prix des garanties retirées (mêmes prix qu'à
+    l'écran) ; la formule de base n'est pas recalculée. Cotisation annuelle = 12 mensualités.
+  - **Numéro** `AV-AAAA-NNNNNN` (année de préparation, identifiant de l'avenant ; recalculé, non stocké) ;
+    `avenant.numero` reste le rang de l'avenant dans le contrat (1, 2…). `document.reference` = numéro AV.
+  - **Un seul avenant en attente** : un nouvel avenant préparé passe l'ancien à `ABANDONNE` ; « Abandonner » aussi.
+    Rien n'est effacé. Tant qu'il est en attente : statut `AVENANT_EN_ATTENTE` (fiche, tableau de bord), garanties et
+    cotisation inchangées.
+  - **Date d'effet** : le lendemain de l'acceptation (heure de Paris), recalculée à l'acceptation. Mensuel : la
+    nouvelle mensualité s'applique à la première échéance datée de la date d'effet ou après, sans prorata ; annuel : à
+    la prochaine échéance annuelle (dit à l'écran). L'échéancier d'US-22 en tient compte ; les échéances payées et les
+    factures déjà émises ne changent pas.
+  - **Acceptation** (AC4) : case jamais pré-cochée, bouton désactivé tant qu'elle ne l'est pas ; `accepte_le` et
+    `accepte_ip` (adresse relayée par le gateway) conservés ; pas de signature par code (RG2). Option ajoutée : début
+    à la date d'effet ; option retirée : fin la veille (elle n'apparaît plus sur la fiche ni dans les nouvelles CP).
+  - **AC7** : régénération d'US-21 (`regenerer(contratId, AVENANT)`) après l'enregistrement complet, si
+    `estRegenerable` ; date d'effet du contrat inchangée dans les CP. Si un PDF échoue, l'acceptation reste et la
+    reprise de T-03 le produit.
+  - **PDF** : modèle « Avenant » (point d'extension de T-03). E-mail : PDF joint + lien vers le contrat (Mailpit).
+    L'avenant se télécharge depuis l'historique de la fiche et « Mes documents » (pas dans la section « Documents » de
+    la fiche, règle d'US-18).
+  - **Fiche conseil et IPID (AC3)** : la fiche conseil auto d'US-29 se rédige depuis un devis, pas depuis un contrat :
+    l'écran propose l'IPID de la formule auto (modèle US-29) et les documents existants du contrat ; habitation :
+    documents existants. RG4 : conseil mis à jour affiché à l'écran avant l'acceptation si une garantie est retirée.
+  - **Contrats du sprint 1** (options lues dans le devis) : à l'acceptation, leurs options sont d'abord enregistrées
+    dans `contrat_option` (prix de la grille) ; ensuite, le devis n'est plus lu.
+- **US-23, données de test de Camille** (`donnees_recette_us23.sql`, après T-05 et US-22, `DONNEES_TEST_ACTIVES`
+  seulement ; scripts déjà sur `main` non modifiés) : l'avenant en attente de `AE-RECETTE-H01` ajoutait `BRIS_GLACE`,
+  qui n'existe pas en habitation : il ajoute `objets-valeur` (2,50 €, 18,50 → 21,00 € par mois), date d'effet au
+  lendemain, et son projet d'avenant reçoit son numéro AV. `AE-RECETTE-A03` (Actif, Tous risques) reçoit la
+  protection juridique (2,50 €) pour tester un retrait : 45,00 → 47,50 € par mois (570,00 € par an).
 
 ---
 

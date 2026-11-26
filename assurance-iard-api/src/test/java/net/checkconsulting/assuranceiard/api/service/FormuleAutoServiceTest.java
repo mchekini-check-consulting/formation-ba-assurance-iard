@@ -188,4 +188,25 @@ class FormuleAutoServiceTest {
         verify(devisAutos).save(any(DevisAuto.class));
         // La vérification de dateConfirmationChoixDifferent est faite via l'entité sauvegardée
     }
+
+    @Test
+    void us23PrixDesOptionsCompatiblesAvecLaFormuleDuContrat() {
+        List<TarifAutoResponse.PrixOption> catalogue = List.of(
+                new TarifAutoResponse.PrixOption("ASSISTANCE_0KM", new BigDecimal("3.50")),
+                new TarifAutoResponse.PrixOption("VEHICULE_REMPLACEMENT", new BigDecimal("4.00")));
+        // Le moteur ne garde que les options compatibles avec la formule (TIERS : pas de véhicule de remplacement).
+        TarifAutoResponse.Detail detail = new TarifAutoResponse.Detail("TIERS", new BigDecimal("20.00"),
+                List.of(catalogue.getFirst()), new BigDecimal("23.50"), new BigDecimal("282.00"));
+        when(moteurTarifaire.calculerAuto(any())).thenAnswer(appel -> {
+            MoteurTarifaireClient.DemandeMoteurAuto demande = appel.getArgument(0);
+            return new TarifAutoResponse(null, "AUTO-2026.1", true, "TR", List.of(), catalogue,
+                    demande.options() == null ? null : detail, LocalDate.now(), null, null, null);
+        });
+
+        assertThat(service.prixDesOptions(vehicule, conducteur, "TIERS"))
+                .containsExactly(java.util.Map.entry("ASSISTANCE_0KM", new BigDecimal("3.50")));
+        verify(moteurTarifaire).calculerAuto(org.mockito.ArgumentMatchers.argThat(demande ->
+                demande.options() != null && demande.options().equals(
+                        List.of("ASSISTANCE_0KM", "VEHICULE_REMPLACEMENT")) && "TIERS".equals(demande.formule())));
+    }
 }

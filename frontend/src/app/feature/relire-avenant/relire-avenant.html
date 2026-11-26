@@ -1,0 +1,143 @@
+<section class="mes-devis" aria-labelledby="avenant-titre">
+  <a [routerLink]="lienFiche()">← Mon contrat</a>
+  <h1 id="avenant-titre" class="serif">Relire et accepter l'avenant</h1>
+
+  @if (message(); as m) {
+    <p class="fiche__confirmation" [class.fiche__confirmation--erreur]="!m.succes" [attr.role]="m.succes ? 'status' : 'alert'">
+      {{ m.texte }}
+    </p>
+  }
+
+  @if (contrat(); as c) {
+    @if (projet(); as p) {
+      <p class="avenant__intro">
+        @if (prenom()) {
+          {{ prenom() }}, voici
+        } @else {
+          Voici
+        }
+        ce qui change sur votre contrat {{ LIBELLES_PRODUIT[c.produit] }} {{ c.numero }}. Tant que vous ne l'avez pas
+        accepté, vous restez couvert aux conditions actuelles.
+      </p>
+
+      <!-- AC3 : ce qui change -->
+      <div class="devis-ligne">
+        <h2 class="serif">Ce qui change</h2>
+        <dl class="fiche">
+          <dt>Ancienne cotisation</dt>
+          <dd>
+            {{ montantTtc(p.avenant.ancienneCotisationMensuelle) }} / mois ({{ montantTtc(p.ancienneCotisationAnnuelle) }}
+            / an)
+          </dd>
+          <dt>Nouvelle cotisation</dt>
+          <dd>
+            <strong>{{ montantTtc(p.avenant.nouvelleCotisationMensuelle) }} / mois</strong>
+            ({{ montantTtc(p.nouvelleCotisationAnnuelle) }} / an)
+          </dd>
+          <dt>Date d'effet</dt>
+          <dd>{{ dateJjMmAaaa(p.avenant.dateEffet) }} (lendemain de votre acceptation)</dd>
+        </dl>
+        <p class="avenant__aide">{{ application() }}</p>
+      </div>
+
+      <!-- Projet d'avenant -->
+      <div class="devis-ligne">
+        <h2 class="serif">Projet d'avenant {{ p.avenant.numero }}</h2>
+        <dl class="fiche">
+          <dt>Garanties ajoutées</dt>
+          <dd>
+            @if (p.avenant.ajouts.length === 0) {
+              Aucune
+            } @else {
+              <ul class="changements">
+                @for (garantie of p.avenant.ajouts; track garantie.code) {
+                  <li>{{ garantie.libelle }} : + {{ montantTtc(garantie.prixMensuelTtc) }} / mois</li>
+                }
+              </ul>
+            }
+          </dd>
+          <dt>Garanties retirées</dt>
+          <dd>
+            @if (p.avenant.retraits.length === 0) {
+              Aucune
+            } @else {
+              <ul class="changements">
+                @for (garantie of p.avenant.retraits; track garantie.code) {
+                  <li>{{ garantie.libelle }} : − {{ montantTtc(garantie.prixMensuelTtc) }} / mois</li>
+                }
+              </ul>
+            }
+          </dd>
+        </dl>
+      </div>
+
+      <!-- RG4 : conseil mis à jour si la couverture diminue -->
+      @if (p.reductionCouverture) {
+        <aside class="avenant__conseil" aria-labelledby="conseil-titre">
+          <strong id="conseil-titre">Notre conseil mis à jour</strong>
+          <ul>
+            @for (conseil of p.conseils; track $index) {
+              <li>{{ conseil }}</li>
+            }
+          </ul>
+        </aside>
+      }
+
+      <!-- AC3 : fiche conseil, IPID et documents du contrat à relire -->
+      <div class="devis-ligne">
+        <h2 class="serif">Documents à relire</h2>
+        @if (p.documents.length === 0 && !adresseIpid()) {
+          <p>Les documents de votre contrat sont disponibles sur sa fiche.</p>
+        } @else {
+          <ul class="fiche__documents">
+            @if (adresseIpid(); as ipid) {
+              <li>
+                <span>Document d'information (IPID) de votre formule</span>
+                <a class="btn btn--contour" [href]="ipid" target="_blank" rel="noopener">Ouvrir</a>
+              </li>
+            }
+            @for (document of p.documents; track document.id) {
+              <li>
+                <span>{{ document.libelle }}</span>
+                <button type="button" class="btn btn--contour" [attr.aria-label]="'Télécharger : ' + document.libelle" (click)="telecharger(document)">
+                  Télécharger
+                </button>
+                @if (messagesDocuments()[document.id]; as texte) {
+                  <p class="mes-devis__erreur fiche__message" role="status">{{ texte }}</p>
+                }
+              </li>
+            }
+          </ul>
+        }
+      </div>
+
+      <!-- AC4 : acceptation par case à cocher et bouton (RG1, RG2) -->
+      <div class="devis-ligne">
+        <label class="avenant__acceptation">
+          <input type="checkbox" [checked]="accepte()" (change)="cocher($event)" />
+          J'ai lu et j'accepte mon avenant
+        </label>
+        <div class="devis-ligne__actions">
+          <button type="button" class="btn" [disabled]="!accepte() || envoiEnCours()" (click)="accepter()">
+            {{ envoiEnCours() ? 'Enregistrement…' : "Accepter l'avenant" }}
+          </button>
+          <button type="button" class="btn btn--contour" [disabled]="envoiEnCours()" (click)="abandonner()">
+            Abandonner l'avenant
+          </button>
+          <a [routerLink]="lienGaranties()">Modifier à nouveau mes garanties</a>
+        </div>
+      </div>
+    } @else {
+      <p>Aucun avenant n'attend votre réponse sur ce contrat.</p>
+      <div class="devis-ligne__actions">
+        <a class="btn" [routerLink]="lienFiche()">Retour à mon contrat</a>
+        <a class="btn btn--contour" [routerLink]="lienGaranties()">Modifier mes garanties</a>
+      </div>
+    }
+  } @else if (erreur(); as texte) {
+    <p class="mes-devis__erreur" role="alert">{{ texte }}</p>
+    <p><a [routerLink]="lienFiche()">Retour à mon contrat</a></p>
+  } @else {
+    <p>Chargement de votre avenant…</p>
+  }
+</section>

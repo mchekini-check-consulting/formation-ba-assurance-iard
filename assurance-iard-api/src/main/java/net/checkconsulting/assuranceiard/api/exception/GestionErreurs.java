@@ -103,6 +103,24 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
     }
 
+    /** US-23, AC6 : contrat qui n'est pas actif (Impayé, Suspendu, résilié...). */
+    @ExceptionHandler(ModificationGarantiesImpossibleException.class)
+    public ProblemDetail modificationGarantiesImpossible(ModificationGarantiesImpossibleException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
+    /** US-23 : aucune garantie changée, garantie obligatoire ou inconnue, case d'acceptation non cochée. */
+    @ExceptionHandler(AvenantInvalideException.class)
+    public ProblemDetail avenantInvalide(AvenantInvalideException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /** US-23 : aucun avenant en attente (déjà accepté ou abandonné). */
+    @ExceptionHandler(AvenantInconnuException.class)
+    public ProblemDetail avenantInconnu(AvenantInconnuException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
     /** US-22 : la date demandÃ©e n'est ni une Ã©chÃ©ance ni une annÃ©e de cotisation du contrat. */
     @ExceptionHandler(PeriodeFacturationInconnueException.class)
     public ProblemDetail periodeFacturationInconnue(PeriodeFacturationInconnueException exception) {

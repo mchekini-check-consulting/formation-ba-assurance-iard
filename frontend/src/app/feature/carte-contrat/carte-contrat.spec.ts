@@ -52,12 +52,15 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
     afficher(CONTRAT_AUTO);
 
     const liens = Array.from(carte.querySelectorAll('a'));
-    // US-21 et US-22 livrées : « Régénérer mon contrat », « Générer une facture » ; garanties et sinistres pas encore.
+    // US-21, US-22 et US-23 livrées : « Modifier mes garanties », « Régénérer mon contrat », « Générer une facture » ;
+    // sinistres pas encore.
     expect(liens.map((lien) => lien.textContent?.trim())).toEqual([
       'Voir mon contrat',
+      'Modifier mes garanties',
       'Régénérer mon contrat',
       'Générer une facture',
     ]);
+    expect(liens[1].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03/garanties');
     expect(liens[0].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03');
     expect(liens[0].classList).not.toContain('btn--contour');
   });

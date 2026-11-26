@@ -72,6 +72,19 @@
       color: var(--rouge-fonce);
     }
   }
+
+  // US-23 : « Télécharger » un avenant est un bouton, présenté comme le lien « Ouvrir ».
+  button#{&}__ouvrir {
+    padding: 0;
+    border: 0;
+    background: none;
+    font: inherit;
+    cursor: pointer;
+  }
+}
+
+.documents + .documents {
+  margin-top: 16px;
 }
 
 // RG5 : sur mobile, le nom du fichier passe sous le type ; « Ouvrir » reste à droite, sans défilement horizontal.

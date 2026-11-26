@@ -28,7 +28,19 @@ public record FicheContratResponse(
         Paiement paiement,
         List<Document> documents,
         List<Version> versionsConditionsParticulieres,
-        boolean conditionsParticulieresAJour) {
+        boolean conditionsParticulieresAJour,
+        List<AvenantResponse> avenants) {
+
+    /** Compatibilité (fiches sans avenant) : historique des avenants vide. */
+    public FicheContratResponse(String numero, UUID referenceDevis, String produit, String statut, String formule,
+            Logement logement, Vehicule vehicule, BigDecimal franchise, List<Garantie> garanties,
+            BigDecimal cotisationMensuelle, BigDecimal cotisationAnnuelle, LocalDate dateEffet,
+            LocalDate dateEcheance, LocalDate dateFin, Paiement paiement, List<Document> documents,
+            List<Version> versionsConditionsParticulieres, boolean conditionsParticulieresAJour) {
+        this(numero, referenceDevis, produit, statut, formule, logement, vehicule, franchise, garanties,
+                cotisationMensuelle, cotisationAnnuelle, dateEffet, dateEcheance, dateFin, paiement, documents,
+                versionsConditionsParticulieres, conditionsParticulieresAJour, List.of());
+    }
 
     public record Logement(String type, Integer surface, String adresse, String codePostal, String ville) {
     }

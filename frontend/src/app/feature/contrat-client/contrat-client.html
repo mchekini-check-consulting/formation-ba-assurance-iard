@@ -20,6 +20,32 @@
           }
         </div>
       }
+      <!-- US-23, AC5 : avenant en attente, contrat couvert aux conditions actuelles -->
+      @if (avenantEnAttente(); as a) {
+        <div class="avenant-attente" role="status">
+          <p>
+            <strong>Avenant en attente ({{ a.numero }})</strong> : nouvelle cotisation de
+            {{ montantTtc(a.nouvelleCotisationMensuelle) }} / mois au lieu de
+            {{ montantTtc(a.ancienneCotisationMensuelle) }}, à partir du {{ dateJjMmAaaa(a.dateEffet) }} si vous
+            l'acceptez aujourd'hui. D'ici là, vous restez couvert aux conditions actuelles.
+          </p>
+          <div class="devis-ligne__actions">
+            <a class="btn" [routerLink]="['/espace-client/contrats', f.numero, CHEMIN_AVENANT]">Relire et accepter</a>
+            <button type="button" class="btn btn--contour" [disabled]="abandonEnCours()" (click)="abandonnerAvenant()">
+              Abandonner l'avenant
+            </button>
+          </div>
+        </div>
+      }
+      @if (messageAvenant(); as message) {
+        <p
+          class="fiche__confirmation"
+          [class.fiche__confirmation--erreur]="!message.succes"
+          [attr.role]="message.succes ? 'status' : 'alert'"
+        >
+          {{ message.texte }}
+        </p>
+      }
     </div>
 
     <div class="devis-ligne">
@@ -131,6 +157,46 @@
         </ul>
       }
     </div>
+
+    <!-- US-23 : historique des avenants (numéro, date d'effet, garanties changées, statut) -->
+    @if (f.avenants?.length) {
+      <section class="devis-ligne" aria-labelledby="titre-avenants">
+        <h2 id="titre-avenants" class="serif">Historique des avenants</h2>
+        <ul class="fiche__documents avenants">
+          @for (avenant of f.avenants; track avenant.numero) {
+            <li>
+              <span>
+                <strong>{{ avenant.numero }}</strong>
+                <span class="versions__statut" [class.versions__statut--en-vigueur]="avenant.statut === 'ACCEPTE'">{{
+                  LIBELLES_STATUT_AVENANT[avenant.statut] ?? avenant.statut
+                }}</span>
+                <span class="versions__date"> · Effet le {{ dateJjMmAaaa(avenant.dateEffet) }}</span>
+                @for (garantie of avenant.ajouts; track garantie.code) {
+                  <span class="avenants__changement"> · + {{ garantie.libelle }}</span>
+                }
+                @for (garantie of avenant.retraits; track garantie.code) {
+                  <span class="avenants__changement"> · − {{ garantie.libelle }}</span>
+                }
+              </span>
+              <!-- Recette US-23 : seul un avenant accepté propose son PDF (jamais un avenant abandonné ou en attente) -->
+              @if (avenantTelechargeable(avenant) && avenant.documentId !== null) {
+                <button
+                  type="button"
+                  class="btn btn--contour"
+                  [attr.aria-label]="'Télécharger : avenant ' + avenant.numero"
+                  (click)="telechargerAvenant(avenant)"
+                >
+                  Télécharger
+                </button>
+                @if (messages()[avenant.documentId]; as message) {
+                  <p class="mes-devis__erreur fiche__message" role="status">{{ message }}</p>
+                }
+              }
+            </li>
+          }
+        </ul>
+      </section>
+    }
 
     <!-- US-21 : versions des conditions particulières (AC2) et régénération (AC1, AC3) -->
     <section class="devis-ligne" [id]="'versions'" aria-labelledby="titre-versions">

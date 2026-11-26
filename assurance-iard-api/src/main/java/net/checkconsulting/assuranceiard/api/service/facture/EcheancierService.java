@@ -8,6 +8,7 @@ import java.time.ZoneId;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,9 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import net.checkconsulting.assuranceiard.api.dto.DonneesContrat;
+import net.checkconsulting.assuranceiard.api.model.Avenant;
 import net.checkconsulting.assuranceiard.api.model.Echeance;
+import net.checkconsulting.assuranceiard.api.repository.AvenantRepository;
 import net.checkconsulting.assuranceiard.api.repository.DonneesContratRepository;
 import net.checkconsulting.assuranceiard.api.repository.EcheanceRepository;
 import net.checkconsulting.assuranceiard.api.service.PremierPrelevementService;
@@ -49,6 +52,7 @@ public class EcheancierService {
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
 
     private final EcheanceRepository echeances;
+    private final AvenantRepository avenants;
     private final DonneesContratRepository donneesContrat;
     private final PremierPrelevementService premierPrelevement;
     private final Clock horloge;
@@ -97,11 +101,22 @@ public class EcheancierService {
         List<Echeance> enBase = echeances.findByContratIdOrderByDateEcheanceDescIdDesc(contrat.id()).stream()
                 .filter(echeance -> !echeance.getDateEcheance().isBefore(tarif.dateEffet()))
                 .toList();
-        List<LigneEcheance> lignes = new ArrayList<>(enBase.isEmpty() ? calculees(contrat, annuel)
-                : completees(contrat, annuel, enBase));
+        List<LigneEcheance> lignes = new ArrayList<>(selonLesAvenants(contrat, annuel, enBase,
+                enBase.isEmpty() ? calculees(contrat, annuel) : completees(contrat, annuel, enBase)));
         lignes.removeIf(ligne -> ligne.date().isBefore(tarif.dateEffet()));
         lignes.sort(Comparator.comparing(LigneEcheance::date).reversed());
         return new Echeancier(lignes, annees(lignes, tarif.dateEffet(), tarif.dateFin()));
+    }
+
+    /** US-23, RG3 : montants des échéances après des avenants acceptés ({@link CotisationsSuccessives}). */
+    private List<LigneEcheance> selonLesAvenants(DonneesContrat contrat, boolean annuel, List<Echeance> enBase,
+            List<LigneEcheance> lignes) {
+        List<Avenant> acceptes = avenants.findByContratIdAndStatutOrderByDateEffetAscIdAsc(contrat.id(),
+                AvenantRepository.ACCEPTE);
+        Map<LocalDate, String> statutsEnBase = new HashMap<>();
+        enBase.forEach(echeance -> statutsEnBase.putIfAbsent(echeance.getDateEcheance(), echeance.getStatut()));
+        return new CotisationsSuccessives(acceptes, contrat.tarif().cotisationMensuelle(),
+                contrat.tarif().cotisationAnnuelle(), annuel).appliquer(lignes, statutsEnBase);
     }
 
     /**
