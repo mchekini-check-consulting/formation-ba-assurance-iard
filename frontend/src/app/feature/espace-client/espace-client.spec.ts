@@ -40,7 +40,9 @@ const TABLEAU: TableauDeBord = {
   ],
   sinistresVisibles: true,
   sinistres: [
-    { numero: 'SIN-1', numeroContrat: 'AE-RECETTE-A03', type: 'BRIS_GLACE', dateSurvenance: '2026-11-14', declareLe: null },
+    { id: 1, numero: 'SIN-1', statut: 'DECLARE', numeroContrat: 'AE-RECETTE-A03', type: 'BRIS_GLACE', dateSurvenance: '2026-11-14', declareLe: null, etape: 3 },
+    // US-24, AC8 : un brouillon à reprendre.
+    { id: 2, numero: null, statut: 'BROUILLON', numeroContrat: 'AE-RECETTE-A03', type: 'VOL', dateSurvenance: null, declareLe: null, etape: 2 },
   ],
 };
 
@@ -124,27 +126,35 @@ describe('EspaceClient : tableau de bord (US-18, maquette)', () => {
       expect(devis.querySelector('a')).toBeNull();
     });
 
-    it('« Sinistres en cours » : type, produit et statut en texte, sans lien tant que US-24 n’est pas livrée', () => {
+    it('« Sinistres en cours » : type, produit et statut en texte ; US-24 : brouillon à reprendre et « Voir mes sinistres »', () => {
       const sinistres = bloc('Sinistres en cours')!;
       const contenu = sinistres.textContent?.replace(/\s+/g, ' ') ?? '';
       expect(contenu).toContain('Bris de glace');
       expect(contenu).toContain('Auto · Sinistre SIN-1');
-      expect(sinistres.querySelector('.badge-sinistre')?.textContent).toBe('Déclaré');
-      expect(contenu).not.toContain('Voir mes sinistres');
+      expect(Array.from(sinistres.querySelectorAll('.badge-sinistre')).map((b) => b.textContent)).toEqual([
+        'Déclaré',
+        'Brouillon',
+      ]);
+      expect(contenu).toContain('déclaration commencée');
+      const reprendre = Array.from(sinistres.querySelectorAll('a')).find((a) => a.textContent?.includes('Reprendre'));
+      expect(reprendre?.getAttribute('href')).toBe('/espace-client/sinistres/2/circonstances');
+      expect(contenu).toContain('Voir mes sinistres');
     });
 
-    it('« Que voulez-vous faire ? » : tuiles « Modifier mes garanties » (US-23), « Mes factures » (US-22) et « Faire un nouveau devis »', () => {
+    it('« Que voulez-vous faire ? » : tuiles « Déclarer un sinistre » (US-24), « Modifier mes garanties » (US-23), « Mes factures » (US-22) et « Faire un nouveau devis »', () => {
       const tuiles = Array.from(page.querySelectorAll('.tuile'));
       expect(tuiles.map((t) => t.textContent?.trim())).toEqual([
+        'Déclarer un sinistre',
         'Modifier mes garanties',
         'Mes factures',
         'Faire un nouveau devis',
       ]);
+      expect(tuiles[0].getAttribute('href')).toBe('/espace-client/sinistres/declarer');
       // US-23 : choix du contrat dans « Mes contrats ».
-      expect(tuiles[0].getAttribute('href')).toBe('/espace-client/contrats');
-      expect(tuiles[1].getAttribute('href')).toBe('/espace-client/factures');
+      expect(tuiles[1].getAttribute('href')).toBe('/espace-client/contrats');
+      expect(tuiles[2].getAttribute('href')).toBe('/espace-client/factures');
       // Page d'accueil, qui propose habitation et auto (US-26).
-      expect(tuiles[2].getAttribute('href')).toBe('/');
+      expect(tuiles[3].getAttribute('href')).toBe('/');
     });
 
     it('télécharge une facture, ou signale qu’elle est en préparation (409)', () => {

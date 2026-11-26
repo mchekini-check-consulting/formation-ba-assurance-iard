@@ -60,7 +60,6 @@ public class EspaceClientService {
     static final List<TypeDocument> DOCUMENTS_FICHE = List.of(TypeDocument.CONDITIONS_GENERALES, TypeDocument.IPID,
             TypeDocument.FICHE_CONSEIL, TypeDocument.MANDAT_SEPA, TypeDocument.ATTESTATION,
             TypeDocument.MEMO_VEHICULE);
-    static final String SINISTRE_DECLARE = "DECLARE";
     private static final String EN_VIGUEUR = "EN_VIGUEUR";
     private static final String AVENANT_ACCEPTE = "ACCEPTE";
     private static final ZoneId FRANCE = ZoneId.of("Europe/Paris");
@@ -260,13 +259,13 @@ public class EspaceClientService {
                 .toList();
     }
 
+    /** US-24, AC8 : sinistres déclarés et brouillons pas encore expirés (à reprendre), les plus récents d'abord. */
     private List<TableauDeBordResponse.Sinistre> sinistresDeclares(Map<Long, String> numeros) {
-        List<Sinistre> declares = sinistres.findByContratIdInAndStatutOrderByDateSurvenanceDescIdDesc(
-                numeros.keySet(), SINISTRE_DECLARE);
-        return declares.stream()
-                .map(sinistre -> new TableauDeBordResponse.Sinistre(sinistre.getNumero(),
-                        numeros.get(sinistre.getContratId()), sinistre.getType(), sinistre.getDateSurvenance(),
-                        sinistre.getDeclareLe()))
+        List<Sinistre> visibles = sinistres.visibles(numeros.keySet(), horloge.instant());
+        return visibles.stream()
+                .map(sinistre -> new TableauDeBordResponse.Sinistre(sinistre.getId(), sinistre.getNumero(),
+                        sinistre.getStatut(), numeros.get(sinistre.getContratId()), sinistre.getType(),
+                        sinistre.getDateSurvenance(), sinistre.getDeclareLe(), sinistre.getEtape()))
                 .toList();
     }
 

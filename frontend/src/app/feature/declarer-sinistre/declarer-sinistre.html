@@ -1,0 +1,115 @@
+<section class="mes-devis" aria-labelledby="declarer-titre">
+  <a [routerLink]="ADRESSE_SINISTRES">← Mes sinistres</a>
+  <h1 id="declarer-titre" class="serif">Déclarer un sinistre</h1>
+  <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+  <iard-etapes-sinistre [etape]="1" />
+
+  @if (numeroAssistance()) {
+    <iard-bandeau-urgence
+      [numero]="numeroAssistance()"
+      [produit]="contratChoisi()?.produit ?? null"
+      [type]="typeChoisi()"
+      [gestes]="typeCourant()?.gestesUrgence ?? []"
+    />
+  }
+
+  @if (chargement()) {
+    <p>Chargement…</p>
+  } @else if (erreur(); as message) {
+    <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    <p><a [routerLink]="ADRESSE_SINISTRES">Retour à mes sinistres</a></p>
+  } @else if (contrats().length === 0) {
+    <p class="sinistre__message" role="status">{{ MESSAGE_AUCUN_CONTRAT }}</p>
+  } @else {
+    <p class="sinistre__intro">
+      @if (prenom()) {
+        {{ prenom() }}, nous
+      } @else {
+        Nous
+      }
+      vous guidons pas à pas. Vous pouvez enregistrer votre déclaration et la terminer plus tard.
+    </p>
+
+    <div class="devis-ligne">
+      <fieldset class="formulaire">
+        <legend><h2 class="serif">Quel contrat est concerné ? <span class="rouge">*</span></h2></legend>
+        <ul class="tuiles" role="list">
+          @for (contrat of contrats(); track contrat.numero) {
+            <li>
+              <button
+                type="button"
+                class="tuile"
+                [class.tuile--choisie]="contratChoisi()?.numero === contrat.numero"
+                [attr.aria-pressed]="contratChoisi()?.numero === contrat.numero"
+                [disabled]="!!declaration() && contratChoisi()?.numero !== contrat.numero"
+                (click)="choisirContrat(contrat)"
+              >
+                <span class="tuile__titre">{{ LIBELLES_PRODUIT[contrat.produit] }} · {{ contrat.numero }}</span>
+                @if (contrat.bienAssure) {
+                  <span class="tuile__aide">{{ contrat.bienAssure }}</span>
+                }
+                @if (contrat.formule) {
+                  <span class="tuile__aide">Formule {{ libelleFormule(contrat.formule) }}</span>
+                }
+              </button>
+            </li>
+          }
+        </ul>
+      </fieldset>
+    </div>
+
+    @if (contratChoisi()) {
+      <div class="devis-ligne">
+        <fieldset class="formulaire">
+          <legend><h2 class="serif">Que s’est-il passé ? <span class="rouge">*</span></h2></legend>
+          @if (types(); as t) {
+            <ul class="tuiles" role="list">
+              @for (type of t.types; track type.code) {
+                <li>
+                  <button
+                    type="button"
+                    class="tuile"
+                    [class.tuile--choisie]="typeChoisi() === type.code"
+                    [attr.aria-pressed]="typeChoisi() === type.code"
+                    [disabled]="enCours()"
+                    (click)="choisirType(type)"
+                  >
+                    <span class="tuile__titre">{{ type.libelle }}</span>
+                    @if (type.aide) {
+                      <span class="tuile__aide">{{ type.aide }}</span>
+                    }
+                  </button>
+                </li>
+              }
+            </ul>
+          } @else {
+            <p>Chargement des types de sinistres…</p>
+          }
+        </fieldset>
+
+        @if (messageCouverture(); as message) {
+          <p class="sinistre__message sinistre__message--attention" role="status">{{ message }}</p>
+        }
+        @if (typeChoisi() === AUTRE) {
+          <p class="sinistre__message" role="status">{{ MESSAGE_AUTRE }}</p>
+        }
+      </div>
+    }
+
+    @if (messageAction(); as message) {
+      <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    }
+
+    <div class="sinistre__actions">
+      <button type="button" class="btn" [disabled]="!declaration() || enCours()" (click)="suivant()">Suivant</button>
+      @if (declaration()) {
+        <button type="button" class="btn btn--contour" [disabled]="enCours()" (click)="plusTard()">
+          Enregistrer et terminer plus tard
+        </button>
+      }
+    </div>
+    @if (!declaration()) {
+      <p class="sinistre__note">Choisissez le contrat puis ce qui s’est passé pour continuer.</p>
+    }
+  }
+</section>

@@ -4,9 +4,11 @@ import { adresseSiLivree, tuiles } from '../../core/config/raccourcis';
 import { ContratResume, LIBELLES_PRODUIT, StatutContrat, libelleFormule } from '../../core/model/contrat';
 import { formaterDate } from '../../core/model/devis-enregistre';
 import { formaterNomPropre } from '../../core/model/identite';
+import { lienReprise } from '../../core/model/sinistre';
 import { formaterPrix } from '../../core/model/recommandation';
 import {
   FactureResume,
+  LIBELLE_SINISTRE_BROUILLON,
   LIBELLE_SINISTRE_DECLARE,
   TableauDeBord,
   libelleSinistre,
@@ -84,6 +86,8 @@ export class EspaceClient {
 
   protected readonly LIBELLES_PRODUIT = LIBELLES_PRODUIT;
   protected readonly LIBELLE_SINISTRE_DECLARE = LIBELLE_SINISTRE_DECLARE;
+  protected readonly LIBELLE_SINISTRE_BROUILLON = LIBELLE_SINISTRE_BROUILLON;
+  protected readonly lienReprise = lienReprise;
   protected readonly libelleFormule = libelleFormule;
   protected readonly libelleSinistre = libelleSinistre;
   protected readonly formaterDate = formaterDate;

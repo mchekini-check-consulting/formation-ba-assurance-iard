@@ -68,13 +68,13 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Impayé',
     ton: 'rouge',
     message: 'Un paiement n’a pas abouti : régularisez votre situation pour garder votre couverture.',
-    actions: ['detail', 'regenerer', 'genererFacture'],
+    actions: ['detail', 'regenerer', 'genererFacture', 'declarerSinistre'],
   },
   SUSPENDU: {
     libelle: 'Suspendu',
     ton: 'rouge',
     message: 'Vos garanties sont suspendues jusqu’à la régularisation de vos paiements.',
-    actions: ['detail', 'genererFacture'],
+    actions: ['detail', 'genererFacture', 'declarerSinistre'],
   },
   RESILIATION_EN_COURS: {
     libelle: 'Résiliation en cours',
@@ -86,7 +86,9 @@ export const STATUTS_CONTRAT: Record<StatutContrat, DescriptionStatut> = {
     libelle: 'Résilié',
     ton: 'gris',
     message: 'Votre contrat est résilié. Vos anciens documents et factures restent consultables.',
-    actions: ['detail', 'genererFacture'],
+    // US-24, AC1 (décision BA, à valider PO) : sinistre déclarable moins de 2 ans après la date de fin (le raccourci
+    // le vérifie, comme le serveur, ReglesDeclaration). Même règle pour Impayé, Suspendu et Résiliation en cours.
+    actions: ['detail', 'genererFacture', 'declarerSinistre'],
   },
   RENONCE: {
     libelle: 'Renoncé',

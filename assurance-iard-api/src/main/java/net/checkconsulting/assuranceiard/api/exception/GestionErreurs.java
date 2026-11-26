@@ -127,6 +127,43 @@ public class GestionErreurs {
         return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
     }
 
+    /** US-24 : déclaration introuvable (ou brouillon expiré). */
+    @ExceptionHandler(SinistreInconnuException.class)
+    public ProblemDetail sinistreInconnu(SinistreInconnuException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.NOT_FOUND, exception.getMessage());
+    }
+
+    /** US-24, AC1 : contrat qui ne permet pas de déclarer en ligne. */
+    @ExceptionHandler(DeclarationImpossibleException.class)
+    public ProblemDetail declarationImpossible(DeclarationImpossibleException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
+    /** US-24 : réponse manquante ou invalide (message affiché tel quel). */
+    @ExceptionHandler(DeclarationInvalideException.class)
+    public ProblemDetail declarationInvalide(DeclarationInvalideException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_REQUEST, exception.getMessage());
+    }
+
+    /** US-24 : déclaration déjà envoyée. */
+    @ExceptionHandler(DeclarationDejaEnvoyeeException.class)
+    public ProblemDetail declarationDejaEnvoyee(DeclarationDejaEnvoyeeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.CONFLICT, exception.getMessage());
+    }
+
+    /** US-24, AC15 : pièce refusée (format, taille, nombre). */
+    @ExceptionHandler(PieceRefuseeException.class)
+    public ProblemDetail pieceRefusee(PieceRefuseeException exception) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_CONTENT, exception.getMessage());
+    }
+
+    /** US-24, AC16 : stockage des pièces indisponible. */
+    @ExceptionHandler(StockageIndisponibleException.class)
+    public ProblemDetail stockageIndisponible(StockageIndisponibleException exception) {
+        log.warn("Stockage des pièces jointes indisponible");
+        return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, exception.getMessage());
+    }
+
     @ExceptionHandler(MandatNonSigneException.class)
     public ProblemDetail mandatNonSigne(MandatNonSigneException exception) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.UNPROCESSABLE_ENTITY, exception.getMessage());

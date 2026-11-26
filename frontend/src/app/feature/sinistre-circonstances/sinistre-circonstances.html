@@ -1,0 +1,323 @@
+<section class="mes-devis" aria-labelledby="circonstances-titre">
+  <a [routerLink]="ADRESSE_SINISTRES">← Mes sinistres</a>
+  <h1 id="circonstances-titre" class="serif">Circonstances</h1>
+  <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+  <iard-etapes-sinistre [etape]="2" />
+
+  @if (declaration(); as d) {
+    <iard-bandeau-urgence
+      [numero]="d.numeroAssistance"
+      [produit]="d.contrat.produit"
+      [type]="d.type"
+      [gestes]="d.gestesUrgence"
+    />
+  }
+
+  @if (erreur(); as message) {
+    <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    <p><a [routerLink]="ADRESSE_SINISTRES">Retour à mes sinistres</a></p>
+  } @else if (declaration(); as d) {
+    @if (reponses(); as r) {
+      <p class="sinistre__intro">
+        {{ d.libelleType }} · {{ LIBELLES_PRODUIT[d.contrat.produit] }} {{ d.contrat.numero }}
+      </p>
+
+      <form class="formulaire" novalidate (submit)="$event.preventDefault(); suivant()">
+        <div class="devis-ligne formulaire">
+          <h2 class="serif">Quand et où ?</h2>
+          <div class="formulaire__ligne">
+            <div class="champ">
+              <label class="libelle" for="date-sinistre">Date du sinistre <span class="rouge">*</span></label>
+              <input
+                id="date-sinistre"
+                class="saisie"
+                type="date"
+                [max]="aujourdhui"
+                [value]="r.dateSurvenance ?? ''"
+                [class.saisie--erreur]="!!erreurs().dateSurvenance"
+                [attr.aria-describedby]="erreurs().dateSurvenance ? 'erreur-date' : null"
+                (change)="date('dateSurvenance', $event)"
+              />
+              @if (erreurs().dateSurvenance; as message) {
+                <p id="erreur-date" class="erreur">{{ message }}</p>
+              }
+            </div>
+            <div class="champ">
+              <label class="libelle" for="heure-sinistre">Heure (si vous la connaissez)</label>
+              <input
+                id="heure-sinistre"
+                class="saisie"
+                type="time"
+                [value]="r.heureSurvenance ?? ''"
+                (change)="date('heureSurvenance', $event)"
+              />
+            </div>
+          </div>
+          <div class="champ">
+            <label class="libelle" for="lieu-sinistre">Lieu <span class="rouge">*</span></label>
+            <input
+              id="lieu-sinistre"
+              class="saisie"
+              type="text"
+              maxlength="255"
+              placeholder="Adresse, ville, parking…"
+              [value]="r.lieu ?? ''"
+              [class.saisie--erreur]="!!erreurs().lieu"
+              (input)="texte('lieu', $event)"
+            />
+            @if (erreurs().lieu; as message) {
+              <p class="erreur">{{ message }}</p>
+            }
+          </div>
+          @if (d.type === 'CLIMATIQUE_CATNAT') {
+            <div class="champ">
+              <label class="libelle" for="date-arrete">
+                Date de publication de l’arrêté de catastrophe naturelle (si elle est connue)
+              </label>
+              <input
+                id="date-arrete"
+                class="saisie"
+                type="date"
+                [max]="aujourdhui"
+                [value]="r.dateArreteCatnat ?? ''"
+                (change)="date('dateArreteCatnat', $event)"
+              />
+              <p class="sinistre__note">Le délai de déclaration est de 30 jours après cette publication.</p>
+            </div>
+          }
+        </div>
+
+        <div class="devis-ligne formulaire">
+          <h2 class="serif">Que s’est-il passé ?</h2>
+          @if (d.type === AUTRE) {
+            <p class="sinistre__message" role="status">{{ MESSAGE_AUTRE }}</p>
+          }
+          <div class="champ">
+            <label class="libelle" for="description-sinistre">
+              Décrivez les faits <span class="rouge">*</span>
+            </label>
+            <textarea
+              id="description-sinistre"
+              class="saisie"
+              maxlength="4000"
+              [value]="r.description ?? ''"
+              [class.saisie--erreur]="!!erreurs().description"
+              (input)="texte('description', $event)"
+            ></textarea>
+            <p class="sinistre__note">N’indiquez aucune information médicale.</p>
+            @if (erreurs().description; as message) {
+              <p class="erreur">{{ message }}</p>
+            }
+          </div>
+
+          @for (question of questions(); track question.libelle; let q = $index) {
+            @if (question.genre === 'texte') {
+              <div class="champ">
+                <label class="libelle" [for]="'question-' + q">{{ question.libelle }}</label>
+                <input
+                  class="saisie"
+                  type="text"
+                  maxlength="500"
+                  [id]="'question-' + q"
+                  [value]="r.details[question.libelle] ?? ''"
+                  (input)="detail(question.libelle, $any($event.target).value)"
+                />
+              </div>
+            } @else {
+              <fieldset>
+                <legend>{{ question.libelle }}</legend>
+                <div class="radios">
+                  @for (option of question.options ?? ['Oui', 'Non']; track option) {
+                    <label>
+                      <input
+                        type="radio"
+                        [name]="'question-' + q"
+                        [checked]="r.details[question.libelle] === option"
+                        (change)="detail(question.libelle, option)"
+                      />
+                      {{ option }}
+                    </label>
+                  }
+                </div>
+              </fieldset>
+            }
+          }
+        </div>
+
+        <div class="devis-ligne formulaire">
+          <h2 class="serif">Les personnes concernées</h2>
+          <fieldset [attr.aria-describedby]="erreurs().tiersImplique ? 'erreur-tiers' : null">
+            <legend>Un tiers est-il impliqué ? <span class="rouge">*</span></legend>
+            <div class="radios">
+              <label>
+                <input type="radio" name="tiers" [checked]="r.tiersImplique === true" (change)="modifier('tiersImplique', true)" />
+                Oui
+              </label>
+              <label>
+                <input type="radio" name="tiers" [checked]="r.tiersImplique === false" (change)="modifier('tiersImplique', false)" />
+                Non
+              </label>
+            </div>
+            @if (erreurs().tiersImplique; as message) {
+              <p id="erreur-tiers" class="erreur">{{ message }}</p>
+            }
+          </fieldset>
+          @if (r.tiersImplique) {
+            <div class="formulaire__ligne">
+              <div class="champ">
+                <label class="libelle" for="tiers-nom">Nom du tiers (s’il est connu)</label>
+                <input id="tiers-nom" class="saisie" type="text" maxlength="100" [value]="r.tiers?.nom ?? ''" (input)="tiers('nom', $event)" />
+              </div>
+              @if (d.contrat.produit === 'AUTO') {
+                <div class="champ">
+                  <label class="libelle" for="tiers-immat">Immatriculation du tiers</label>
+                  <input id="tiers-immat" class="saisie" type="text" maxlength="100" [value]="r.tiers?.immatriculation ?? ''" (input)="tiers('immatriculation', $event)" />
+                </div>
+                <div class="champ">
+                  <label class="libelle" for="tiers-assureur">Assureur du tiers</label>
+                  <input id="tiers-assureur" class="saisie" type="text" maxlength="100" [value]="r.tiers?.assureur ?? ''" (input)="tiers('assureur', $event)" />
+                </div>
+              }
+            </div>
+          }
+
+          <fieldset [attr.aria-describedby]="erreurs().blesses ? 'erreur-blesses' : null">
+            <legend>Y a-t-il des blessés ? <span class="rouge">*</span></legend>
+            <div class="radios">
+              <label>
+                <input type="radio" name="blesses" [checked]="r.blesses === true" (change)="modifier('blesses', true)" />
+                Oui
+              </label>
+              <label>
+                <input type="radio" name="blesses" [checked]="r.blesses === false" (change)="modifier('blesses', false)" />
+                Non
+              </label>
+            </div>
+            @if (erreurs().blesses; as message) {
+              <p id="erreur-blesses" class="erreur">{{ message }}</p>
+            }
+          </fieldset>
+          @if (r.blesses) {
+            <p class="sinistre__message sinistre__message--attention" role="status">{{ MESSAGE_BLESSES }}</p>
+            <div class="champ">
+              <label class="libelle" for="nombre-blesses">Nombre de blessés <span class="rouge">*</span></label>
+              <input
+                id="nombre-blesses"
+                class="saisie"
+                type="number"
+                min="1"
+                max="99"
+                inputmode="numeric"
+                [value]="r.nombreBlesses ?? ''"
+                [class.saisie--erreur]="!!erreurs().nombreBlesses"
+                (input)="nombre($event)"
+              />
+              @if (erreurs().nombreBlesses; as message) {
+                <p class="erreur">{{ message }}</p>
+              }
+            </div>
+          }
+
+          <fieldset [attr.aria-describedby]="erreurs().declarant ? 'erreur-declarant' : null">
+            <legend>Qui déclare ce sinistre ? <span class="rouge">*</span></legend>
+            <div class="radios">
+              @for (choix of declarants(); track choix.valeur) {
+                <label>
+                  <input type="radio" name="declarant" [checked]="r.declarant === choix.valeur" (change)="declarant(choix.valeur)" />
+                  {{ choix.libelle }}
+                </label>
+              }
+            </div>
+            @if (erreurs().declarant; as message) {
+              <p id="erreur-declarant" class="erreur">{{ message }}</p>
+            }
+          </fieldset>
+          @if (pourUnAutre()) {
+            <div class="formulaire__ligne">
+              <div class="champ">
+                <label class="libelle" for="declarant-nom">Votre nom et prénom <span class="rouge">*</span></label>
+                <input
+                  id="declarant-nom"
+                  class="saisie"
+                  type="text"
+                  maxlength="100"
+                  [value]="r.declarantNom ?? ''"
+                  [class.saisie--erreur]="!!erreurs().declarantNom"
+                  (input)="texte('declarantNom', $event)"
+                />
+                @if (erreurs().declarantNom; as message) {
+                  <p class="erreur">{{ message }}</p>
+                }
+              </div>
+              <div class="champ">
+                <label class="libelle" for="declarant-lien">Votre lien avec l’assuré <span class="rouge">*</span></label>
+                <input
+                  id="declarant-lien"
+                  class="saisie"
+                  type="text"
+                  maxlength="100"
+                  placeholder="Conjoint, enfant, ami…"
+                  [value]="r.declarantLien ?? ''"
+                  [class.saisie--erreur]="!!erreurs().declarantLien"
+                  (input)="texte('declarantLien', $event)"
+                />
+                @if (erreurs().declarantLien; as message) {
+                  <p class="erreur">{{ message }}</p>
+                }
+              </div>
+            </div>
+            <p class="sinistre__note">{{ MESSAGE_POUR_UN_AUTRE }}</p>
+          }
+        </div>
+
+        @if (controles(); as c) {
+          <div class="devis-ligne formulaire" aria-live="polite">
+            @if (messageCouverture(); as message) {
+              <p class="sinistre__message sinistre__message--attention">{{ message }}</p>
+            }
+            @if (c.horsPeriodeContrat) {
+              <p class="sinistre__message sinistre__message--attention">{{ MESSAGE_HORS_PERIODE }}</p>
+            }
+            @if (c.horsDelai) {
+              <p class="sinistre__message">{{ messageDelai(c.delaiPrevu) }}</p>
+              <div class="champ">
+                <label class="libelle" for="explication-retard">
+                  Pourquoi déclarez-vous ce sinistre maintenant ? <span class="rouge">*</span>
+                </label>
+                <textarea
+                  id="explication-retard"
+                  class="saisie"
+                  maxlength="2000"
+                  [value]="r.explicationRetard ?? ''"
+                  [class.saisie--erreur]="!!erreurs().explicationRetard"
+                  (input)="texte('explicationRetard', $event)"
+                ></textarea>
+                @if (erreurs().explicationRetard; as message) {
+                  <p class="erreur">{{ message }}</p>
+                }
+              </div>
+            }
+            <p class="sinistre__note">{{ MESSAGE_CONTINUER }}</p>
+          </div>
+        }
+
+        @if (messageAction(); as message) {
+          <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+        }
+        @if (aDesErreurs()) {
+          <p class="mes-devis__erreur" role="alert">Complétez les réponses signalées pour continuer.</p>
+        }
+
+        <div class="sinistre__actions">
+          <button type="button" class="btn btn--contour" [disabled]="enCours()" (click)="precedent()">Précédent</button>
+          <button type="submit" class="btn" [disabled]="enCours()">Suivant</button>
+          <button type="button" class="btn btn--contour" [disabled]="enCours()" (click)="plusTard()">
+            Enregistrer et terminer plus tard
+          </button>
+        </div>
+      </form>
+    }
+  } @else {
+    <p>Chargement de votre déclaration…</p>
+  }
+</section>

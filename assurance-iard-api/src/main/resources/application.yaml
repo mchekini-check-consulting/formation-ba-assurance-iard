@@ -37,11 +37,11 @@ spring:
             enable: ${SMTP_TLS:false}
             required: ${SMTP_TLS:false}
 
-  # US-13 : le service contrôle les 5 Mo avec un message précis ;
+  # US-13 (5 Mo) et US-24 (10 Mo) : le service contrôle la taille avec un message précis ;
   # ces limites plus larges bloquent seulement les envois démesurés.
   servlet:
     multipart:
-      max-file-size: 6MB
+      max-file-size: 11MB
       max-request-size: 13MB
 
 # Une valeur refusée (téléphone, nom...) ne doit jamais finir dans les logs
@@ -117,6 +117,15 @@ assurance:
       "[assistance-depannage]": 0.09
       "[ASSISTANCE_0KM]": 0.09
       "[ASSISTANCE_PANNE]": 0.09
+
+  # US-24 : déclaration de sinistre.
+  sinistres:
+    # AC10 : numéro d'assistance 24h/24. PROVISOIRE, numéro fictif À VALIDER PAR LE PO.
+    numero-assistance: "01 23 45 67 89"
+    # RG6 : suppression des brouillons de plus de 30 jours (pièces jointes comprises).
+    purge:
+      intervalle: PT1H
+      delai-initial: PT2M
 
 moteur-tarifaire:
   url: ${MOTEUR_TARIFAIRE_URL:http://localhost:8081}

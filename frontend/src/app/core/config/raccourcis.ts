@@ -14,8 +14,10 @@ export const LIVRAISONS = {
   regenerer: true,
   /** US-22 : livrée (Mes factures, Générer une facture) */
   factures: true,
-  /** US-24 : Mes sinistres, Déclarer un sinistre */
-  sinistres: false,
+  /** US-24 : livrée (Mes sinistres, dans la barre latérale) */
+  sinistres: true,
+  /** US-24 : livrée (Déclarer un sinistre : tuile, raccourci des contrats ouverts à la déclaration) */
+  declarerSinistre: true,
   /** Page « Mon compte » (pas encore développée) */
   monCompte: false,
 };
@@ -31,7 +33,22 @@ export const ADRESSES: Partial<Record<keyof typeof LIVRAISONS, string>> = {
    * ouvre directement <adresse>/<numéro>/garanties.
    */
   modifierGaranties: '/espace-client/contrats',
+  /** US-24 : dossiers et brouillons. */
+  sinistres: '/espace-client/sinistres',
+  /** US-24 : étape 1 de la déclaration ; le raccourci d'un contrat ajoute ?contrat=<numéro>. */
+  declarerSinistre: '/espace-client/sinistres/declarer',
 };
+
+/** US-24, AC1 : un contrat résilié reste ouvert à la déclaration 2 ans après sa date de fin. */
+export const ANNEES_DECLARATION_APRES_RESILIATION = 2;
+
+/** US-24, AC1 (décision BA) : même règle que le serveur (ReglesDeclaration.declarable). */
+export function resilieDepuisMoinsDe2Ans(dateFin: string | null | undefined, aujourdhui = new Date()): boolean {
+  if (!dateFin) return false;
+  const limite = new Date(aujourdhui);
+  limite.setFullYear(limite.getFullYear() - ANNEES_DECLARATION_APRES_RESILIATION);
+  return new Date(`${dateFin}T00:00:00`) > limite;
+}
 
 /** US-23 : écrans de l'avenant, sous la fiche du contrat. */
 export const CHEMIN_GARANTIES = 'garanties';
@@ -42,7 +59,8 @@ export const CHEMIN_AVENANT_ACCEPTE = 'avenant-accepte';
 export const ANCRE_VERSIONS = 'versions';
 
 /** Ce dont les raccourcis ont besoin d'un contrat (résumé ou fiche). */
-export type ContratRaccourcis = Pick<ContratResume, 'numero' | 'produit' | 'statut' | 'referenceDevis'>;
+export type ContratRaccourcis = Pick<ContratResume, 'numero' | 'produit' | 'statut' | 'referenceDevis'> &
+  Partial<Pick<ContratResume, 'dateFin'>>;
 
 export interface Lien {
   commandes: string[];
@@ -116,7 +134,18 @@ export const RACCOURCIS: Record<
     lien: (contrat) =>
       ADRESSES.factures ? { commandes: [ADRESSES.factures], fragment: `contrat-${contrat.numero}` } : null,
   },
-  declarerSinistre: { libelle: 'Déclarer un sinistre', livre: LIVRAISONS.sinistres, produits: ['HABITATION', 'AUTO'] },
+  declarerSinistre: {
+    libelle: 'Déclarer un sinistre',
+    livre: LIVRAISONS.declarerSinistre,
+    produits: ['HABITATION', 'AUTO'],
+    // US-24, AC1 : ouvre l'étape 1 sur ce contrat (le client l'a choisi) ; un contrat résilié depuis 2 ans ou plus
+    // n'a pas ce raccourci.
+    lien: (contrat) => {
+      if (!ADRESSES.declarerSinistre) return null;
+      if (contrat.statut === 'RESILIE' && !resilieDepuisMoinsDe2Ans(contrat.dateFin)) return null;
+      return { commandes: [ADRESSES.declarerSinistre], parametres: { contrat: contrat.numero } };
+    },
+  },
 };
 
 /** Raccourcis affichés : fonction livrée, permise par le statut (RG3) et par le produit, avec une adresse. */
@@ -170,7 +199,7 @@ export function navigationClient(
 /** « Que voulez-vous faire ? » : tuiles des fonctions livrées ; « Faire un nouveau devis » est toujours disponible. */
 export function tuiles(livraisons = LIVRAISONS, adresses = ADRESSES): Entree[] {
   return [
-    ...siLivree('sinistres', 'Déclarer un sinistre', livraisons, adresses),
+    ...siLivree('declarerSinistre', 'Déclarer un sinistre', livraisons, adresses),
     ...siLivree('modifierGaranties', 'Modifier mes garanties', livraisons, adresses),
     ...siLivree('factures', 'Mes factures', livraisons, adresses),
     // Page d'accueil : elle propose le devis habitation et le devis auto (US-26).

@@ -1,0 +1,47 @@
+<section class="mes-devis" aria-labelledby="envoye-titre">
+  @if (erreur(); as message) {
+    <h1 id="envoye-titre" class="serif">Déclaration de sinistre</h1>
+    <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    <p><a [routerLink]="ADRESSE_SINISTRES">Retour à mes sinistres</a></p>
+  } @else if (declaration(); as d) {
+    <h1 id="envoye-titre" class="serif">
+      @if (d.prenom) {
+        Merci {{ formaterNomPropre(d.prenom) }}, votre déclaration est envoyée
+      } @else {
+        Votre déclaration est envoyée
+      }
+    </h1>
+    <div class="devis-ligne">
+      <p class="sinistre__succes" role="status">Dossier {{ d.numero }} · Déclaré</p>
+      <p>
+        {{ d.libelleType }}, contrat {{ d.contrat.numero }}, déclaré le {{ dateFrancaise(d.declareLe) }}.
+      </p>
+      @if (envoi()?.emailEnvoye === false) {
+        <p class="sinistre__message">
+          L’accusé de réception n’a pas pu vous être envoyé par e-mail. Votre dossier est bien enregistré.
+        </p>
+      } @else {
+        <p>Un accusé de réception vous est envoyé par e-mail.</p>
+      }
+    </div>
+
+    <div class="devis-ligne">
+      <h2 class="serif">Les prochaines étapes</h2>
+      <ol>
+        @for (etape of PROCHAINES_ETAPES; track etape) {
+          <li>{{ etape }}</li>
+        }
+      </ol>
+      @if (d.piecesManquantes) {
+        <p class="sinistre__message sinistre__message--attention">
+          Des justificatifs obligatoires manquent encore : déposez-les dès que possible pour accélérer votre dossier.
+        </p>
+        <p><a class="btn" [routerLink]="[ADRESSE_SINISTRES, d.id, 'justificatifs']">Compléter mes justificatifs</a></p>
+      }
+    </div>
+
+    <p><a class="btn btn--contour" [routerLink]="ADRESSE_SINISTRES">Voir mes sinistres</a></p>
+  } @else {
+    <p>Chargement…</p>
+  }
+</section>

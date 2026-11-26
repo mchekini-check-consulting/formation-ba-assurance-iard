@@ -10,7 +10,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-/** T-05 : pièce jointe d'un sinistre (PDF, JPG ou PNG, 5 Mo maximum). */
+/** T-05 / US-24 : pièce jointe d'un sinistre (PDF, JPG ou PNG, 10 Mo maximum ; contenu en base, SHA-256). */
 @Entity
 @Table(name = "piece_jointe")
 @Getter
@@ -45,4 +45,7 @@ public class PieceJointe extends EntiteHorodatee {
 
     @Column(name = "motif_refus", length = 255)
     private String motifRefus;
+
+    @Column(name = "empreinte", length = 64)
+    private String empreinte;
 }

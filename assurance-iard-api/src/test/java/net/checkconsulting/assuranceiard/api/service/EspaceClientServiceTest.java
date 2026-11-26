@@ -199,12 +199,18 @@ class EspaceClientServiceTest {
         when(documents.findAllById(List.of(100L, 101L))).thenReturn(List.of(unDocument(100L, true),
                 unDocument(101L, false)));
         Sinistre declare = new Sinistre();
+        declare.setId(7L);
         declare.setNumero("SIN-1");
+        declare.setStatut("DECLARE");
         declare.setContratId(1L);
         declare.setType("DEGAT_EAUX");
         declare.setDateSurvenance(LocalDate.of(2026, 11, 14));
-        when(sinistres.findByContratIdInAndStatutOrderByDateSurvenanceDescIdDesc(anyCollection(), eq("DECLARE")))
-                .thenReturn(List.of(declare));
+        // US-24, AC8 : un brouillon non expiré est aussi affiché (à reprendre).
+        Sinistre brouillon = new Sinistre();
+        brouillon.setId(8L);
+        brouillon.setContratId(3L);
+        brouillon.setType("VOL");
+        when(sinistres.visibles(anyCollection(), any())).thenReturn(List.of(declare, brouillon));
 
         TableauDeBordResponse tableau = service.tableauDeBord(JETON);
 
@@ -224,8 +230,10 @@ class EspaceClientServiceTest {
                         org.assertj.core.groups.Tuple.tuple("AE-RECETTE-A03", null),
                         org.assertj.core.groups.Tuple.tuple("AE-RECETTE-A03", null));
         assertThat(tableau.sinistresVisibles()).isTrue();
-        assertThat(tableau.sinistres()).containsExactly(new TableauDeBordResponse.Sinistre("SIN-1", "AE-RECETTE-1",
-                "DEGAT_EAUX", LocalDate.of(2026, 11, 14), null));
+        assertThat(tableau.sinistres()).containsExactly(
+                new TableauDeBordResponse.Sinistre(7L, "SIN-1", "DECLARE", "AE-RECETTE-1", "DEGAT_EAUX",
+                        LocalDate.of(2026, 11, 14), null, 1),
+                new TableauDeBordResponse.Sinistre(8L, null, "BROUILLON", "AE-RECETTE-A03", "VOL", null, null, 1));
     }
 
     @Test

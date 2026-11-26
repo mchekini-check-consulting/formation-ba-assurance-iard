@@ -1,6 +1,14 @@
 import { ContratResume, StatutContrat } from '../model/contrat';
 import { CONTRAT_AUTO } from '../model/contrat.exemples';
-import { LIVRAISONS, RACCOURCIS, adresseSiLivree, navigationClient, raccourcisDuContrat, tuiles } from './raccourcis';
+import {
+  LIVRAISONS,
+  RACCOURCIS,
+  adresseSiLivree,
+  navigationClient,
+  raccourcisDuContrat,
+  resilieDepuisMoinsDe2Ans,
+  tuiles,
+} from './raccourcis';
 
 const contrat = (statut: StatutContrat, produit: 'HABITATION' | 'AUTO' = 'HABITATION'): ContratResume => ({
   ...CONTRAT_AUTO,
@@ -14,11 +22,17 @@ const actions = (c: ContratResume, reglage = RACCOURCIS): string[] =>
   raccourcisDuContrat(c, reglage).map((r) => r.action);
 
 describe('raccourcis du contrat (US-18, AC2)', () => {
-  it('masque les fonctions pas encore livrées', () => {
-    expect(actions(contrat('ACTIF'))).toEqual(['detail', 'modifierGaranties', 'regenerer', 'genererFacture']);
+  it('affiche les fonctions livrées (US-24 : Déclarer un sinistre est livrée)', () => {
+    expect(actions(contrat('ACTIF'))).toEqual([
+      'detail',
+      'modifierGaranties',
+      'regenerer',
+      'genererFacture',
+      'declarerSinistre',
+    ]);
     expect(RACCOURCIS.modifierGaranties.livre).toBe(true);
     expect(RACCOURCIS.genererFacture.livre).toBe(true);
-    expect(RACCOURCIS.declarerSinistre.livre).toBe(false);
+    expect(RACCOURCIS.declarerSinistre.livre).toBe(true);
   });
 
   it('US-23, AC6 : « Modifier mes garanties » seulement pour un contrat Actif, vers ses garanties', () => {
@@ -59,11 +73,11 @@ describe('raccourcis du contrat (US-18, AC2)', () => {
       'genererFacture',
       'declarerSinistre',
     ]);
-    expect(actions(contrat('RESILIE'), reglage)).toEqual(['detail', 'genererFacture']);
+    expect(actions(contrat('RENONCE'), reglage)).toEqual(['detail', 'genererFacture']);
   });
 
   it('une fonction livrée sans adresse reste masquée', () => {
-    const reglage = { ...RACCOURCIS, declarerSinistre: { ...RACCOURCIS.declarerSinistre, livre: true } };
+    const reglage = { ...RACCOURCIS, declarerSinistre: { ...RACCOURCIS.declarerSinistre, lien: undefined } };
     expect(actions(contrat('ACTIF'), reglage)).toEqual(['detail', 'modifierGaranties', 'regenerer', 'genererFacture']);
   });
 
@@ -108,22 +122,34 @@ describe('US-21 : raccourci « Régénérer mon contrat »', () => {
 
 describe('navigation et tuiles (US-18, maquette)', () => {
   const tout = { ...LIVRAISONS, factures: true, sinistres: true, monCompte: true, modifierGaranties: true };
-  const adresses = { factures: '/espace-client/factures', sinistres: '/espace-client/sinistres', monCompte: '/compte', modifierGaranties: '/garanties' };
+  const adresses = {
+    factures: '/espace-client/factures',
+    sinistres: '/espace-client/sinistres',
+    declarerSinistre: '/espace-client/sinistres/declarer',
+    monCompte: '/compte',
+    modifierGaranties: '/garanties',
+  };
 
-  it('masque Mes sinistres et Mon compte tant que leurs US ne sont pas livrées ; US-22 : Mes factures est livrée', () => {
+  it('masque Mon compte tant que son US n’est pas livrée ; US-22 et US-24 : Mes factures et Mes sinistres sont livrées', () => {
     expect(navigationClient().map((e) => e.libelle)).toEqual([
       'Tableau de bord',
       'Mes contrats',
       'Mes devis',
       'Mes documents',
       'Mes factures',
+      'Mes sinistres',
     ]);
     expect(navigationClient().find((e) => e.libelle === 'Mes factures')).toEqual({
       libelle: 'Mes factures',
       adresse: '/espace-client/factures',
       rubrique: 'CONTRATS',
     });
-    expect(LIVRAISONS.sinistres || LIVRAISONS.monCompte).toBe(false);
+    expect(navigationClient().find((e) => e.libelle === 'Mes sinistres')).toEqual({
+      libelle: 'Mes sinistres',
+      adresse: '/espace-client/sinistres',
+      rubrique: 'SINISTRES',
+    });
+    expect(LIVRAISONS.monCompte).toBe(false);
   });
 
   it('affiche les liens dans l’ordre de la maquette une fois livrés', () => {
@@ -146,8 +172,15 @@ describe('navigation et tuiles (US-18, maquette)', () => {
 
   it('« Faire un nouveau devis » est toujours proposé, les autres tuiles selon les livraisons', () => {
     // US-23 : « Modifier mes garanties » ouvre Mes contrats (choix du contrat).
-    expect(tuiles().map((t) => t.libelle)).toEqual(['Modifier mes garanties', 'Mes factures', 'Faire un nouveau devis']);
+    expect(tuiles().map((t) => t.libelle)).toEqual([
+      'Déclarer un sinistre',
+      'Modifier mes garanties',
+      'Mes factures',
+      'Faire un nouveau devis',
+    ]);
     expect(tuiles().find((t) => t.libelle === 'Modifier mes garanties')?.adresse).toBe('/espace-client/contrats');
+    // US-24 : la tuile ouvre l'étape 1 de la déclaration.
+    expect(tuiles().find((t) => t.libelle === 'Déclarer un sinistre')?.adresse).toBe('/espace-client/sinistres/declarer');
     expect(tuiles(tout, adresses).map((t) => t.libelle)).toEqual([
       'Déclarer un sinistre',
       'Modifier mes garanties',
@@ -159,7 +192,7 @@ describe('navigation et tuiles (US-18, maquette)', () => {
 
   it('les raccourcis de contrat suivent le même réglage', () => {
     expect(RACCOURCIS.genererFacture.livre).toBe(LIVRAISONS.factures);
-    expect(RACCOURCIS.declarerSinistre.livre).toBe(LIVRAISONS.sinistres);
+    expect(RACCOURCIS.declarerSinistre.livre).toBe(LIVRAISONS.declarerSinistre);
     expect(RACCOURCIS.detail.libelle).toBe('Voir mon contrat');
   });
 });
@@ -192,5 +225,46 @@ describe('US-22 : raccourci « Générer une facture » et lien « Voir mes fact
   it('sans adresse, le raccourci est masqué', () => {
     const reglage = { ...RACCOURCIS, genererFacture: { ...RACCOURCIS.genererFacture, lien: () => null } };
     expect(actions(contrat('ACTIF'), reglage)).not.toContain('genererFacture');
+  });
+});
+
+describe('US-24 : raccourci « Déclarer un sinistre »', () => {
+  const aujourdhui = new Date('2026-11-26T12:00:00');
+
+  it('AC1 : ouvre l’étape 1 sur ce contrat, choisi par le client', () => {
+    const declarer = raccourcisDuContrat(contrat('ACTIF', 'AUTO')).find((r) => r.action === 'declarerSinistre');
+    expect(declarer?.libelle).toBe('Déclarer un sinistre');
+    expect(declarer?.lien).toEqual({ commandes: ['/espace-client/sinistres/declarer'], parametres: { contrat: 'AE-1' } });
+  });
+
+  it('AC1 : proposé pour les contrats Actif, Impayé, Suspendu, Résiliation en cours, avenant ou justificatifs attendus', () => {
+    for (const statut of [
+      'ACTIF',
+      'ACTIF_JUSTIFICATIFS_ATTENDUS',
+      'AVENANT_EN_ATTENTE',
+      'IMPAYE',
+      'SUSPENDU',
+      'RESILIATION_EN_COURS',
+    ] as const) {
+      expect(actions(contrat(statut))).toContain('declarerSinistre');
+    }
+    for (const statut of ['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'RENONCE'] as const) {
+      expect(actions(contrat(statut))).not.toContain('declarerSinistre');
+    }
+  });
+
+  it('AC1 : un contrat résilié l’est encore moins de 2 ans après sa date de fin', () => {
+    const recent = new Date();
+    recent.setMonth(recent.getMonth() - 3);
+    const dateFin = recent.toISOString().slice(0, 10);
+    expect(actions({ ...contrat('RESILIE'), dateFin })).toContain('declarerSinistre');
+    expect(actions({ ...contrat('RESILIE'), dateFin: '2020-01-31' })).not.toContain('declarerSinistre');
+    expect(actions({ ...contrat('RESILIE'), dateFin: null })).not.toContain('declarerSinistre');
+  });
+
+  it('règle des 2 ans, comme le serveur', () => {
+    expect(resilieDepuisMoinsDe2Ans('2024-11-27', aujourdhui)).toBe(true);
+    expect(resilieDepuisMoinsDe2Ans('2024-11-25', aujourdhui)).toBe(false);
+    expect(resilieDepuisMoinsDe2Ans(undefined, aujourdhui)).toBe(false);
   });
 });

@@ -40,7 +40,10 @@ describe('statuts du contrat (US-18, RG3 et AC5)', () => {
     expect(STATUTS_CONTRAT.AVENANT_EN_ATTENTE.actions).toContain('relireAvenant');
     expect(STATUTS_CONTRAT.AVENANT_EN_ATTENTE.message).toContain('conditions actuelles');
     expect(STATUTS_CONTRAT.SUSPENDU.actions).not.toContain('regenerer');
-    expect(STATUTS_CONTRAT.RESILIE.actions).not.toContain('declarerSinistre');
+    // US-24, AC1 (décision BA) : un contrat résilié depuis moins de 2 ans reste ouvert à la déclaration.
+    expect(STATUTS_CONTRAT.RESILIE.actions).toContain('declarerSinistre');
+    expect(STATUTS_CONTRAT.EN_ATTENTE_EFFET.actions).not.toContain('declarerSinistre');
+    expect(STATUTS_CONTRAT.RENONCE.actions).not.toContain('declarerSinistre');
     // US-22 : un contrat renoncé garde ses factures des périodes antérieures (décision BA).
     expect(STATUTS_CONTRAT.RENONCE.actions).toEqual(['detail', 'genererFacture']);
     expect(STATUTS_CONTRAT.EN_ATTENTE_DE_SIGNATURE.actions).not.toContain('genererFacture');

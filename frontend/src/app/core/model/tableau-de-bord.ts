@@ -32,11 +32,17 @@ export interface FactureResume {
 }
 
 export interface SinistreResume {
+  /** US-24 : identifiant du dossier ou du brouillon (« Reprendre »). */
+  id: number;
   numero: string | null;
+  /** US-24, AC8 : DECLARE, ou BROUILLON pas encore expiré. */
+  statut: 'DECLARE' | 'BROUILLON';
   numeroContrat: string;
   type: string;
-  dateSurvenance: string;
+  dateSurvenance: string | null;
   declareLe: string | null;
+  /** US-24 : étape où reprendre un brouillon. */
+  etape: number;
 }
 
 const LIBELLES_SINISTRE: Record<string, string> = {
@@ -47,12 +53,17 @@ const LIBELLES_SINISTRE: Record<string, string> = {
   ACCIDENT_TIERS: 'Accident avec un tiers',
   ACCIDENT_SANS_TIERS: 'Accident sans tiers',
   CLIMATIQUE_CATNAT: 'Événement climatique ou catastrophe naturelle',
-  AUTRE: 'Autre',
+  // US-24 : types habitation.
+  VOL_CAMBRIOLAGE: 'Vol ou cambriolage',
+  RC_TIERS: 'Dommage causé à un tiers',
+  AUTRE: 'Autre / je ne sais pas',
 };
 
 export function libelleSinistre(type: string): string {
   return LIBELLES_SINISTRE[type] ?? type;
 }
 
-/** Statut d'un sinistre affiché (les brouillons ne sont jamais renvoyés par le serveur). */
+/** Statut d'un sinistre affiché. */
 export const LIBELLE_SINISTRE_DECLARE = 'Déclaré';
+/** US-24, AC8 : un brouillon pas encore expiré, à reprendre. */
+export const LIBELLE_SINISTRE_BROUILLON = 'Brouillon';

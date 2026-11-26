@@ -1,0 +1,60 @@
+<section class="mes-devis" aria-labelledby="mes-sinistres-titre">
+  <h1 id="mes-sinistres-titre" class="serif">Mes sinistres</h1>
+  <div class="sinistre__actions">
+    <a class="btn" [routerLink]="ADRESSE_DECLARER">Déclarer un sinistre</a>
+  </div>
+
+  @if (message(); as texte) {
+    <p class="sinistre__succes" role="status">{{ texte }}</p>
+  }
+
+  @if (erreur(); as texte) {
+    <p class="mes-devis__erreur" role="alert">{{ texte }}</p>
+  } @else if (liste(); as sinistres) {
+    @if (sinistres.length === 0) {
+      <p>Vous n’avez déclaré aucun sinistre.</p>
+    } @else {
+      <ul class="mes-devis__liste">
+        @for (sinistre of sinistres; track sinistre.id) {
+          <li class="devis-ligne">
+            <div class="devis-ligne__entete">
+              <h2>{{ sinistre.libelleType }}</h2>
+              @if (sinistre.statut === 'BROUILLON') {
+                <span class="badge-brouillon">Brouillon</span>
+              } @else {
+                <span class="badge-brouillon">Déclaré</span>
+              }
+            </div>
+            <p>
+              {{ LIBELLES_PRODUIT[sinistre.produit] }} {{ sinistre.numeroContrat }}
+              @if (sinistre.numero) {
+                · Dossier {{ sinistre.numero }}
+              }
+              @if (sinistre.dateSurvenance) {
+                · survenu le {{ jourFrancais(sinistre.dateSurvenance) }}
+              }
+            </p>
+            @if (sinistre.statut === 'BROUILLON') {
+              <p class="sinistre__note">
+                Brouillon sans valeur de déclaration, conservé jusqu’au {{ dateFrancaise(sinistre.brouillonExpireLe) }}.
+              </p>
+              <div class="sinistre__actions">
+                <a class="btn" [routerLink]="lienReprise(sinistre)">Reprendre</a>
+              </div>
+            } @else {
+              <p class="sinistre__note">Déclaré le {{ dateFrancaise(sinistre.declareLe) }}.</p>
+              @if (sinistre.piecesManquantes) {
+                <p class="sinistre__message">Des justificatifs obligatoires restent à déposer.</p>
+                <div class="sinistre__actions">
+                  <a class="btn btn--contour" [routerLink]="lienReprise(sinistre)">Compléter mes justificatifs</a>
+                </div>
+              }
+            }
+          </li>
+        }
+      </ul>
+    }
+  } @else {
+    <p>Chargement de vos sinistres…</p>
+  }
+</section>

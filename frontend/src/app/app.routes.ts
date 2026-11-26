@@ -86,6 +86,50 @@ export const routes: Routes = [
         title: "Mes factures – Assur'Easy",
       },
       {
+        // US-24 : dossiers déclarés et brouillons (AC8).
+        path: 'sinistres',
+        loadComponent: () => import('./feature/mes-sinistres/mes-sinistres').then((m) => m.MesSinistres),
+        canActivate: [droitGuard('SINISTRES', 'CONSULTER')],
+        title: "Mes sinistres – Assur'Easy",
+      },
+      {
+        // US-24, étape 1 : contrat et type (AC1, AC2) ; ?contrat=<numéro> depuis le raccourci d'un contrat.
+        path: 'sinistres/declarer',
+        loadComponent: () => import('./feature/declarer-sinistre/declarer-sinistre').then((m) => m.DeclarerSinistre),
+        canActivate: [droitGuard('SINISTRES', 'CREER')],
+        title: "Déclarer un sinistre – Assur'Easy",
+      },
+      {
+        // US-24, étape 1 d'un brouillon (AC8).
+        path: 'sinistres/:id/type',
+        loadComponent: () => import('./feature/declarer-sinistre/declarer-sinistre').then((m) => m.DeclarerSinistre),
+        canActivate: [droitGuard('SINISTRES', 'CREER')],
+        title: "Déclarer un sinistre – Assur'Easy",
+      },
+      {
+        // US-24, étape 2 (AC4 à AC6, AC11 à AC13).
+        path: 'sinistres/:id/circonstances',
+        loadComponent: () =>
+          import('./feature/sinistre-circonstances/sinistre-circonstances').then((m) => m.SinistreCirconstances),
+        canActivate: [droitGuard('SINISTRES', 'CREER')],
+        title: "Circonstances du sinistre – Assur'Easy",
+      },
+      {
+        // US-24, étape 3 (AC7, AC9, AC14 à AC16) ; dossier envoyé : compléter ses justificatifs.
+        path: 'sinistres/:id/justificatifs',
+        loadComponent: () =>
+          import('./feature/sinistre-justificatifs/sinistre-justificatifs').then((m) => m.SinistreJustificatifs),
+        canActivate: [droitGuard('SINISTRES', 'CREER')],
+        title: "Justificatifs du sinistre – Assur'Easy",
+      },
+      {
+        // US-24, AC9 : « Déclaration envoyée ».
+        path: 'sinistres/:id/envoyee',
+        loadComponent: () => import('./feature/sinistre-envoye/sinistre-envoye').then((m) => m.SinistreEnvoyePage),
+        canActivate: [droitGuard('SINISTRES', 'CONSULTER')],
+        title: "Déclaration envoyée – Assur'Easy",
+      },
+      {
         path: 'documents',
         loadComponent: () => import('./feature/mes-documents/mes-documents').then((m) => m.MesDocuments),
         canActivate: [droitGuard('DOCUMENTS', 'CONSULTER')],

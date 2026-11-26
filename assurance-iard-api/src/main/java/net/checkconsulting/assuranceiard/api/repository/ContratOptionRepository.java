@@ -17,6 +17,16 @@ public interface ContratOptionRepository extends JpaRepository<ContratOption, Lo
             ORDER BY o.id""")
     List<ContratOption> enCours(@Param("contratId") Long contratId, @Param("date") LocalDate date);
 
+    /**
+     * US-24, RG4 : options en vigueur à cette date (souscrites au plus tard ce jour-là et pas encore retirées), y
+     * compris celles ajoutées ou retirées par un avenant d'US-23.
+     */
+    @Query("""
+            SELECT o FROM ContratOption o
+            WHERE o.contratId = :contratId AND o.dateDebut <= :date AND (o.dateFin IS NULL OR o.dateFin >= :date)
+            ORDER BY o.id""")
+    List<ContratOption> aLaDate(@Param("contratId") Long contratId, @Param("date") LocalDate date);
+
     /** US-23 : vrai si les options du contrat sont déjà enregistrées (sinon, contrat du sprint 1 : celles du devis). */
     boolean existsByContratId(Long contratId);
 }

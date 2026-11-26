@@ -133,9 +133,18 @@
                         @if (sinistre.numero) {
                           Sinistre {{ sinistre.numero }} ·
                         }
-                        survenu le {{ formaterDate(sinistre.dateSurvenance) }}
+                        @if (sinistre.dateSurvenance) {
+                          survenu le {{ formaterDate(sinistre.dateSurvenance) }}
+                        } @else {
+                          déclaration commencée
+                        }
                       </p>
-                      <span class="badge-sinistre">{{ LIBELLE_SINISTRE_DECLARE }}</span>
+                      @if (sinistre.statut === 'BROUILLON') {
+                        <span class="badge-sinistre">{{ LIBELLE_SINISTRE_BROUILLON }}</span>
+                        <a [routerLink]="lienReprise(sinistre)">Reprendre ma déclaration</a>
+                      } @else {
+                        <span class="badge-sinistre">{{ LIBELLE_SINISTRE_DECLARE }}</span>
+                      }
                     </li>
                   }
                 </ul>

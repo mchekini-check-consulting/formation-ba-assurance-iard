@@ -108,6 +108,24 @@ describe('règle : les pages de la barre latérale s’affichent dans le cadre c
     expect(chemin!.route.canActivate?.length).toBeGreaterThan(0);
   });
 
+  it.each([
+    ['Mes sinistres', '/espace-client/sinistres'],
+    ['Déclarer – 1 Que s’est-il passé ?', '/espace-client/sinistres/declarer'],
+    ['Déclarer – 1 (brouillon)', '/espace-client/sinistres/42/type'],
+    ['Déclarer – 2 Circonstances', '/espace-client/sinistres/42/circonstances'],
+    ['Déclarer – 3 Justificatifs et récapitulatif', '/espace-client/sinistres/42/justificatifs'],
+    ['Déclaration envoyée', '/espace-client/sinistres/42/envoyee'],
+  ])('US-24 : « %s » (%s) s’affiche dans le cadre, avec la barre latérale', async (_libelle, adresse) => {
+    const chemin = routeDe(adresse);
+    expect(chemin, `aucune route pour ${adresse}`).toBeDefined();
+    expect(await dansLeCadre(chemin!)).toBe(true);
+    expect(chemin!.route.canActivate?.length).toBeGreaterThan(0);
+  });
+
+  it('US-24 : « Mes sinistres » est dans la barre latérale (livrée)', () => {
+    expect(navigationClient().map((entree) => entree.adresse)).toContain('/espace-client/sinistres');
+  });
+
   it('les gardes de droits sont conservées sur chaque page (US-04)', () => {
     const pages = aplatir(routes).filter(
       (chemin) => /^(espace-client|back-office|admin)\//.test(chemin.adresse + '/') && chemin.parents.length > 0,
