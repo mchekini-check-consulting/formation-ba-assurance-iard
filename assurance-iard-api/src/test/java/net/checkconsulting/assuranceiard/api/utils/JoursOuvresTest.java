@@ -25,6 +25,22 @@ class JoursOuvresTest {
     }
 
     @Test
+    void lundiDePaquesEtNoelSontReconnusCommeFeriesMemeEnSemaine() {
+        // Lundi de Pâques 2026 (06/04) et 25/12/2026 (un vendredi) : jours de semaine, mais fériés.
+        LocalDate lundiDePaques = LocalDate.of(2026, 4, 6);
+        LocalDate noel = LocalDate.of(2026, 12, 25);
+        assertThat(lundiDePaques.getDayOfWeek()).isEqualTo(java.time.DayOfWeek.MONDAY);
+        assertThat(noel.getDayOfWeek()).isEqualTo(java.time.DayOfWeek.FRIDAY);
+        assertThat(JoursOuvres.estFerie(lundiDePaques)).isTrue();
+        assertThat(JoursOuvres.estFerie(noel)).isTrue();
+        assertThat(JoursOuvres.estOuvre(lundiDePaques)).isFalse();
+        assertThat(JoursOuvres.estOuvre(noel)).isFalse();
+        // Les veilles et lendemains ordinaires restent ouvrés.
+        assertThat(JoursOuvres.estOuvre(LocalDate.of(2026, 4, 7))).isTrue();
+        assertThat(JoursOuvres.estOuvre(LocalDate.of(2026, 12, 24))).isTrue();
+    }
+
+    @Test
     void unJourOrdinaireEstOuvreSaufLeWeekEnd() {
         assertThat(JoursOuvres.estOuvre(LocalDate.of(2026, 11, 26))).isTrue();
         assertThat(JoursOuvres.estOuvre(LocalDate.of(2026, 11, 28))).isFalse();

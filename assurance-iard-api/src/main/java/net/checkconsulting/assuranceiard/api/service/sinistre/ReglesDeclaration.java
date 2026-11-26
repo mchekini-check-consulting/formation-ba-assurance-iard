@@ -22,10 +22,10 @@ import net.checkconsulting.assuranceiard.api.utils.JoursOuvres;
  */
 public final class ReglesDeclaration {
 
+    static final String RESILIE = "RESILIE";
     /** AC1 : statuts qui permettent de déclarer (RESILIE : moins de 2 ans après la date de fin). */
     public static final Set<String> STATUTS_DECLARABLES = Set.of("ACTIF", "ACTIF_JUSTIFICATIFS_ATTENDUS",
-            "AVENANT_EN_ATTENTE", "IMPAYE", "SUSPENDU", "RESILIATION_EN_COURS", "RESILIE");
-    static final String RESILIE = "RESILIE";
+            "AVENANT_EN_ATTENTE", "IMPAYE", "SUSPENDU", "RESILIATION_EN_COURS", RESILIE);
     static final int ANNEES_APRES_RESILIATION = 2;
 
     private ReglesDeclaration() {

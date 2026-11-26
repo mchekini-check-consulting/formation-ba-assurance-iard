@@ -107,6 +107,35 @@ class SmtpEnvoiSinistreTest {
                 .doesNotContain(SANTE.stream().map(mot -> mot.toLowerCase(Locale.ROOT)).toList()));
     }
 
+    private static int occurrences(String texte, String mot) {
+        return texte.split(java.util.regex.Pattern.quote(mot), -1).length - 1;
+    }
+
+    @Test
+    void recetteUneSeuleFoisVotreEspaceClientDansChaqueEMailTexteEtHtml() {
+        String lien = "https://frontend.exemple.test/espace-client/sinistres";
+        String texteAccuse = SmtpEnvoiSinistre.texteAccuse(DOSSIER, lien);
+        String htmlAccuse = org.springframework.web.util.HtmlUtils.htmlUnescape(SmtpEnvoiSinistre.htmlAccuse(DOSSIER, lien));
+        String texteInformation = SmtpEnvoiSinistre.texteInformation(PAR_UN_PROCHE, lien);
+        String htmlInformation = org.springframework.web.util.HtmlUtils.htmlUnescape(
+                SmtpEnvoiSinistre.htmlInformation(PAR_UN_PROCHE, lien));
+
+        assertThat(texteAccuse).contains("Vous suivez son avancement dans « Mes sinistres » de votre espace client : "
+                + lien);
+        assertThat(htmlAccuse).contains("Vous suivez son avancement dans « Mes sinistres » de <a href=\"" + lien
+                + "\" style=\"color:#A82B27;\">votre espace client</a>.");
+        assertThat(texteInformation).contains("Votre dossier est dans « Mes sinistres » de votre espace client : "
+                + lien);
+        assertThat(htmlInformation).contains("Votre dossier est dans « Mes sinistres » de <a href=\"" + lien
+                + "\" style=\"color:#A82B27;\">votre espace client</a>.");
+        for (String courriel : List.of(texteAccuse, htmlAccuse, texteInformation, htmlInformation)) {
+            assertThat(occurrences(courriel, "votre espace client")).isEqualTo(1);
+            assertThat(courriel).doesNotContain("espace client. votre espace client", "espace client.\n\n" + lien);
+        }
+        assertThat(occurrences(htmlAccuse, "<a href=")).isEqualTo(1);
+        assertThat(occurrences(htmlInformation, "<a href=")).isEqualTo(1);
+    }
+
     @Test
     void sansPieceManquanteLeRappelNApparaitPas() {
         EnvoiSinistre.Dossier complet = new EnvoiSinistre.Dossier("c@x.fr", null, "SIN-2026-000001", "AE-1",

@@ -130,7 +130,20 @@ describe('SinistreJustificatifs, étape 3 (US-24, AC7, AC9, AC14 à AC16, RG8)',
     charger();
     const honneur = page.querySelector<HTMLInputElement>('.honneur input')!;
     expect(honneur.checked).toBe(false);
-    expect(page.querySelector('.honneur')?.textContent).toContain(TEXTE_HONNEUR);
+    // RG8 (IA-87), mot pour mot : texte de la case, puis mention d'information sous la case.
+    expect(page.querySelector('.honneur')?.textContent?.replace(' *', '').trim()).toBe(
+      "Je certifie sur l'honneur que les informations de cette déclaration sont exactes et sincères. Une fausse " +
+        'déclaration faite intentionnellement sur la date, les circonstances ou les conséquences du sinistre entraîne ' +
+        'la perte de tout droit à indemnité pour ce sinistre (déchéance de garantie prévue aux conditions générales ' +
+        'de mon contrat).',
+    );
+    expect(TEXTE_HONNEUR).toContain('exactes et sincères');
+    const mention = page.querySelector('.honneur + .honneur__mention');
+    expect(mention?.textContent?.trim()).toBe(
+      "La déchéance ne s'applique qu'en cas de fausse déclaration intentionnelle, que l'assureur doit prouver. " +
+        'Une simple erreur ou un oubli de bonne foi ne vous prive pas de votre indemnité. Vous pourrez compléter ' +
+        'ou corriger votre déclaration auprès de votre gestionnaire.',
+    );
     bouton('Envoyer ma déclaration').click();
     fixture.detectChanges();
     expect(page.querySelector('[role="alert"]')?.textContent).toBe(MESSAGE_HONNEUR);

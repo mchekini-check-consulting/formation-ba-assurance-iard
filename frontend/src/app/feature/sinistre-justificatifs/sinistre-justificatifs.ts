@@ -7,6 +7,7 @@ import {
   ADRESSE_SINISTRES,
   DeclarationSinistre,
   LIBELLES_DECLARANT,
+  MENTION_HONNEUR,
   MESSAGE_BLESSES,
   PieceAttendue,
   PieceJointe,
@@ -63,6 +64,7 @@ export class SinistreJustificatifs {
   protected readonly MESSAGE_BLESSES = MESSAGE_BLESSES;
   protected readonly MESSAGE_PIECES_PLUS_TARD = MESSAGE_PIECES_PLUS_TARD;
   protected readonly TEXTE_HONNEUR = TEXTE_HONNEUR;
+  protected readonly MENTION_HONNEUR = MENTION_HONNEUR;
   protected readonly jourFrancais = jourFrancais;
   protected readonly heureFrancaise = heureFrancaise;
   protected readonly libelleFormule = libelleFormule;

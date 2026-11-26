@@ -272,9 +272,18 @@ export const MESSAGE_AUTRE =
 export const MESSAGE_POUR_UN_AUTRE =
   'L’assuré sera informé de cette déclaration par e-mail. Il reste le seul à pouvoir accepter une offre.';
 
+/** RG8 (IA-87) : texte de la case de déclaration sur l'honneur, mot pour mot. */
 export const TEXTE_HONNEUR =
-  'Je certifie sur l’honneur que les informations de cette déclaration sont exactes. ' +
-  'Je sais qu’une fausse déclaration intentionnelle entraîne la perte du droit à indemnité.';
+  "Je certifie sur l'honneur que les informations de cette déclaration sont exactes et sincères. " +
+  'Une fausse déclaration faite intentionnellement sur la date, les circonstances ou les conséquences du sinistre ' +
+  'entraîne la perte de tout droit à indemnité pour ce sinistre (déchéance de garantie prévue aux conditions ' +
+  'générales de mon contrat).';
+
+/** RG8 (IA-87) : mention d'information affichée sous la case, mot pour mot. */
+export const MENTION_HONNEUR =
+  "La déchéance ne s'applique qu'en cas de fausse déclaration intentionnelle, que l'assureur doit prouver. " +
+  'Une simple erreur ou un oubli de bonne foi ne vous prive pas de votre indemnité. ' +
+  'Vous pourrez compléter ou corriger votre déclaration auprès de votre gestionnaire.';
 
 export const MESSAGE_TAILLE = 'Ce fichier dépasse 10 Mo : déposez un fichier plus léger (PDF, JPG ou PNG de 10 Mo maximum).';
 export const MESSAGE_FORMAT = 'Ce fichier n’est pas accepté : déposez un PDF, un JPG ou un PNG.';

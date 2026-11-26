@@ -194,6 +194,7 @@
           <input type="checkbox" [checked]="honneur()" (change)="cocher($event)" />
           <span>{{ TEXTE_HONNEUR }} <span class="rouge">*</span></span>
         </label>
+        <p class="sinistre__note honneur__mention">{{ MENTION_HONNEUR }}</p>
 
         @if (messageEnvoi(); as message) {
           <p class="mes-devis__erreur" role="alert">{{ message }}</p>

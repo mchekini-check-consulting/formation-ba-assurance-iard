@@ -12,6 +12,7 @@ import java.util.Set;
  */
 public final class JoursOuvres {
 
+    private static final Set<DayOfWeek> WEEK_END = Set.of(DayOfWeek.SATURDAY, DayOfWeek.SUNDAY);
     private static final Set<MonthDay> FERIES_FIXES = Set.of(MonthDay.of(1, 1), MonthDay.of(5, 1), MonthDay.of(5, 8),
             MonthDay.of(7, 14), MonthDay.of(8, 15), MonthDay.of(11, 1), MonthDay.of(11, 11), MonthDay.of(12, 25));
     private static final int LUNDI_DE_PAQUES = 1;
@@ -35,8 +36,7 @@ public final class JoursOuvres {
     }
 
     public static boolean estOuvre(LocalDate jour) {
-        DayOfWeek semaine = jour.getDayOfWeek();
-        return semaine != DayOfWeek.SATURDAY && semaine != DayOfWeek.SUNDAY && !estFerie(jour);
+        return !WEEK_END.contains(jour.getDayOfWeek()) && !estFerie(jour);
     }
 
     public static boolean estFerie(LocalDate jour) {

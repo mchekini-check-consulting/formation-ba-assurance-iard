@@ -1,6 +1,6 @@
 package net.checkconsulting.assuranceiard.api.service.facture;
 
-import static net.checkconsulting.assuranceiard.api.service.facture.DonneesContratDeTest.habitation;
+import static net.checkconsulting.assuranceiard.api.service.facture.ContratsFictifs.habitation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
@@ -52,7 +52,7 @@ class FactureServiceTest {
 
     private static final String JETON = "Bearer jeton";
     private static final String NUMERO = "AE-2026-000012";
-    private static final long CONTRAT = DonneesContratDeTest.ID;
+    private static final long CONTRAT = ContratsFictifs.ID;
     private static final Clock HORLOGE = Clock.fixed(Instant.parse("2026-11-25T10:00:00Z"), ZoneId.of("Europe/Paris"));
     private static final LocalDate EFFET = LocalDate.of(2026, 3, 1);
     private static final LocalDate FIN_ANNEE = LocalDate.of(2027, 2, 28);
