@@ -131,14 +131,14 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 
 ## Annulation
 
-Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U35__…sql` et
+Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U36__…sql` et
 `moteurtarifaire/db/annulation/U5__…sql`, à exécuter **à la main, dans l'ordre inverse** (`psql -f`). Ils ne sont
 jamais lancés par Flyway. Chacun retire aussi sa ligne de `flyway_schema_history`, pour pouvoir rejouer la migration.
 `U22_1__…sql` se place entre U23 et U22 ; il ne retire que sa ligne de `flyway_schema_history` (la correction des
 statuts `SIGNE` n'est pas défaite : l'ancienne valeur, invalide, n'est conservée nulle part).
 U21, U22 et U23 s'arrêtent sans rien modifier s'il existe des données qui ne tiennent pas dans le schéma du sprint 1
 (contrats ou devis auto, mandats sans dossier, franchise non entière) : les supprimer d'abord, en connaissance de cause.
-U35 retire les référentiels et le contenu des pièces jointes de sinistre (elles redeviennent de simples
+U36 retire les référentiels et le contenu des pièces jointes de sinistre (elles redeviennent de simples
 descriptions) ; il s'arrête sans rien modifier si une pièce dépasse 5 Mo.
 U28 supprime les PDF stockés en base (les documents concernés repassent à `stocke` = faux) et les conditions
 générales provisoires ; il s'arrête sans rien modifier si un contrat a plusieurs documents EN_VIGUEUR du même type
@@ -160,7 +160,7 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 
 ## Hypothèses non validées par la PO
 
-Taille maximale des pièces jointes 10 Mo (contrôlée en base, V35 ; décision BA du 26/11/2026 pour US-24) ; format de facture `FAC-AAAA-NNNNNN` (non contrôlé en
+Taille maximale des pièces jointes 10 Mo (contrôlée en base, V36 ; décision BA du 26/11/2026 pour US-24) ; format de facture `FAC-AAAA-NNNNNN` (non contrôlé en
 base) ; franchises 400 € (Intermédiaire) et 500 € (Tous risques) (données T-04) ; conducteur de 17 ans en conduite
 accompagnée non géré. T-03 : taille maximale d'un PDF 5 Mo ; mentions de l'assureur, garanties par formule,
 exclusions et conditions générales **provisoires et fictives** (`application.yaml`, `assurance.documents`), à
@@ -258,7 +258,7 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
   qui n'existe pas en habitation : il ajoute `objets-valeur` (2,50 €, 18,50 → 21,00 € par mois), date d'effet au
   lendemain, et son projet d'avenant reçoit son numéro AV. `AE-RECETTE-A03` (Actif, Tous risques) reçoit la
   protection juridique (2,50 €) pour tester un retrait : 45,00 → 47,50 € par mois (570,00 € par an).
-- **US-24, déclaration de sinistre** (IA-87) : migration **V35** (annulation `U35`). Pièces jointes de **10 Mo** au
+- **US-24, déclaration de sinistre** (IA-87) : migration **V36** (annulation `U36`). Pièces jointes de **10 Mo** au
   plus (RG7, décision BA du 26/11/2026 ; T-05 en contrôlait 5), contenu en base (`piece_jointe_contenu`, jamais sur le
   disque, voir IA-241) avec empreinte SHA-256 ; champs `corbeille`, `a_requalifier`, `pieces_manquantes`,
   `nombre_blesses`, `date_arrete_catnat`, `etape` sur `sinistre` ; `date_survenance`, `tiers_implique` et
@@ -271,7 +271,7 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
     a choisi ; depuis la tuile ou « Mes sinistres », aucun contrat n'est présélectionné, même s'il n'y en a qu'un.
   - **Aucune présélection** : contrat, type, boutons radio, cases (RG commune).
   - **Types et pièces (RG1, RG10)** : tables `ref_type_sinistre` (ordre, actif, délai, garanties qui couvrent, gestes
-    d'urgence) et `ref_piece_attendue` (obligatoires et facultatives), alimentées par V35 ; pas d'écran
+    d'urgence) et `ref_piece_attendue` (obligatoires et facultatives), alimentées par V36 ; pas d'écran
     d'administration (US-39). « Autre / je ne sais pas » toujours en dernier et jamais désactivable (contrôle en base).
     « Description du dommage » (RC) et « Description libre » (Autre) de RG1 sont la description des faits, obligatoire
     à l'étape 2, et non des fichiers.
@@ -986,7 +986,7 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `permission` | `uk_permission` | unique | Pas de doublon sur : profil, rubrique, droit. | `UNIQUE (profil, rubrique, droit)` |
 | `piece_jointe` | `ck_piece_jointe_format` | contrôle | Format : PDF, JPG ou PNG. | `CHECK (((format) = ANY ((ARRAY['PDF', 'JPG', 'PNG']))))` |
 | `piece_jointe` | `ck_piece_jointe_statut` | contrôle | Statut de la pièce : STOCKEE ou REFUSEE. | `CHECK (((statut) = ANY ((ARRAY['STOCKEE', 'REFUSEE']))))` |
-| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | Taille entre 1 octet et 10 Mo (US-24, V35). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 10485760)))` |
+| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | Taille entre 1 octet et 10 Mo (US-24, V36). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 10485760)))` |
 | `piece_jointe_contenu` | `ck_piece_jointe_contenu_taille` | contrôle | Contenu entre 1 octet et 10 Mo (US-24). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 10485760)))` |
 | `piece_jointe_contenu` | `ck_piece_jointe_contenu_taille_reelle` | contrôle | La taille annoncée est la taille réelle. | `CHECK ((taille_octets = octet_length(contenu)))` |
 | `piece_jointe_contenu` | `uk_piece_jointe_contenu_piece` | unique | Un contenu par pièce. | `UNIQUE (piece_jointe_id)` |

@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 
 /**
  * US-24, RG1 et RG10 : types de sinistres et pièces attendues par produit (tables ref_type_sinistre et
- * ref_piece_attendue, V35). « Autre / je ne sais pas » est toujours renvoyé en dernier, quel que soit son ordre.
+ * ref_piece_attendue, V36). « Autre / je ne sais pas » est toujours renvoyé en dernier, quel que soit son ordre.
  */
 @Repository
 @RequiredArgsConstructor
