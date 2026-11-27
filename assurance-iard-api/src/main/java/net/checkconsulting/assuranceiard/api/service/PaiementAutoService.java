@@ -148,7 +148,7 @@ public class PaiementAutoService {
             String authorization) {
         Compte compte = sessionService.compteConnecte(authorization);
         DevisAuto devis = chargerDevis(devisAutoId);
-        Vehicule vehicule = vehicules.findById(devis.getVehiculeId())
+        vehicules.findById(devis.getVehiculeId())
                 .orElseThrow(() -> new VehiculeIntrouvableException("Véhicule introuvable"));
 
         SouscripteurAuto souscripteur = souscripteurs.findByDevisAutoId(devisAutoId)
@@ -210,7 +210,7 @@ public class PaiementAutoService {
 
         // Créer les 12 échéances
         creerEcheances(contratId, devis.getPrixMensuelTtc().setScale(2, RoundingMode.HALF_UP),
-                premierPrelevementDate, demande.jourPrelevement(), aujourd_hui);
+                premierPrelevementDate, demande.jourPrelevement());
 
         // Générer le PDF mandat SEPA
         Document doc = documentsService.generer(DemandeDocument.duContrat(
@@ -287,7 +287,7 @@ public class PaiementAutoService {
     }
 
     private void creerEcheances(Long contratId, BigDecimal montantMensuel, LocalDate premierPrelevementDate,
-            int jourPrelevement, LocalDate aujourd_hui) {
+            int jourPrelevement) {
         LocalDate dateEcheance = premierPrelevementDate;
         for (int i = 0; i < 12; i++) {
             Echeance e = new Echeance();
