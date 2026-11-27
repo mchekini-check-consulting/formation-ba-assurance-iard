@@ -33,8 +33,12 @@ public record TableauDeBordResponse(
             BigDecimal montantTtc, Long documentId) {
     }
 
-    /** Sinistre déclaré (les brouillons ne sont pas affichés). */
-    public record Sinistre(String numero, String numeroContrat, String type, LocalDate dateSurvenance,
-            Instant declareLe) {
+    /**
+     * Sinistre déclaré, ou brouillon pas encore expiré (US-24, AC8 : « Reprendre » à son étape).
+     *
+     * @param statut DECLARE ou BROUILLON
+     */
+    public record Sinistre(Long id, String numero, String statut, String numeroContrat, String type,
+            LocalDate dateSurvenance, Instant declareLe, int etape) {
     }
 }

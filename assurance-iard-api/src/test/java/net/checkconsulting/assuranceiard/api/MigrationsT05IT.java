@@ -212,9 +212,10 @@ class MigrationsT05IT {
         refuse(jdbc, "sinistre DECLARE sans déclaration sur l'honneur", """
                 INSERT INTO sinistre (numero, contrat_id, statut, type, date_survenance, declare_le)
                 VALUES ('SIN-2026-000001', ?, 'DECLARE', 'DEGAT_EAUX', CURRENT_DATE, NOW())""", contrat);
-        refuse(jdbc, "pièce jointe de plus de 5 Mo", """
+        // US-24 (V36) : 10 Mo au plus par pièce jointe (RG7, décision BA du 26/11/2026), au lieu de 5 Mo.
+        refuse(jdbc, "pièce jointe de plus de 10 Mo", """
                 INSERT INTO piece_jointe (sinistre_id, type_piece, nom_fichier, format, taille_octets)
-                VALUES (?, 'PHOTO', 'photo.jpg', 'JPG', 5242881)""", sinistre);
+                VALUES (?, 'PHOTO', 'photo.jpg', 'JPG', 10485761)""", sinistre);
         refuse(jdbc, "pièce jointe dans un format refusé", """
                 INSERT INTO piece_jointe (sinistre_id, type_piece, nom_fichier, format, taille_octets)
                 VALUES (?, 'PHOTO', 'photo.gif', 'GIF', 1000)""", sinistre);

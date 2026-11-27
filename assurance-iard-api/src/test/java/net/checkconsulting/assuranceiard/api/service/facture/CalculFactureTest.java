@@ -1,6 +1,6 @@
 package net.checkconsulting.assuranceiard.api.service.facture;
 
-import static net.checkconsulting.assuranceiard.api.service.facture.DonneesContratDeTest.contrat;
+import static net.checkconsulting.assuranceiard.api.service.facture.ContratsFictifs.contrat;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 

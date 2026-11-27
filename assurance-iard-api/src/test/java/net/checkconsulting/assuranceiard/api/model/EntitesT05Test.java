@@ -157,6 +157,10 @@ class EntitesT05Test {
         if (type == LocalTime.class) {
             return LocalTime.of(8, 30);
         }
+        // US-24 : étape du brouillon, nombre de blessés (colonnes SMALLINT).
+        if (type == Short.class) {
+            return (short) 2;
+        }
         if (type == Instant.class) {
             return Instant.parse("2026-05-10T08:30:00Z");
         }

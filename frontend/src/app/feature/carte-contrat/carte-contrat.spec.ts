@@ -59,7 +59,10 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
       'Modifier mes garanties',
       'Régénérer mon contrat',
       'Générer une facture',
+      // US-24 : livrée.
+      'Déclarer un sinistre',
     ]);
+    expect(liens[4].getAttribute('href')).toBe('/espace-client/sinistres/declarer?contrat=AE-RECETTE-A03');
     expect(liens[1].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03/garanties');
     expect(liens[0].getAttribute('href')).toBe('/espace-client/contrats/AE-RECETTE-A03');
     expect(liens[0].classList).not.toContain('btn--contour');
@@ -79,6 +82,8 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
     expect(Array.from(carte.querySelectorAll('a')).map((lien) => lien.textContent?.trim())).toEqual([
       'Voir mon contrat',
       'Générer une facture',
+      // US-24, AC1 (décision BA) : un contrat suspendu reste ouvert à la déclaration de sinistre.
+      'Déclarer un sinistre',
     ]);
   });
 

@@ -1,0 +1,364 @@
+// US-24 : écrans de la déclaration de sinistre. Mobile d'abord : aucun défilement horizontal, les tuiles et les
+// choix passent à la ligne ; sur ordinateur, le cadre commun garde la barre latérale à gauche.
+.urgence {
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: var(--rose);
+  border-left: 4px solid var(--rouge);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+
+  p {
+    margin: 0;
+  }
+
+  a {
+    color: var(--rouge-fonce);
+  }
+
+  &__depannage {
+    align-self: flex-start;
+  }
+
+  a.urgence__depannage {
+    color: #fff;
+  }
+
+  &__gestes ul {
+    margin: 6px 0 0;
+    padding-left: 20px;
+  }
+}
+
+.etapes {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  font-size: 14px;
+  color: var(--texte-discret);
+
+  &__etape {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+
+    &--active {
+      color: var(--texte);
+      font-weight: 700;
+    }
+
+    &--faite {
+      color: var(--texte-doux);
+    }
+  }
+
+  &__numero {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 1.5px solid currentcolor;
+    font-size: 12px;
+  }
+
+  &__etape--active &__numero {
+    background: var(--rouge);
+    border-color: var(--rouge);
+    color: #fff;
+  }
+}
+
+.sinistre {
+  &__intro {
+    margin: 0;
+    color: var(--texte-doux);
+  }
+
+  &__note {
+    margin: 0;
+    font-size: 14px;
+    color: var(--texte-discret);
+  }
+
+  &__message {
+    margin: 0;
+    padding: 12px 16px;
+    border-radius: 10px;
+    background: var(--beige);
+    border-left: 4px solid var(--gris);
+
+    &--attention {
+      background: var(--rose);
+      border-left-color: var(--rouge);
+    }
+  }
+
+  &__succes {
+    margin: 0;
+    color: #1d6b3a;
+    font-weight: 600;
+  }
+
+  &__actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+  }
+}
+
+.rouge {
+  color: var(--rouge);
+}
+
+.note-champs {
+  margin: 0;
+  font-size: 14px;
+  color: var(--texte-discret);
+}
+
+.tuiles {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 12px;
+}
+
+.tuile {
+  width: 100%;
+  height: 100%;
+  padding: 14px;
+  border: 1.5px solid var(--bordure);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--texte);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &:hover,
+  &:focus-visible {
+    border-color: var(--rouge);
+  }
+
+  &--choisie {
+    border-color: var(--rouge);
+    background: var(--rose);
+    box-shadow: inset 0 0 0 1px var(--rouge);
+  }
+
+  &__titre {
+    font-weight: 700;
+  }
+
+  &__aide {
+    font-size: 14px;
+    color: var(--texte-discret);
+  }
+}
+
+.formulaire {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+
+  fieldset {
+    margin: 0;
+    padding: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  legend {
+    padding: 0;
+    margin-bottom: 8px;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  textarea.saisie {
+    height: auto;
+    min-height: 110px;
+    padding: 12px 14px;
+  }
+
+  &__ligne {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr));
+    gap: 16px;
+  }
+}
+
+.radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+
+  label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    min-height: 44px;
+    cursor: pointer;
+  }
+
+  input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+  }
+}
+
+.pieces {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.piece {
+  padding: 14px;
+  border: 1px solid var(--bordure);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  p {
+    margin: 0;
+  }
+
+  &__entete {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  &__badge {
+    font-size: 13px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    background: var(--beige);
+
+    &--obligatoire {
+      background: var(--rose);
+      color: var(--rouge-fonce);
+      font-weight: 600;
+    }
+  }
+
+  &__fichiers {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+
+    li {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      overflow-wrap: anywhere;
+    }
+  }
+
+  &__coche {
+    color: #1d6b3a;
+    font-weight: 700;
+  }
+
+  &__depots {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  &__depot {
+    position: relative;
+    overflow: hidden;
+
+    input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+    }
+  }
+}
+
+.lien-bouton {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--rouge-fonce);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.recap {
+  margin: 0;
+  display: grid;
+  grid-template-columns: minmax(120px, 220px) 1fr;
+  gap: 8px 16px;
+  overflow-wrap: anywhere;
+
+  dt {
+    font-weight: 600;
+  }
+
+  dd {
+    margin: 0;
+  }
+
+  @media (width <= 600px) {
+    grid-template-columns: 1fr;
+
+    dd {
+      margin-bottom: 8px;
+    }
+  }
+}
+
+.honneur {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-weight: 600;
+
+  input {
+    width: 20px;
+    height: 20px;
+    margin: 0;
+    flex: none;
+  }
+}
+
+.badge-brouillon {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--beige);
+  border: 1px solid var(--bordure);
+  font-size: 13px;
+  font-weight: 600;
+}

@@ -1,8 +1,8 @@
 package net.checkconsulting.assuranceiard.api.service.facture;
 
-import static net.checkconsulting.assuranceiard.api.service.facture.DonneesContratDeTest.ID;
-import static net.checkconsulting.assuranceiard.api.service.facture.DonneesContratDeTest.contrat;
-import static net.checkconsulting.assuranceiard.api.service.facture.DonneesContratDeTest.habitation;
+import static net.checkconsulting.assuranceiard.api.service.facture.ContratsFictifs.ID;
+import static net.checkconsulting.assuranceiard.api.service.facture.ContratsFictifs.contrat;
+import static net.checkconsulting.assuranceiard.api.service.facture.ContratsFictifs.habitation;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -264,7 +264,7 @@ class EcheancierServiceTest {
         assertThat(service.de("ACTIF", habitation(null, null, 10)).estVide()).isTrue();
 
         when(echeances.findByContratIdOrderByDateEcheanceDescIdDesc(ID)).thenReturn(List.of());
-        assertThat(service.de("ACTIF", DonneesContratDeTest.sansCotisation(EFFET)).estVide()).isTrue();
+        assertThat(service.de("ACTIF", ContratsFictifs.sansCotisation(EFFET)).estVide()).isTrue();
     }
 
     @Test

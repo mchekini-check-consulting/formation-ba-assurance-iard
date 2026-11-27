@@ -3,6 +3,7 @@ package net.checkconsulting.assuranceiard.api;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsInAnyOrder;
 import static org.hamcrest.Matchers.hasItem;
+import static org.hamcrest.Matchers.matchesPattern;
 import static org.hamcrest.Matchers.not;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
@@ -122,7 +123,9 @@ class EspaceClientIT {
                 // Aucun modèle ne produit encore le PDF d'une facture : pas de lien de téléchargement.
                 .andExpect(jsonPath("$.dernieresFactures[0].documentId").doesNotExist())
                 .andExpect(jsonPath("$.sinistres.length()").value(1))
-                .andExpect(jsonPath("$.sinistres[0].numero").value("SIN-RECETTE-0001"))
+                // US-24 : numéro au format SIN-AAAA-XXXXXX (données corrigées par le script US-24).
+                .andExpect(jsonPath("$.sinistres[0].numero").value(matchesPattern("SIN-\\d{4}-\\d{6}")))
+                .andExpect(jsonPath("$.sinistres[0].statut").value("DECLARE"))
                 // Son devis habitation est transformé en contrat : il n'est plus « en cours ».
                 .andExpect(jsonPath("$.devisEnCours").isEmpty());
     }
@@ -145,8 +148,11 @@ class EspaceClientIT {
                 .andExpect(jsonPath("$.devisEnCours[*].produit").value(containsInAnyOrder("AUTO", "AUTO")))
                 .andExpect(jsonPath("$.devisEnCours[*].description")
                         .value(containsInAnyOrder("Peugeot 208 · EF-003-GH", "Peugeot 208 · EF-004-GH")))
-                // Son seul sinistre est un brouillon : non affiché.
-                .andExpect(jsonPath("$.sinistres").isEmpty())
+                // US-24, AC8 : son brouillon (pas encore expiré) est affiché, à reprendre ; le brouillon expiré
+                // des données de test ne l'est pas.
+                .andExpect(jsonPath("$.sinistres.length()").value(1))
+                .andExpect(jsonPath("$.sinistres[0].statut").value("BROUILLON"))
+                .andExpect(jsonPath("$.sinistres[0].etape").value(2))
                 .andExpect(jsonPath("$.dernieresFactures").isEmpty())
                 .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-1"))));
     }

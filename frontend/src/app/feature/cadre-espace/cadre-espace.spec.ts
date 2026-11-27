@@ -107,7 +107,7 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
   });
 
   describe('navigation client (ordre de la maquette, droits du profil)', () => {
-    it('un assuré voit Tableau de bord, Mes contrats, Mes devis, Mes documents, Mes factures (US-22) ; sinistres et compte pas encore livrés', () => {
+    it('un assuré voit Tableau de bord, Mes contrats, Mes devis, Mes documents, Mes factures (US-22), Mes sinistres (US-24) ; compte pas encore livré', () => {
       afficherAvec('ASSURE', ['CONTRATS:CONSULTER', 'DEVIS:CONSULTER', 'DOCUMENTS:CONSULTER', 'SINISTRES:CONSULTER']);
       http.expectOne(URL_TABLEAU).flush({ prenom: 'Alice', nom: 'Martin' });
 
@@ -117,6 +117,7 @@ describe('CadreEspace : en-tête et barre latérale (US-18, maquette ; US-04)', 
         'Mes devis',
         'Mes documents',
         'Mes factures',
+        'Mes sinistres',
       ]);
     });
 

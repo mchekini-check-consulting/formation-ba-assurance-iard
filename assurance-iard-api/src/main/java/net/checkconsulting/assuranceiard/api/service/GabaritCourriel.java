@@ -25,7 +25,7 @@ public final class GabaritCourriel {
     private GabaritCourriel() {
     }
 
-    /** Un e-mail prêt à partir, avec son PDF joint. */
+    /** Un e-mail prêt à partir, avec son PDF joint (aucun si pdf est vide). */
     public record Courriel(String email, String objet, String texte, String html, String nomFichier, byte[] pdf) {
     }
 
@@ -37,7 +37,10 @@ public final class GabaritCourriel {
             contenu.setTo(courriel.email());
             contenu.setSubject(courriel.objet());
             contenu.setText(courriel.texte(), courriel.html());
-            contenu.addAttachment(courriel.nomFichier(), new ByteArrayResource(courriel.pdf()), "application/pdf");
+            // US-24 : l'accusé de réception d'un sinistre n'a aucune pièce jointe.
+            if (courriel.pdf() != null) {
+                contenu.addAttachment(courriel.nomFichier(), new ByteArrayResource(courriel.pdf()), "application/pdf");
+            }
         } catch (MessagingException | UnsupportedEncodingException exception) {
             throw new MailPreparationException("Préparation de l'e-mail impossible : " + courriel.objet(), exception);
         }

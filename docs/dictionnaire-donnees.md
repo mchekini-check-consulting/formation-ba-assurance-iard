@@ -57,7 +57,8 @@ ils font foi en cas de doute.
 | STATUT_FVA | A_ENVOYER, DECLAREE, REJETEE, DIFFEREE | `declaration_fva.statut` |
 | STATUT_HAMON | A_ENVOYER, ENVOYEE, ACCEPTEE, INTROUVABLE, ERREUR | `resiliation_hamon.statut` |
 | STATUT_SINISTRE | BROUILLON, DECLARE | `sinistre.statut` |
-| TYPE_SINISTRE (auto) | ACCIDENT_TIERS, ACCIDENT_SANS_TIERS, VOL, BRIS_GLACE, INCENDIE, CLIMATIQUE_CATNAT, AUTRE | `sinistre.type` (la base accepte l'union auto + habitation ; la cohérence avec le produit est une règle de l'application, US-24) |
+| TYPE_SINISTRE (auto) | ACCIDENT_TIERS, ACCIDENT_SANS_TIERS, VOL, BRIS_GLACE, INCENDIE, CLIMATIQUE_CATNAT, AUTRE | `sinistre.type` (la base accepte l'union auto + habitation ; US-24 : types proposés par produit dans `ref_type_sinistre`, cohérence vérifiée par l'application) |
+| CORBEILLE (US-24) | AUTO, HABITATION | `sinistre.corbeille` |
 | TYPE_SINISTRE (habitation) | DEGAT_EAUX, VOL_CAMBRIOLAGE, INCENDIE, BRIS_GLACE, CLIMATIQUE_CATNAT, RC_TIERS, AUTRE | `sinistre.type` |
 | DECLARANT | SOUSCRIPTEUR, CONDUCTEUR, PROCHE | `sinistre.declarant` |
 | FORMAT_PIECE | PDF, JPG, PNG | `piece_jointe.format` |
@@ -130,13 +131,15 @@ grille_tarifaire ─< ref_formule, ref_option, ref_tarif   (base moteurtarifaire
 
 ## Annulation
 
-Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U28__…sql` et
+Un script par migration : `assurance-iard-api/db/annulation/U19__…sql` à `U36__…sql` et
 `moteurtarifaire/db/annulation/U5__…sql`, à exécuter **à la main, dans l'ordre inverse** (`psql -f`). Ils ne sont
 jamais lancés par Flyway. Chacun retire aussi sa ligne de `flyway_schema_history`, pour pouvoir rejouer la migration.
 `U22_1__…sql` se place entre U23 et U22 ; il ne retire que sa ligne de `flyway_schema_history` (la correction des
 statuts `SIGNE` n'est pas défaite : l'ancienne valeur, invalide, n'est conservée nulle part).
 U21, U22 et U23 s'arrêtent sans rien modifier s'il existe des données qui ne tiennent pas dans le schéma du sprint 1
 (contrats ou devis auto, mandats sans dossier, franchise non entière) : les supprimer d'abord, en connaissance de cause.
+U36 retire les référentiels et le contenu des pièces jointes de sinistre (elles redeviennent de simples
+descriptions) ; il s'arrête sans rien modifier si une pièce dépasse 5 Mo.
 U28 supprime les PDF stockés en base (les documents concernés repassent à `stocke` = faux) et les conditions
 générales provisoires ; il s'arrête sans rien modifier si un contrat a plusieurs documents EN_VIGUEUR du même type
 (plusieurs factures ou avenants).
@@ -150,14 +153,14 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 
 | Compte | Contenu |
 |---|---|
-| `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE. US-22 : effet un an avant le 26 du mois courant, 3 échéances payées et 1 à venir |
-| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON. US-23 : avenant de H01 sur `objets-valeur` (18,50 → 21,00 €), `A03` avec la protection juridique (47,50 €) |
+| `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE (US-24 : renuméroté `SIN-AAAA-XXXXXX`, daté de la veille de sa déclaration, photos manquantes). US-22 : effet un an avant le 26 du mois courant, 3 échéances payées et 1 à venir |
+| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON. US-23 : avenant de H01 sur `objets-valeur` (18,50 → 21,00 €), `A03` avec la protection juridique (47,50 €). US-24 : brouillon (accident sans tiers sur A03) à l'étape 2 ; brouillon expiré pour la purge ; A04 et A07 (Tiers) pour un vol non couvert, A09 (résilié il y a 5 jours) déclarable, A01, A02 et A10 non déclarables |
 | `recette.prospect@assureasy.fr` (T-05) | prospect sans aucun contrat |
 | `recette.assure2`, `recette.gestionnaire`, `recette.admin` (US-04) | inchangés |
 
 ## Hypothèses non validées par la PO
 
-Taille maximale des pièces jointes 5 Mo (contrôlée en base) ; format de facture `FAC-AAAA-NNNNNN` (non contrôlé en
+Taille maximale des pièces jointes 10 Mo (contrôlée en base, V36 ; décision BA du 26/11/2026 pour US-24) ; format de facture `FAC-AAAA-NNNNNN` (non contrôlé en
 base) ; franchises 400 € (Intermédiaire) et 500 € (Tous risques) (données T-04) ; conducteur de 17 ans en conduite
 accompagnée non géré. T-03 : taille maximale d'un PDF 5 Mo ; mentions de l'assureur, garanties par formule,
 exclusions et conditions générales **provisoires et fictives** (`application.yaml`, `assurance.documents`), à
@@ -255,6 +258,74 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
   qui n'existe pas en habitation : il ajoute `objets-valeur` (2,50 €, 18,50 → 21,00 € par mois), date d'effet au
   lendemain, et son projet d'avenant reçoit son numéro AV. `AE-RECETTE-A03` (Actif, Tous risques) reçoit la
   protection juridique (2,50 €) pour tester un retrait : 45,00 → 47,50 € par mois (570,00 € par an).
+- **US-24, déclaration de sinistre** (IA-87) : migration **V36** (annulation `U36`). Pièces jointes de **10 Mo** au
+  plus (RG7, décision BA du 26/11/2026 ; T-05 en contrôlait 5), contenu en base (`piece_jointe_contenu`, jamais sur le
+  disque, voir IA-241) avec empreinte SHA-256 ; champs `corbeille`, `a_requalifier`, `pieces_manquantes`,
+  `nombre_blesses`, `date_arrete_catnat`, `etape` sur `sinistre` ; `date_survenance`, `tiers_implique` et
+  `blesses` vides dans un brouillon (aucune présélection), obligatoires à l'envoi ; référentiels `ref_type_sinistre`
+  et `ref_piece_attendue` (RG1, RG10). Décisions BA, **à valider PO** :
+  - **Accès (AC1)** : déclaration possible pour les contrats `ACTIF`, `ACTIF_JUSTIFICATIFS_ATTENDUS`,
+    `AVENANT_EN_ATTENTE`, `IMPAYE`, `SUSPENDU`, `RESILIATION_EN_COURS`, et `RESILIE` si sa date de fin date de
+    moins de 2 ans ; pas pour `EN_ATTENTE_DE_SIGNATURE`, `EN_ATTENTE_EFFET` ni `RENONCE`. Le serveur refuse aussi
+    l'appel direct (422). Depuis le raccourci « Déclarer un sinistre » d'un contrat, ce contrat est celui que le client
+    a choisi ; depuis la tuile ou « Mes sinistres », aucun contrat n'est présélectionné, même s'il n'y en a qu'un.
+  - **Aucune présélection** : contrat, type, boutons radio, cases (RG commune).
+  - **Types et pièces (RG1, RG10)** : tables `ref_type_sinistre` (ordre, actif, délai, garanties qui couvrent, gestes
+    d'urgence) et `ref_piece_attendue` (obligatoires et facultatives), alimentées par V36 ; pas d'écran
+    d'administration (US-39). « Autre / je ne sais pas » toujours en dernier et jamais désactivable (contrôle en base).
+    « Description du dommage » (RC) et « Description libre » (Autre) de RG1 sont la description des faits, obligatoire
+    à l'étape 2, et non des fichiers.
+  - **Couverture (AC3, RG4)** : formule du contrat (un avenant d'US-23 ne change pas la formule) et options de
+    `contrat_option` **en vigueur à la date du sinistre** (début au plus tard ce jour-là, fin vide ou ce jour-là ou
+    après). Message seulement, jamais bloquant, jamais pour « Autre ». Table type → garanties qui couvrent :
+
+    | Produit | Type | Formules qui couvrent | Option qui couvre aussi |
+    |---|---|---|---|
+    | Auto | Accident avec un tiers | Tiers, Intermédiaire, Tous risques | |
+    | Auto | Accident sans tiers | Tous risques | |
+    | Auto | Vol du véhicule | Intermédiaire, Tous risques | |
+    | Auto | Bris de glace | Intermédiaire, Tous risques | `BRIS_GLACE` |
+    | Auto | Incendie | Intermédiaire, Tous risques | |
+    | Auto | Événement climatique ou CatNat | Intermédiaire, Tous risques | |
+    | Habitation | Dégât des eaux, Incendie, Climatique ou CatNat, RC | Essentielle, Confort, Sérénité | |
+    | Habitation | Vol ou cambriolage, Bris de glace | Confort, Sérénité | |
+    | Auto et habitation | Autre / je ne sais pas | (aucun message) | |
+
+    Déduite des garanties par formule d'`application.yaml` (`assurance.documents.garanties`, elles-mêmes provisoires).
+  - **Date (AC4, AC5)** : jamais dans le futur ; avant la date d'effet ou après la date de fin : message neutre, on
+    continue, `hors_periode_contrat` = vrai.
+  - **Délai (AC6, RG2, RG3)** : 5 jours ouvrés, 2 pour un vol (auto et habitation), comptés à partir du lendemain de la
+    date du sinistre ; jours ouvrés = hors samedis, dimanches et 11 jours fériés nationaux (ni Alsace-Moselle ni
+    outre-mer). Catastrophe naturelle : 30 jours après la date de publication de l'arrêté, demandée (facultative) ; pas
+    de message si elle est inconnue. En retard : message neutre et explication du retard obligatoire ; jamais bloquant.
+  - **Blessés (AC11)** : oui / non et nombre (1 à 99) seulement, aucun champ médical ; jamais dans les e-mails ni les
+    journaux.
+  - **Pièces jointes (AC7, AC14 à AC16, RG7)** : PDF, JPG ou PNG contrôlés sur le contenu réel, 10 Mo par fichier,
+    20 par dossier ; photo possible sur mobile ; une pièce obligatoire manquante n'empêche pas l'envoi
+    (`pieces_manquantes`), et des pièces peuvent être ajoutées après l'envoi (« Compléter mes justificatifs »). Une
+    pièce refusée n'est pas enregistrée (`statut` REFUSEE non utilisé). **Bouchon de stockage** (commentaire du
+    20/11/2026) : pas de WireMock dans ce dépôt ; le bouchon est une classe Java qui stocke en base, et un fichier nommé
+    `erreur-stockage…` simule l'erreur technique (AC16), seulement avec `DONNEES_TEST_ACTIVES`.
+  - **Brouillon (AC8, RG6)** : enregistré à chaque étape et par « Enregistrer et terminer plus tard » ; repris à son
+    étape depuis « Mes sinistres » et le tableau de bord ; 30 jours après sa création, il n'est plus visible et la purge
+    (toutes les heures) le supprime avec ses pièces.
+  - **Envoi (AC9, RG5, RG8)** : récapitulatif, case sur l'honneur jamais pré-cochée (texte de RG8), numéro `SIN-AAAA-XXXXXX` (année de l'envoi, identifiant du sinistre sur 6 chiffres, comme les
+    factures), statut `DECLARE`, écran « Déclaration envoyée ». Accusé de réception par e-mail (Mailpit) : numéro,
+    type, date, contrat, prochaines étapes ; ni description, ni blessés, ni pièce jointe. Un e-mail qui ne part pas
+    n'annule pas la déclaration.
+  - **Corbeille (RG9, RG11)** : `corbeille` = produit du contrat, remplie à la création ; `a_requalifier` = type
+    « Autre ». Pas d'écran gestionnaire (US-35).
+  - **Urgence (AC10)** : numéro d'assistance 24h/24 **fictif** (`assurance.sinistres.numero-assistance`) ; accident
+    auto : « Demander un dépannage » appelle ce numéro en attendant US-47 ; habitation : gestes d'urgence du type
+    (`ref_type_sinistre.gestes_urgence`).
+  - **Qui déclare (AC13)** : moi-même, conducteur secondaire (auto seulement), un proche ; nom et lien obligatoires
+    sinon (`declarant_infos`). Le souscripteur reçoit un e-mail d'information ; pas de compte séparé pour le proche.
+  - **Heure** du sinistre facultative (« si vous la connaissez »).
+  - **Tableau de bord** (US-18) : « Sinistres en cours » montre aussi les brouillons non expirés, avec « Reprendre ».
+- **US-24, données de test** (`donnees_recette_us24.sql`, après T-05, US-22 et US-23) : `SIN-RECETTE-0001`
+  d'Alice prend un numéro `SIN-AAAA-XXXXXX` et est daté de la veille de sa déclaration (il était déclaré 10 jours
+  après, sans explication) ; le brouillon de Camille reprend à l'étape 2, « qui déclare » et « blessés » vidés ;
+  un brouillon expiré (31 jours) est recréé à chaque démarrage pour tester la purge.
 
 ---
 
@@ -654,6 +725,18 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `cle_stockage` | texte(255) |  |  |  |
 | `statut` | texte(8) | oui | 'STOCKEE' |  |
 | `motif_refus` | texte(255) |  |  |  |
+| `empreinte` *(US-24)* | texte(64) |  |  | SHA-256 du fichier |
+| `date_creation` | horodatage UTC | oui | now() |  |
+| `date_modification` | horodatage UTC | oui | now() |  |
+
+### `piece_jointe_contenu` *(nouvelle, US-24)*
+
+| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
+|---|---|---|---|---|
+| `id` | entier | oui | clé (auto) |  |
+| `piece_jointe_id` | entier | oui |  | → piece_jointe (supprimé avec elle) |
+| `contenu` | binaire | oui |  |  |
+| `taille_octets` | entier | oui |  |  |
 | `date_creation` | horodatage UTC | oui | now() |  |
 | `date_modification` | horodatage UTC | oui | now() |  |
 
@@ -690,6 +773,20 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `options` | liste de textes | oui |  |  |
 | `date_creation` | horodatage UTC | oui |  |  |
 
+### `ref_piece_attendue` *(nouvelle, US-24)*
+
+| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
+|---|---|---|---|---|
+| `id` | entier | oui | clé (auto) |  |
+| `produit` | texte(12) | oui |  | → ref_type_sinistre |
+| `type_sinistre` | texte(20) | oui |  | → ref_type_sinistre |
+| `code` | texte(30) | oui |  | = piece_jointe.type_piece |
+| `libelle` | texte(120) | oui |  |  |
+| `obligatoire` | booléen | oui |  |  |
+| `ordre` | entier | oui |  |  |
+| `date_creation` | horodatage UTC | oui | now() |  |
+| `date_modification` | horodatage UTC | oui | now() |  |
+
 ### `ref_plaque_test` *(nouvelle, T-05)*
 
 | Colonne | Type | Obligatoire | Défaut / calcul | Lien |
@@ -698,6 +795,24 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `immatriculation` | texte(10) | oui |  |  |
 | `ref_vehicule_id` | entier |  |  | → ref_vehicule |
 | `comportement` | texte(10) | oui |  |  |
+| `date_creation` | horodatage UTC | oui | now() |  |
+| `date_modification` | horodatage UTC | oui | now() |  |
+
+### `ref_type_sinistre` *(nouvelle, US-24)*
+
+| Colonne | Type | Obligatoire | Défaut / calcul | Lien |
+|---|---|---|---|---|
+| `produit` | texte(12) | oui |  | clé, AUTO ou HABITATION |
+| `code` | texte(20) | oui |  | clé, = sinistre.type |
+| `libelle` | texte(80) | oui |  |  |
+| `aide` | texte(255) |  |  |  |
+| `ordre` | entier | oui |  | « Autre » toujours affiché en dernier |
+| `actif` | booléen | oui | true | « Autre » toujours actif |
+| `delai_jours_ouvres` | entier |  |  | RG2 |
+| `delai_jours_arrete` | entier |  |  | RG2 (CatNat : 30) |
+| `formules_couvrantes` | liste de textes | oui | '{}' | AC3 |
+| `options_couvrantes` | liste de textes | oui | '{}' | AC3 |
+| `gestes_urgence` | liste de textes | oui | '{}' | AC10 |
 | `date_creation` | horodatage UTC | oui | now() |  |
 | `date_modification` | horodatage UTC | oui | now() |  |
 
@@ -748,13 +863,14 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `contrat_id` | entier | oui |  | → contrat |
 | `statut` | texte(10) | oui | 'BROUILLON' |  |
 | `type` | texte(20) | oui |  |  |
-| `date_survenance` | date | oui |  |  |
+| `date_survenance` | date |  |  | obligatoire à l'envoi (US-24) |
 | `heure_survenance` | heure |  |  |  |
 | `lieu` | texte(255) |  |  |  |
 | `description` | text |  |  |  |
-| `tiers_implique` | booléen | oui | false |  |
+| `tiers_implique` | booléen |  |  | vide tant que non répondu ; obligatoire à l'envoi (US-24) |
 | `tiers_infos` | JSON |  |  |  |
-| `blesses` | booléen | oui | false |  |
+| `blesses` | booléen |  |  | vide tant que non répondu ; obligatoire à l'envoi (US-24) |
+| `nombre_blesses` *(US-24)* | entier |  |  | 1 ou plus |
 | `declarant` | texte(12) |  |  |  |
 | `declarant_infos` | JSON |  |  |  |
 | `details` | JSON |  |  |  |
@@ -764,6 +880,11 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `declaration_honneur` | booléen | oui | false |  |
 | `declare_le` | horodatage UTC |  |  |  |
 | `brouillon_expire_le` | horodatage UTC | oui | (now() + '30 days') |  |
+| `corbeille` *(US-24)* | texte(12) |  |  | AUTO ou HABITATION (RG9) |
+| `a_requalifier` *(US-24)* | booléen | oui | false | type « Autre » (RG11) |
+| `pieces_manquantes` *(US-24)* | booléen | oui | false | AC7 |
+| `date_arrete_catnat` *(US-24)* | date |  |  | RG2 |
+| `etape` *(US-24)* | entier | oui | 1 | étape où reprendre le brouillon (1 à 3) |
 | `date_creation` | horodatage UTC | oui | now() |  |
 | `date_modification` | horodatage UTC | oui | now() |  |
 
@@ -865,7 +986,13 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `permission` | `uk_permission` | unique | Pas de doublon sur : profil, rubrique, droit. | `UNIQUE (profil, rubrique, droit)` |
 | `piece_jointe` | `ck_piece_jointe_format` | contrôle | Format : PDF, JPG ou PNG. | `CHECK (((format) = ANY ((ARRAY['PDF', 'JPG', 'PNG']))))` |
 | `piece_jointe` | `ck_piece_jointe_statut` | contrôle | Statut de la pièce : STOCKEE ou REFUSEE. | `CHECK (((statut) = ANY ((ARRAY['STOCKEE', 'REFUSEE']))))` |
-| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | Taille entre 1 octet et 5 Mo (hypothèse non validée par la PO). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 5242880)))` |
+| `piece_jointe` | `ck_piece_jointe_taille` | contrôle | Taille entre 1 octet et 10 Mo (US-24, V36). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 10485760)))` |
+| `piece_jointe_contenu` | `ck_piece_jointe_contenu_taille` | contrôle | Contenu entre 1 octet et 10 Mo (US-24). | `CHECK (((taille_octets >= 1) AND (taille_octets <= 10485760)))` |
+| `piece_jointe_contenu` | `ck_piece_jointe_contenu_taille_reelle` | contrôle | La taille annoncée est la taille réelle. | `CHECK ((taille_octets = octet_length(contenu)))` |
+| `piece_jointe_contenu` | `uk_piece_jointe_contenu_piece` | unique | Un contenu par pièce. | `UNIQUE (piece_jointe_id)` |
+| `ref_type_sinistre` | `ck_ref_type_sinistre_autre_actif` | contrôle | « Autre / je ne sais pas » ne peut pas être désactivé (RG10). | `CHECK ((((code) <> 'AUTRE') OR actif))` |
+| `ref_type_sinistre` | `ck_ref_type_sinistre_produit` | contrôle | Produit : AUTO ou HABITATION. | `CHECK (((produit) = ANY ((ARRAY['AUTO', 'HABITATION']))))` |
+| `ref_piece_attendue` | `uk_ref_piece_attendue` | unique | Une pièce par (produit, type, code). | `UNIQUE (produit, type_sinistre, code)` |
 | `preuve_signature` | `ck_preuve_signature_nb_essais` | contrôle | Signature obtenue en 1 à 3 essais. | `CHECK (((nb_essais >= 1) AND (nb_essais <= 3)))` |
 | `recommandation_devis` | `uk_recommandation_devis_reference` | unique | Pas de doublon sur : reference. | `UNIQUE (reference)` |
 | `ref_plaque_test` | `ck_ref_plaque_test_comportement` | contrôle | Comportement simulé : TROUVE, INCONNU, ERREUR ou DELAI. | `CHECK (((comportement) = ANY ((ARRAY['TROUVE', 'INCONNU', 'ERREUR', 'DELAI']))))` |
@@ -875,6 +1002,9 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 | `resiliation_hamon` | `ck_resiliation_hamon_statut` | contrôle | Statut : A_ENVOYER, ENVOYEE, ACCEPTEE, INTROUVABLE ou ERREUR. | `CHECK (((statut) = ANY ((ARRAY['A_ENVOYER', 'ENVOYEE', 'ACCEPTEE', 'INTROUVABLE', 'ERREUR']))))` |
 | `session_client` | `uk_session_client_jeton` | unique | Pas de doublon sur : jeton_hash. | `UNIQUE (jeton_hash)` |
 | `sinistre` | `ck_sinistre_date_survenance` | contrôle | Le sinistre ne survient pas après la création de la déclaration (date du jour contrôlée par l'application). | `CHECK ((date_survenance <= (date_creation)::date))` |
+| `sinistre` | `ck_sinistre_corbeille` | contrôle | Corbeille : AUTO ou HABITATION (US-24, RG9). | `CHECK (((corbeille) = ANY ((ARRAY['AUTO', 'HABITATION']))))` |
+| `sinistre` | `ck_sinistre_etape` | contrôle | Étape du brouillon entre 1 et 3 (US-24). | `CHECK (((etape >= 1) AND (etape <= 3)))` |
+| `sinistre` | `ck_sinistre_nombre_blesses` | contrôle | Nombre de blessés : 1 ou plus (US-24). | `CHECK (((nombre_blesses IS NULL) OR (nombre_blesses >= 1)))` |
 | `sinistre` | `ck_sinistre_declarant` | contrôle | Déclarant : SOUSCRIPTEUR, CONDUCTEUR ou PROCHE. | `CHECK (((declarant) = ANY ((ARRAY['SOUSCRIPTEUR', 'CONDUCTEUR', 'PROCHE']))))` |
 | `sinistre` | `ck_sinistre_declare` | contrôle | Un sinistre DECLARE a la déclaration sur l'honneur, un numéro et une date de déclaration. | `CHECK ((((statut) <> 'DECLARE') OR (declaration_honneur AND (numero IS NOT NULL) AND (declare_le IS NOT NULL))))` |
 | `sinistre` | `ck_sinistre_statut` | contrôle | Statut : BROUILLON ou DECLARE. | `CHECK (((statut) = ANY ((ARRAY['BROUILLON', 'DECLARE']))))` |

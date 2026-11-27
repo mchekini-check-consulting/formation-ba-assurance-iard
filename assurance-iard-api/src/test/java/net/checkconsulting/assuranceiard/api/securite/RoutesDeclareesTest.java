@@ -14,6 +14,7 @@ import net.checkconsulting.assuranceiard.api.repository.DevisEnregistreRepositor
 import net.checkconsulting.assuranceiard.api.repository.DocumentRepository;
 import net.checkconsulting.assuranceiard.api.repository.DossierSouscriptionRepository;
 import net.checkconsulting.assuranceiard.api.repository.JustificatifRepository;
+import net.checkconsulting.assuranceiard.api.repository.SinistreRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.context.annotation.ClassPathScanningCandidateComponentProvider;
 import org.springframework.core.annotation.AnnotatedElementUtils;
@@ -83,7 +84,8 @@ class RoutesDeclareesTest {
                 new ProprietairesContrat(mock(ContratRepository.class)).type(),
                 new ProprietairesContratNumero(mock(ContratRepository.class)).type(),
                 new ProprietairesDocument(mock(JustificatifRepository.class)).type(),
-                new ProprietairesDocumentContrat(mock(DocumentRepository.class)).type());
+                new ProprietairesDocumentContrat(mock(DocumentRepository.class)).type(),
+                new ProprietairesSinistre(mock(SinistreRepository.class)).type());
 
         assertThat(controlees).containsExactlyInAnyOrderElementsOf(attendues);
     }

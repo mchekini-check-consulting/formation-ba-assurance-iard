@@ -18,5 +18,7 @@ public enum TypeRessource {
     /** Document déposé (US-13), identifié par son numéro. */
     DOCUMENT,
     /** Document PDF généré (T-03 : conditions particulières...), identifié par son numéro dans la table document. */
-    DOCUMENT_CONTRAT
+    DOCUMENT_CONTRAT,
+    /** Déclaration de sinistre (US-24), identifiée par son identifiant technique ; appartient au client du contrat. */
+    SINISTRE
 }

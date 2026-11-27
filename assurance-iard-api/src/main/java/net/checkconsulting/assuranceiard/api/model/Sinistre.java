@@ -43,7 +43,8 @@ public class Sinistre extends EntiteHorodatee {
     @Column(name = "type", nullable = false, length = 20)
     private String type;
 
-    @Column(name = "date_survenance", nullable = false)
+    /** US-24 : vide dans un brouillon commencé (étape 1) ; obligatoire à l'envoi. */
+    @Column(name = "date_survenance")
     private LocalDate dateSurvenance;
 
     @Column(name = "heure_survenance")
@@ -55,15 +56,20 @@ public class Sinistre extends EntiteHorodatee {
     @Column(name = "description", columnDefinition = "text")
     private String description;
 
-    @Column(name = "tiers_implique", nullable = false)
-    private Boolean tiersImplique = false;
+    /** US-24 : vide tant que le client n'a pas répondu (aucune présélection) ; obligatoire à l'envoi. */
+    @Column(name = "tiers_implique")
+    private Boolean tiersImplique;
 
     @JdbcTypeCode(SqlTypes.JSON)
     @Column(name = "tiers_infos")
     private String tiersInfos;
 
-    @Column(name = "blesses", nullable = false)
-    private Boolean blesses = false;
+    /** US-24, AC11 : seulement « oui / non » et le nombre de blessés ; aucune donnée médicale. */
+    @Column(name = "blesses")
+    private Boolean blesses;
+
+    @Column(name = "nombre_blesses")
+    private Short nombreBlesses;
 
     @Column(name = "declarant", length = 12)
     private String declarant;
@@ -93,6 +99,26 @@ public class Sinistre extends EntiteHorodatee {
 
     @Column(name = "brouillon_expire_le", nullable = false)
     private Instant brouillonExpireLe;
+
+    /** US-24, RG9 : corbeille AUTO ou HABITATION (produit du contrat), remplie à la création. */
+    @Column(name = "corbeille", length = 12)
+    private String corbeille;
+
+    /** US-24, RG11 : déclaré en « Autre / je ne sais pas ». */
+    @Column(name = "a_requalifier", nullable = false)
+    private Boolean requalifier = false;
+
+    /** US-24, AC7 : une pièce obligatoire manquait à l'envoi (ou manque encore). */
+    @Column(name = "pieces_manquantes", nullable = false)
+    private Boolean piecesManquantes = false;
+
+    /** US-24, RG2 : date de publication de l'arrêté de catastrophe naturelle, si le client la connaît. */
+    @Column(name = "date_arrete_catnat")
+    private LocalDate dateArreteCatnat;
+
+    /** US-24, AC8 : dernière étape enregistrée du brouillon (1 à 3), pour le reprendre là où il en était. */
+    @Column(name = "etape", nullable = false)
+    private Short etape = 1;
 
     /** Un brouillon expire 30 jours après sa création. */
     @PrePersist

@@ -6,11 +6,11 @@ import java.util.List;
 import net.checkconsulting.assuranceiard.api.dto.DonneesContrat;
 
 /** US-22 : contrats fictifs pour les tests de facturation. */
-final class DonneesContratDeTest {
+final class ContratsFictifs {
 
     static final long ID = 12L;
 
-    private DonneesContratDeTest() {
+    private ContratsFictifs() {
     }
 
     static DonneesContrat contrat(String produit, LocalDate effet, LocalDate fin, String frequence, Integer jour,

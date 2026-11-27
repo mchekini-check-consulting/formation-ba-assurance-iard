@@ -1,0 +1,218 @@
+<section class="mes-devis" aria-labelledby="justificatifs-titre">
+  <a [routerLink]="ADRESSE_SINISTRES">← Mes sinistres</a>
+  @if (envoyee()) {
+    <h1 id="justificatifs-titre" class="serif">Compléter mes justificatifs</h1>
+  } @else {
+    <h1 id="justificatifs-titre" class="serif">Vos justificatifs</h1>
+    <p class="note-champs"><span class="rouge">*</span> Champs obligatoires</p>
+    <iard-etapes-sinistre [etape]="3" />
+  }
+
+  @if (declaration(); as d) {
+    <iard-bandeau-urgence
+      [numero]="d.numeroAssistance"
+      [produit]="d.contrat.produit"
+      [type]="d.type"
+      [gestes]="d.gestesUrgence"
+    />
+  }
+
+  @if (erreur(); as message) {
+    <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+    <p><a [routerLink]="ADRESSE_SINISTRES">Retour à mes sinistres</a></p>
+  } @else if (declaration(); as d) {
+    <p class="sinistre__intro">
+      {{ d.libelleType }} · {{ LIBELLES_PRODUIT[d.contrat.produit] }} {{ d.contrat.numero }}
+      @if (d.numero) {
+        · Dossier {{ d.numero }}
+      }
+    </p>
+
+    <div class="devis-ligne">
+      <h2 class="serif">Pièces attendues</h2>
+      <p class="sinistre__note">
+        PDF, JPG ou PNG, 10 Mo maximum par fichier, 20 fichiers au plus. Sur téléphone, vous pouvez prendre une photo.
+      </p>
+      @if (d.piecesAttendues.length === 0) {
+        <p>Aucune pièce n’est attendue pour ce type de sinistre.</p>
+      }
+      <ul class="pieces">
+        @for (piece of d.piecesAttendues; track piece.code) {
+          <li class="piece">
+            <div class="piece__entete">
+              <p><strong>{{ piece.libelle }}</strong></p>
+              @if (piece.obligatoire) {
+                <span class="piece__badge piece__badge--obligatoire">Obligatoire</span>
+              } @else {
+                <span class="piece__badge">Facultative</span>
+              }
+            </div>
+            @if (fichiersDe(piece).length > 0) {
+              <ul class="piece__fichiers">
+                @for (jointe of fichiersDe(piece); track jointe.id) {
+                  <li>
+                    <span class="piece__coche" aria-hidden="true">✓</span>
+                    <button type="button" class="lien-bouton" (click)="ouvrir(jointe)">{{ jointe.nomFichier }}</button>
+                    <span class="sinistre__note">{{ taille(jointe.tailleOctets) }}</span>
+                    @if (!envoyee()) {
+                      <button
+                        type="button"
+                        class="lien-bouton"
+                        [attr.aria-label]="'Supprimer ' + jointe.nomFichier"
+                        (click)="supprimer(jointe)"
+                      >
+                        Supprimer
+                      </button>
+                    }
+                  </li>
+                }
+              </ul>
+            }
+            <div class="piece__depots">
+              <label class="btn btn--contour piece__depot">
+                {{ depotEnCours() === piece.code ? 'Envoi en cours…' : 'Déposer un fichier' }}
+                <input
+                  type="file"
+                  [accept]="ACCEPT_FICHIERS"
+                  [disabled]="!!depotEnCours()"
+                  [attr.aria-label]="'Déposer un fichier : ' + piece.libelle"
+                  (change)="deposer(piece, $event)"
+                />
+              </label>
+              <label class="btn btn--contour piece__depot">
+                Prendre une photo
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png"
+                  capture="environment"
+                  [disabled]="!!depotEnCours()"
+                  [attr.aria-label]="'Prendre une photo : ' + piece.libelle"
+                  (change)="deposer(piece, $event)"
+                />
+              </label>
+            </div>
+            @if (messagesPieces()[piece.code]; as message) {
+              <p class="erreur" role="alert">{{ message }}</p>
+            }
+          </li>
+        }
+      </ul>
+      @if (d.piecesManquantes) {
+        <p class="sinistre__message" role="status">{{ MESSAGE_PIECES_PLUS_TARD }}</p>
+      }
+    </div>
+
+    @if (!envoyee()) {
+      <div class="devis-ligne">
+        <div class="devis-ligne__entete">
+          <h2 class="serif">Récapitulatif</h2>
+        </div>
+        <dl class="recap">
+          <dt>Contrat</dt>
+          <dd>
+            {{ LIBELLES_PRODUIT[d.contrat.produit] }} {{ d.contrat.numero }}
+            @if (d.contrat.formule) {
+              (formule {{ libelleFormule(d.contrat.formule) }})
+            }
+          </dd>
+          <dt>Ce qui s’est passé</dt>
+          <dd>{{ d.libelleType }} <a [routerLink]="lien('type')">Modifier</a></dd>
+          <dt>Date et heure</dt>
+          <dd>
+            {{ jourFrancais(d.dateSurvenance) || 'Non renseignée' }}
+            @if (d.heureSurvenance) {
+              à {{ heureFrancaise(d.heureSurvenance) }}
+            }
+            <a [routerLink]="lien('circonstances')">Modifier</a>
+          </dd>
+          <dt>Lieu</dt>
+          <dd>{{ d.lieu || 'Non renseigné' }}</dd>
+          <dt>Description</dt>
+          <dd>{{ d.description || 'Non renseignée' }}</dd>
+          @for (detail of details(); track detail[0]) {
+            <dt>{{ detail[0] }}</dt>
+            <dd>{{ detail[1] }}</dd>
+          }
+          @if (d.dateArreteCatnat) {
+            <dt>Arrêté de catastrophe naturelle</dt>
+            <dd>publié le {{ jourFrancais(d.dateArreteCatnat) }}</dd>
+          }
+          <dt>Tiers impliqué</dt>
+          <dd>
+            @if (d.tiersImplique === null) {
+              Non renseigné
+            } @else if (d.tiersImplique) {
+              Oui
+              @if (d.tiers?.nom) {
+                · {{ d.tiers?.nom }}
+              }
+              @if (d.tiers?.immatriculation) {
+                · {{ d.tiers?.immatriculation }}
+              }
+              @if (d.tiers?.assureur) {
+                · assuré par {{ d.tiers?.assureur }}
+              }
+            } @else {
+              Non
+            }
+          </dd>
+          <dt>Blessés</dt>
+          <dd>
+            @if (d.blesses === null) {
+              Non renseigné
+            } @else if (d.blesses) {
+              Oui ({{ d.nombreBlesses }}) · {{ MESSAGE_BLESSES }}
+            } @else {
+              Non
+            }
+          </dd>
+          <dt>Déclaré par</dt>
+          <dd>
+            @if (d.declarant) {
+              {{ LIBELLES_DECLARANT[d.declarant] }}
+              @if (d.declarantNom) {
+                · {{ d.declarantNom }} ({{ d.declarantLien }})
+              }
+            } @else {
+              Non renseigné
+            }
+          </dd>
+          @if (d.explicationRetard) {
+            <dt>Raison du délai</dt>
+            <dd>{{ d.explicationRetard }}</dd>
+          }
+          <dt>Justificatifs</dt>
+          <dd>
+            {{ d.piecesJointes.length }} fichier(s)
+            @if (d.piecesManquantes) {
+              · des pièces obligatoires restent à déposer
+            }
+          </dd>
+        </dl>
+
+        <label class="honneur">
+          <input type="checkbox" [checked]="honneur()" (change)="cocher($event)" />
+          <span>{{ TEXTE_HONNEUR }} <span class="rouge">*</span></span>
+        </label>
+        <p class="sinistre__note honneur__mention">{{ MENTION_HONNEUR }}</p>
+
+        @if (messageEnvoi(); as message) {
+          <p class="mes-devis__erreur" role="alert">{{ message }}</p>
+        }
+        <div class="sinistre__actions">
+          <a class="btn btn--contour" [routerLink]="lien('circonstances')">Précédent</a>
+          <button type="button" class="btn" [disabled]="enCours()" (click)="envoyer()">
+            {{ enCours() ? 'Envoi en cours…' : 'Envoyer ma déclaration' }}
+          </button>
+          <button type="button" class="btn btn--contour" [disabled]="enCours()" (click)="plusTard()">
+            Enregistrer et terminer plus tard
+          </button>
+        </div>
+      </div>
+    } @else {
+      <p><a class="btn btn--contour" [routerLink]="ADRESSE_SINISTRES">Retour à mes sinistres</a></p>
+    }
+  } @else {
+    <p>Chargement de votre déclaration…</p>
+  }
+</section>
