@@ -102,6 +102,12 @@ public class PaiementAutoService {
         LocalDate dateFinAncienContrat = hamonApplicable
                 ? LocalDate.ofInstant(horloge.instant(), FRANCE).plusMonths(1) : null;
 
+        Conducteur conducteur = devis.getConducteurId() != null
+                ? conducteurs.findById(devis.getConducteurId()).orElse(null) : null;
+        Integer anneePermis = conducteur != null && conducteur.getDatePermis() != null
+                ? conducteur.getDatePermis().getYear() : null;
+        BigDecimal bonusMalus = conducteur != null ? conducteur.getCoefficientBonusMalus() : null;
+
         Optional<Contrat> contratExistant = contratsRepo.findByDevisAutoId(devisAutoId);
 
         log.info("layer=service Initialisation paiement auto : devisId={}", devisAutoId);
@@ -116,7 +122,8 @@ public class PaiementAutoService {
                 MandatService.ICS, MandatService.CREANCIER,
                 souscripteur.getPrenom() + " " + souscripteur.getNom(),
                 contratExistant.map(Contrat::getNumero).orElse(null),
-                contratExistant.map(c -> documentMandatSepaId(c.getId())).orElse(null));
+                contratExistant.map(c -> documentMandatSepaId(c.getId())).orElse(null),
+                anneePermis, bonusMalus);
     }
 
     // -------------------------------------------------------------------------
@@ -344,18 +351,23 @@ public class PaiementAutoService {
         }
         if (dateDebut.isAfter(aujourd_hui.plusDays(DELAI_MAX_JOURS))) {
             throw new InformationRefuseeException("dateDebut",
-                    "La date de début doit être comprise entre le " + aujourd_hui.plusDays(1)
-                    + " et le " + aujourd_hui.plusDays(DELAI_MAX_JOURS) + ".");
+                    "La date de début doit être comprise entre le "
+                    + formaterDate(aujourd_hui.plusDays(1))
+                    + " et le " + formaterDate(aujourd_hui.plusDays(DELAI_MAX_JOURS)) + ".");
         }
         if (Boolean.TRUE.equals(devis.getAssurePlusUnAn())) {
             LocalDate finAncienContrat = LocalDate.ofInstant(horloge.instant(), FRANCE).plusMonths(1);
             LocalDate minDateDebut = finAncienContrat.plusDays(1);
             if (dateDebut.isBefore(minDateDebut)) {
                 throw new InformationRefuseeException("dateDebut",
-                        "La date de début ne peut pas être antérieure au " + minDateDebut
-                        + ", fin de votre ancien contrat.");
+                        "La date de début ne peut pas être antérieure au "
+                        + formaterDate(minDateDebut) + ", fin de votre ancien contrat.");
             }
         }
+    }
+
+    private static String formaterDate(LocalDate date) {
+        return String.format("%02d/%02d/%d", date.getDayOfMonth(), date.getMonthValue(), date.getYear());
     }
 
     private static void verifierJour(int jour) {

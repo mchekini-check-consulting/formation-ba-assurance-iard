@@ -189,9 +189,7 @@ class PaiementAutoServiceTest {
 
     @Test
     void franchiseTrEst500() {
-        // Vérification indirecte via initialiser : franchise TR = 500
         devis.setFormuleChoisie("TR");
-        when(souscripteurs.findByDevisAutoId(10L)).thenReturn(Optional.of(souscripteur));
         var rep = service.initialiser(10L, JETON);
         assertThat(rep.franchise()).isEqualByComparingTo(new BigDecimal("500"));
     }
@@ -210,8 +208,30 @@ class PaiementAutoServiceTest {
         assertThat(rep.franchise()).isNull();
     }
 
+    // ---- initialiser : données conducteur ----
+
+    @Test
+    void initialiserInclutLAnneePermisEtLeBonusMalus() {
+        Conducteur conducteur = new Conducteur();
+        conducteur.setDatePermis(java.time.LocalDate.of(2010, 6, 15));
+        conducteur.setCoefficientBonusMalus(new BigDecimal("0.68"));
+        when(conducteurs.findById(3L)).thenReturn(Optional.of(conducteur));
+
+        var rep = service.initialiser(10L, JETON);
+        assertThat(rep.conducteurAnneePermis()).isEqualTo(2010);
+        assertThat(rep.conducteurBonusMalus()).isEqualByComparingTo(new BigDecimal("0.68"));
+    }
+
+    @Test
+    void initialiserTolereUnConducteurSansPermisNiBonusMalus() {
+        when(conducteurs.findById(3L)).thenReturn(Optional.of(new Conducteur()));
+        var rep = service.initialiser(10L, JETON);
+        assertThat(rep.conducteurAnneePermis()).isNull();
+        assertThat(rep.conducteurBonusMalus()).isNull();
+    }
+
     private PaiementAutoRequest demande(LocalDate dateDebut, int jour) {
         return new PaiementAutoRequest(dateDebut, "Marie Durand", IBAN_BNP,
-                "BNPAFRPPXXX", "BNP Paribas", jour, true);
+                null, null, jour, true);
     }
 }

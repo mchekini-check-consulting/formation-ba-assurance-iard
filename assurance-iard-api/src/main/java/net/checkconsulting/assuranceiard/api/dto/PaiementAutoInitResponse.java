@@ -26,7 +26,9 @@ public record PaiementAutoInitResponse(
         String creancier,
         String titulairePrerempli,
         String numeroContratExistant,
-        Long documentMandatSepaIdExistant) {
+        Long documentMandatSepaIdExistant,
+        Integer conducteurAnneePermis,
+        BigDecimal conducteurBonusMalus) {
 
     public record OptionPrix(String code, BigDecimal prixMensuelTtc) {
     }

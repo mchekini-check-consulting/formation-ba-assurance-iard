@@ -43,6 +43,10 @@ class PaiementAutoResourceTest {
             "iban":"FR7630006000011234567890189","bic":"BNPAFRPPXXX",
             "banque":"BNP Paribas","jourPrelevement":10,"autorisationPrelevement":true}
             """;
+    private static final String CORPS_CONTRAT_SANS_BIC = """
+            {"dateDebut":"2026-12-15","titulaire":"Marie Durand",
+            "iban":"FR7630006000011234567890189","jourPrelevement":10,"autorisationPrelevement":true}
+            """;
 
     @Autowired
     private MockMvc mockMvc;
@@ -70,7 +74,8 @@ class PaiementAutoResourceTest {
                 "Marie", "Durand", "12 rue de la Paix", "75001", "Paris", "marie@test.fr",
                 "Renault", "Clio", "AA-123-BB", "TR", List.of(),
                 new BigDecimal("500.00"), new BigDecimal("55.00"), new BigDecimal("660.00"),
-                false, null, "FR00ZZZ000000", "Assur'Easy", "Marie Durand", null, null);
+                false, null, "FR00ZZZ000000", "Assur'Easy", "Marie Durand", null, null,
+                2010, new BigDecimal("0.68"));
         when(paiementAutoService.initialiser(DEVIS_ID, JETON)).thenReturn(init);
 
         mockMvc.perform(get("/v1/devis/auto/{id}/paiement", DEVIS_ID)
@@ -97,7 +102,20 @@ class PaiementAutoResourceTest {
         verifierIban("{\"iban\":\"" + IBAN_TEST + "\"}")
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.valide").value(true))
+                .andExpect(jsonPath("$.zoneSepa").value(true))
                 .andExpect(jsonPath("$.bic").value("BNPAFRPPXXX"));
+    }
+
+    @Test
+    void verifierIbanHorsSepaRetourneZoneSepaFalse() throws Exception {
+        when(paiementAutoService.verifierIban(any()))
+                .thenReturn(IbanVerificationResponse.horsSepa(
+                        "Cet IBAN n'est pas dans la zone SEPA : le prélèvement est impossible."));
+
+        verifierIban("{\"iban\":\"BR1800360305000010009795493C1\"}")
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.valide").value(false))
+                .andExpect(jsonPath("$.zoneSepa").value(false));
     }
 
     @Test
@@ -136,13 +154,22 @@ class PaiementAutoResourceTest {
                 any());
     }
 
+    @Test
+    void genererContratAccepteSansBicNiBanque() throws Exception {
+        ContratAutoGenerationResponse rep = new ContratAutoGenerationResponse(
+                "AE-2026-000002", "EN_ATTENTE_DE_SIGNATURE", 8L,
+                "marie@test.fr", "Marie", "Durand",
+                LocalDate.of(2026, 12, 15), new BigDecimal("55.00"));
+        when(paiementAutoService.genererContrat(eq(DEVIS_ID), any(), eq(JETON))).thenReturn(rep);
+
+        genererContrat(CORPS_CONTRAT_SANS_BIC).andExpect(status().isCreated());
+    }
+
     @ParameterizedTest
     @ValueSource(strings = {
         "\"dateDebut\":\"2026-12-15\"|\"dateDebut\":null",
         "\"titulaire\":\"Marie Durand\"|\"titulaire\":\" \"",
         "\"iban\":\"FR7630006000011234567890189\"|\"iban\":\"\"",
-        "\"bic\":\"BNPAFRPPXXX\"|\"bic\":\"\"",
-        "\"banque\":\"BNP Paribas\"|\"banque\":\"\"",
         "\"jourPrelevement\":10|\"jourPrelevement\":null",
         "\"autorisationPrelevement\":true|\"autorisationPrelevement\":false"
     })

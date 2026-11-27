@@ -34,7 +34,7 @@
 .titre-zone {
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 4px;
   padding-top: 4px;
 }
 
@@ -48,6 +48,12 @@
   margin: 0;
   color: var(--texte-doux);
   font-size: 15px;
+}
+
+.mention-obligatoire {
+  margin: 0;
+  font-size: 13px;
+  color: var(--texte-doux);
 }
 
 .asterisque {
@@ -102,42 +108,11 @@
   }
 }
 
-/* ── Récapitulatif ── */
-
-.recap-grille {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-}
-
-.recap {
-  &__libelle {
-    margin: 0;
-    font-size: 12px;
-    color: var(--texte-doux);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  &__valeur {
-    margin: 2px 0 0;
-    font-size: 15px;
-    font-weight: 600;
-    color: var(--texte);
-  }
-
-  &__detail {
-    margin: 2px 0 0;
-    font-size: 13px;
-    color: var(--texte-doux);
-  }
-}
-
 /* ── Loi Hamon ── */
 
 .encadre-hamon {
-  background: #e3f2fd;
-  border: 1px solid #90caf9;
+  background: #fdf2f4;
+  border: 1px solid #e8b4bd;
   border-radius: 10px;
   padding: 16px 20px;
   display: flex;
@@ -148,7 +123,7 @@
     margin: 0;
     font-size: 15px;
     font-weight: 700;
-    color: #0d47a1;
+    color: var(--rouge);
   }
 
   &__texte {
@@ -165,10 +140,6 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-
-  &--etroit {
-    max-width: 220px;
-  }
 }
 
 .champ-grille {
@@ -216,9 +187,13 @@
   }
 
   &--iban {
-    flex: 1;
     font-family: monospace;
     letter-spacing: 0.05em;
+  }
+
+  &--verifie {
+    background: var(--beige);
+    color: var(--texte-doux);
   }
 
   &:read-only {
@@ -227,30 +202,18 @@
   }
 }
 
-/* ── IBAN ligne ── */
-
-.iban-ligne {
+.verif-ok-ligne {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 8px;
-  align-items: flex-start;
 }
 
-.bouton-verif {
-  padding: 10px 16px;
-  background: var(--rouge);
-  color: white;
-  border: none;
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: opacity 0.15s;
-
-  &:disabled {
-    opacity: 0.6;
-    cursor: not-allowed;
-  }
+.verif-statut {
+  margin: 2px 0 0;
+  font-size: 13px;
+  color: var(--texte-doux);
+  font-style: italic;
 }
 
 .verif-ok {
@@ -260,12 +223,24 @@
   font-weight: 600;
 }
 
+.lien-modifier {
+  display: inline;
+  font-size: 13px;
+  color: var(--rouge);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
 /* ── Jour de prélèvement ── */
 
 .choix {
-  display: flex;
-  gap: 8px;
-
   &--trois {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -274,7 +249,7 @@
   }
 
   &__option {
-    padding: 8px 20px;
+    padding: 8px 0;
     border: 1.5px solid var(--bordure);
     border-radius: 6px;
     background: white;
@@ -325,6 +300,163 @@
   margin: 2px 0 0;
   font-size: 13px;
   color: var(--erreur);
+}
+
+/* ── Carte SEPA ── */
+
+.sepa-grille {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+
+  @media (max-width: 600px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sepa-libelle {
+  margin: 0 0 2px;
+  font-size: 12px;
+  color: var(--texte-doux);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.sepa-valeur {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--texte);
+}
+
+.sepa-droits {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-doux);
+  line-height: 1.5;
+}
+
+/* ── Échéancier ── */
+
+.echeancier {
+  background: var(--beige);
+  border-radius: 8px;
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  &__liste {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  &__ligne {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--texte);
+  }
+
+  &__total {
+    font-size: 13px;
+    color: var(--texte-doux);
+    padding-top: 6px;
+    border-top: 1px solid var(--bordure);
+
+    strong {
+      color: var(--texte);
+    }
+  }
+
+  &__invite {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-doux);
+    font-style: italic;
+  }
+}
+
+.lien-echeancier {
+  font-size: 13px;
+  color: var(--rouge);
+  text-decoration: underline;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+/* ── Encadré Résilier ── */
+
+.encadre-resilier {
+  background: #faf9f7;
+  border: 1px solid var(--bordure);
+  border-radius: 10px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+
+  &__titre {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--texte);
+  }
+
+  &__texte {
+    margin: 0;
+    font-size: 13px;
+    color: var(--texte-doux);
+    line-height: 1.5;
+  }
+}
+
+/* ── Récapitulatif ── */
+
+.recap-liste {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+
+  &__ligne {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 12px;
+    padding: 10px 0;
+  }
+
+  &__separateur {
+    height: 1px;
+    background: var(--bordure-claire);
+  }
+
+  &__libelle {
+    margin: 0 0 2px;
+    font-size: 12px;
+    color: var(--texte-doux);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    font-weight: 400;
+  }
+
+  &__valeur {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--texte);
+  }
 }
 
 /* ── Alertes ── */
@@ -396,8 +528,22 @@
   display: flex;
   gap: 12px;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-end;
   padding-top: 8px;
+}
+
+.actions-droite {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 6px;
+}
+
+.aide-bouton {
+  margin: 0;
+  font-size: 12px;
+  color: var(--texte-doux);
+  text-align: right;
 }
 
 .lien-retour {
@@ -510,12 +656,6 @@
     p { margin: 0; }
   }
 
-  &__annuel {
-    font-size: 11px;
-    font-weight: 400;
-    color: var(--texte-doux);
-  }
-
   &__prix {
     text-align: right;
 
@@ -530,6 +670,13 @@
       font-size: 12px;
       color: var(--texte-doux);
     }
+  }
+
+  &__annuel-phrase {
+    margin: 0;
+    font-size: 12px;
+    color: var(--texte-doux);
+    line-height: 1.4;
   }
 }
 
@@ -550,14 +697,6 @@
 }
 
 @media (max-width: 540px) {
-  .recap-grille {
-    grid-template-columns: 1fr;
-  }
-
-  .champ--etroit {
-    max-width: 100%;
-  }
-
   .contenu-etape {
     margin-top: 20px;
   }

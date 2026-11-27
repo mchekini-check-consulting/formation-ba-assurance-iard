@@ -179,6 +179,8 @@ export interface PaiementAutoInit {
   titulairePrerempli: string;
   numeroContratExistant: string | null;
   documentMandatSepaIdExistant: number | null;
+  conducteurAnneePermis: number | null;
+  conducteurBonusMalus: number | null;
 }
 
 // Résultat de la génération du contrat auto
@@ -196,5 +198,6 @@ export interface IbanVerification {
   ibanMasque: string | null;
   bic: string | null;
   banque: string | null;
+  zoneSepa: boolean;
   messageErreur: string | null;
 }

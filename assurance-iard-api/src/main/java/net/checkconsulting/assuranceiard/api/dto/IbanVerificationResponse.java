@@ -6,13 +6,18 @@ public record IbanVerificationResponse(
         String ibanMasque,
         String bic,
         String banque,
+        boolean zoneSepa,
         String messageErreur) {
 
     public static IbanVerificationResponse valide(String ibanMasque, String bic, String banque) {
-        return new IbanVerificationResponse(true, ibanMasque, bic, banque, null);
+        return new IbanVerificationResponse(true, ibanMasque, bic, banque, true, null);
     }
 
     public static IbanVerificationResponse invalide(String messageErreur) {
-        return new IbanVerificationResponse(false, null, null, null, messageErreur);
+        return new IbanVerificationResponse(false, null, null, null, true, messageErreur);
+    }
+
+    public static IbanVerificationResponse horsSepa(String messageErreur) {
+        return new IbanVerificationResponse(false, null, null, null, false, messageErreur);
     }
 }

@@ -10,8 +10,8 @@ public record PaiementAutoRequest(
         @NotNull LocalDate dateDebut,
         @NotBlank @Size(min = 2, max = 140) String titulaire,
         @NotBlank @Size(max = 50) String iban,
-        @NotBlank @Size(max = 11) String bic,
-        @NotBlank @Size(max = 100) String banque,
+        @Size(max = 11) String bic,
+        @Size(max = 100) String banque,
         @NotNull Integer jourPrelevement,
         @AssertTrue Boolean autorisationPrelevement) {
 }

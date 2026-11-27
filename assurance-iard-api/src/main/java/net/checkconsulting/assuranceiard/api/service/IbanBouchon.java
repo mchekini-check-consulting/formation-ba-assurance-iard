@@ -25,7 +25,7 @@ public class IbanBouchon {
     /** Vérifie si la zone SEPA est supportée pour l'IBAN donné (normalisé, clé déjà vérifiée). */
     public IbanVerificationResponse verifier(String ibanNormalise) {
         if (IBAN_HORS_SEPA.equalsIgnoreCase(ibanNormalise)) {
-            return IbanVerificationResponse.invalide(MSG_HORS_SEPA);
+            return IbanVerificationResponse.horsSepa(MSG_HORS_SEPA);
         }
         if (IBAN_VALIDE_SPECIFIQUE.equalsIgnoreCase(ibanNormalise)) {
             return IbanVerificationResponse.valide(masquer(ibanNormalise), BIC_SPECIFIQUE, BANQUE_SPECIFIQUE);

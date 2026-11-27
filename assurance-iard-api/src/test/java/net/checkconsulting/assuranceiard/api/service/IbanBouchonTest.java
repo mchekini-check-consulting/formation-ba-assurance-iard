@@ -21,6 +21,7 @@ class IbanBouchonTest {
     void lIbanBresillienEstRefuseCarHorsSEPA() {
         IbanVerificationResponse rep = bouchon.verifier("BR1800360305000010009795493C1");
         assertThat(rep.valide()).isFalse();
+        assertThat(rep.zoneSepa()).isFalse();
         assertThat(rep.messageErreur()).contains("SEPA");
     }
 

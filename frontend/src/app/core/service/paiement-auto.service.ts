@@ -8,8 +8,8 @@ export interface DemandePaiementAuto {
   dateDebut: string;
   titulaire: string;
   iban: string;
-  bic: string;
-  banque: string;
+  bic: string | null;
+  banque: string | null;
   jourPrelevement: number;
   autorisationPrelevement: boolean;
 }
