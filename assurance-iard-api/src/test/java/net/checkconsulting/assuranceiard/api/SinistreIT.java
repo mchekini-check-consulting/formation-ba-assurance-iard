@@ -159,9 +159,10 @@ class SinistreIT {
     void ac8MesSinistresDeCamilleSansLeBrouillonExpire() throws Exception {
         appel(get("/sinistres"), camille)
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.length()").value(1))
-                .andExpect(jsonPath("$[0].statut").value("BROUILLON"))
-                .andExpect(jsonPath("$[0].libelleType").value("Accident sans tiers"))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[*].statut").value(not(hasItem("DECLARE"))))
+                .andExpect(jsonPath("$[*].libelleType").value(hasItem("Accident sans tiers")))
+                .andExpect(jsonPath("$[*].numeroContrat").value(hasItem("AE-RECETTE-A06")))
                 .andExpect(jsonPath("$[0].brouillonExpireLe").isNotEmpty());
     }
 
@@ -201,15 +202,36 @@ class SinistreIT {
                 .andExpect(jsonPath("$.contrats[*].numero").value(hasItem("AE-RECETTE-H01")))
                 .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-A01"))))
                 .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-A02"))))
+                .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-A06"))))
+                .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-A07"))))
                 .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-A10"))));
 
-        for (String contrat : List.of("AE-RECETTE-A01", "AE-RECETTE-A02", "AE-RECETTE-A10")) {
+        // A06 Impayé et A07 Suspendu : non déclarables (décision PO du 27/11/2026).
+        for (String contrat : List.of("AE-RECETTE-A01", "AE-RECETTE-A02", "AE-RECETTE-A06", "AE-RECETTE-A07",
+                "AE-RECETTE-A10")) {
             appel(post("/sinistres").contentType(JSON)
                     .content("{\"numeroContrat\":\"" + contrat + "\",\"type\":\"VOL\"}"), camille)
                     .andExpect(status().is(422));
         }
         // Résilié il y a 5 jours : moins de 2 ans, déclarable.
         assertThat(creer(camille, "AE-RECETTE-A09", "VOL")).isPositive();
+    }
+
+    @Test
+    @Order(4)
+    void ac1LeBrouillonDUnContratImpayeResteConsultableMaisNePeutPlusEtreEnvoye() throws Exception {
+        Long id = jdbc.queryForObject("SELECT id FROM sinistre WHERE description LIKE '%(recette US-24 : impayé)'",
+                Long.class);
+
+        appel(get("/sinistres/{id}", id), camille)
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.statut").value("BROUILLON"));
+        appel(post("/sinistres/{id}/envoi", id).contentType(JSON).content("{\"declarationHonneur\":true}"), camille)
+                .andExpect(status().is(422))
+                .andExpect(jsonPath("$.detail").value(containsString("assistance 24h/24")));
+        assertThat(jdbc.queryForObject("SELECT statut FROM sinistre WHERE id = ?", String.class, id))
+                .isEqualTo("BROUILLON");
+        verify(emails, never()).accuserReception(any());
     }
 
     @Test

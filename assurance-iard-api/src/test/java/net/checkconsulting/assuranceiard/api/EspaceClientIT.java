@@ -149,10 +149,12 @@ class EspaceClientIT {
                 .andExpect(jsonPath("$.devisEnCours[*].description")
                         .value(containsInAnyOrder("Peugeot 208 · EF-003-GH", "Peugeot 208 · EF-004-GH")))
                 // US-24, AC8 : son brouillon (pas encore expiré) est affiché, à reprendre ; le brouillon expiré
-                // des données de test ne l'est pas.
-                .andExpect(jsonPath("$.sinistres.length()").value(1))
-                .andExpect(jsonPath("$.sinistres[0].statut").value("BROUILLON"))
-                .andExpect(jsonPath("$.sinistres[0].etape").value(2))
+                // des données de test ne l'est pas. Le second est celui du contrat Impayé A06 (décision PO du
+                // 27/11/2026 : consultable, mais plus envoyable).
+                .andExpect(jsonPath("$.sinistres.length()").value(2))
+                .andExpect(jsonPath("$.sinistres[*].statut").value(containsInAnyOrder("BROUILLON", "BROUILLON")))
+                .andExpect(jsonPath("$.sinistres[?(@.numeroContrat == 'AE-RECETTE-A03')].etape").value(hasItem(2)))
+                .andExpect(jsonPath("$.sinistres[?(@.numeroContrat == 'AE-RECETTE-A06')].etape").value(hasItem(3)))
                 .andExpect(jsonPath("$.dernieresFactures").isEmpty())
                 .andExpect(jsonPath("$.contrats[*].numero").value(not(hasItem("AE-RECETTE-1"))));
     }

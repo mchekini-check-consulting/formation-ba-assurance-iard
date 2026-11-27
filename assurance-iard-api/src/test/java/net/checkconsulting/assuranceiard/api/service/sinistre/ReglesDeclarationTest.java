@@ -35,8 +35,8 @@ class ReglesDeclarationTest {
     }
 
     @ParameterizedTest
-    @CsvSource({"ACTIF, true", "ACTIF_JUSTIFICATIFS_ATTENDUS, true", "AVENANT_EN_ATTENTE, true", "IMPAYE, true",
-        "SUSPENDU, true", "RESILIATION_EN_COURS, true", "EN_ATTENTE_DE_SIGNATURE, false", "EN_ATTENTE_EFFET, false",
+    @CsvSource({"ACTIF, true", "ACTIF_JUSTIFICATIFS_ATTENDUS, true", "AVENANT_EN_ATTENTE, true", "IMPAYE, false",
+        "SUSPENDU, false", "RESILIATION_EN_COURS, true", "EN_ATTENTE_DE_SIGNATURE, false", "EN_ATTENTE_EFFET, false",
         "RENONCE, false"})
     void ac1StatutsOuvertsALaDeclaration(String statut, boolean attendu) {
         assertThat(ReglesDeclaration.declarable(contrat(statut, AUJOURDHUI.minusYears(1), null), AUJOURDHUI))

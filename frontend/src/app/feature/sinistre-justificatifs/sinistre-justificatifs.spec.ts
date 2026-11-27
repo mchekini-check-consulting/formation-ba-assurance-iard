@@ -164,18 +164,19 @@ describe('SinistreJustificatifs, étape 3 (US-24, AC7, AC9, AC14 à AC16, RG8)',
     });
   });
 
-  it('un refus à l’envoi (explication manquante) est affiché tel quel', () => {
+  it.each([
+    [400, 'Expliquez en quelques mots la raison du délai de déclaration.'],
+    // AC1 (décision PO du 27/11/2026) : brouillon d'un contrat devenu Impayé ou Suspendu.
+    [422, "La situation actuelle de votre contrat ne permet plus d'envoyer cette déclaration en ligne. Appelez notre assistance 24h/24 au 01 23 45 67 89 : un conseiller enregistrera votre sinistre avec vous."],
+  ])('un refus %i à l’envoi est affiché tel quel', (status, detail) => {
     charger();
     const honneur = page.querySelector<HTMLInputElement>('.honneur input')!;
     honneur.checked = true;
     honneur.dispatchEvent(new Event('change'));
     bouton('Envoyer ma déclaration').click();
-    http.expectOne(`${ADRESSE}/envoi`).flush({ detail: 'Expliquez en quelques mots la raison du délai de déclaration.' }, {
-      status: 400,
-      statusText: 'x',
-    });
+    http.expectOne(`${ADRESSE}/envoi`).flush({ detail }, { status, statusText: 'x' });
     fixture.detectChanges();
-    expect(page.querySelector('[role="alert"]')?.textContent).toContain('raison du délai');
+    expect(page.querySelector('[role="alert"]')?.textContent).toContain(detail);
   });
 
   it('AC8 : « Enregistrer et terminer plus tard » à l’étape 3', () => {

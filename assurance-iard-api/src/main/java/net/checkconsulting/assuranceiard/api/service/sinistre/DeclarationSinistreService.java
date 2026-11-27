@@ -168,6 +168,16 @@ public class DeclarationSinistreService {
         return contrat.getCompte() == null ? null : contrat.getCompte().getPrenom();
     }
 
+    /**
+     * AC1 (décision PO du 27/11/2026) : un brouillon commencé sur un contrat devenu Impayé ou Suspendu (ou qui n'est
+     * plus ouvert à la déclaration) ne peut plus être envoyé ; il reste consultable.
+     */
+    void verifierEnvoyable(Contrat contrat) {
+        if (!ReglesDeclaration.declarable(contrat, vue.aujourdhui())) {
+            throw DeclarationImpossibleException.aLEnvoi(proprietes.numeroAssistance());
+        }
+    }
+
     private Contrat declarable(String numeroContrat) {
         Contrat contrat = contrats.parNumero(numeroContrat).orElseThrow(ContratInconnuException::new);
         if (!ReglesDeclaration.declarable(contrat, vue.aujourdhui())) {

@@ -10,9 +10,10 @@ import net.checkconsulting.assuranceiard.api.repository.ReferentielSinistresRepo
 import net.checkconsulting.assuranceiard.api.utils.JoursOuvres;
 
 /**
- * US-24 : règles de la déclaration, sans accès aux données (décisions BA, à valider PO).
+ * US-24 : règles de la déclaration, sans accès aux données (décisions PO du 27/11/2026).
  * <ul>
- *   <li>AC1 : contrats ouverts à la déclaration ; un contrat résilié l'est encore 2 ans après sa date de fin.</li>
+ *   <li>AC1 : contrats ouverts à la déclaration ; un contrat résilié l'est encore 2 ans après sa date de fin. Un
+ *       contrat Impayé ou Suspendu ne l'est pas : le client appelle l'assistance 24h/24.</li>
  *   <li>AC3, RG4 : un type est couvert si la formule ou une option en vigueur à la date du sinistre le couvre ;
  *       jamais de message pour « Autre » (RG11).</li>
  *   <li>AC5 : date antérieure à la date d'effet ou postérieure à la date de fin.</li>
@@ -25,7 +26,7 @@ public final class ReglesDeclaration {
     static final String RESILIE = "RESILIE";
     /** AC1 : statuts qui permettent de déclarer (RESILIE : moins de 2 ans après la date de fin). */
     public static final Set<String> STATUTS_DECLARABLES = Set.of("ACTIF", "ACTIF_JUSTIFICATIFS_ATTENDUS",
-            "AVENANT_EN_ATTENTE", "IMPAYE", "SUSPENDU", "RESILIATION_EN_COURS", RESILIE);
+            "AVENANT_EN_ATTENTE", "RESILIATION_EN_COURS", RESILIE);
     static final int ANNEES_APRES_RESILIATION = 2;
 
     private ReglesDeclaration() {
