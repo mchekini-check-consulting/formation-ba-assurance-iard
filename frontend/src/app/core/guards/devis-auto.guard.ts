@@ -48,3 +48,8 @@ export const souscripteurEnregistreAutoGuard: CanActivateFn = () => {
   const devisAuto = inject(DevisAutoService);
   return devisAuto.souscripteurEnregistre() ? true : inject(Router).parseUrl('/devis-auto/informations');
 };
+
+export const contratAutoGenereGuard: CanActivateFn = () => {
+  const devisAuto = inject(DevisAutoService);
+  return devisAuto.contratGenere() !== null ? true : inject(Router).parseUrl('/devis-auto/paiement');
+};

@@ -42,6 +42,10 @@ public interface ContratRepository extends JpaRepository<Contrat, Long> {
     @Query("SELECT c.compte.id FROM Contrat c WHERE c.numero = :numero")
     List<Long> proprietairesParNumero(@Param("numero") String numero);
 
+    /** US-31 étape 5 : contrat auto généré depuis ce devis (idempotence). */
+    @LogMetier
+    Optional<Contrat> findByDevisAutoId(Long devisAutoId);
+
     /** RG1 : prochain numéro de séquence pour l'année donnée. */
     @LogMetier
     @Query(value = """

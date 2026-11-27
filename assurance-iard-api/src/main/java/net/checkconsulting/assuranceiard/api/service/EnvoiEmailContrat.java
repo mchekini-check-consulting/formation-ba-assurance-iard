@@ -1,7 +1,17 @@
 package net.checkconsulting.assuranceiard.api.service;
 
-/** Envoie le code de signature du contrat à l'adresse e-mail du souscripteur (US-16). */
+import java.math.BigDecimal;
+import java.time.LocalDate;
+
+/** Envoie les e-mails liés au contrat (US-16, US-31). */
 public interface EnvoiEmailContrat {
 
     void envoyer(String destinataire, String code);
+
+    /**
+     * US-31 étape 5, RG6 : remise sur support durable — envoie le mandat SEPA et l'échéancier en PDF.
+     * L'e-mail ne contient jamais l'IBAN, même masqué.
+     */
+    void envoyerMandatSepa(String destinataire, String prenom, String nom, String numeroContrat,
+            LocalDate premierPrelevement, BigDecimal montantMensuel, byte[] pdfMandatSepa);
 }

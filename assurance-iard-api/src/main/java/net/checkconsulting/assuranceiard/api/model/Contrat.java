@@ -105,4 +105,8 @@ public class Contrat {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "mandat_sepa_id", insertable = false, updatable = false)
     private MandatSepa mandatSepa;
+
+    /** US-31 étape 5 : devis auto source du contrat (idempotence à la génération). */
+    @Column(name = "devis_auto_id")
+    private Long devisAutoId;
 }

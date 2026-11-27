@@ -42,15 +42,21 @@
         </li>
         <li class="progression__etape"
             [class.progression__etape--active]="etape4Active()"
+            [class.progression__etape--faite]="etape4Faite()"
             [attr.aria-current]="etape4Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 4</span>
           <span class="progression__nom">Mes informations</span>
         </li>
-        <li class="progression__etape">
+        <li class="progression__etape"
+            [class.progression__etape--active]="etape5Active()"
+            [class.progression__etape--faite]="etape5Faite()"
+            [attr.aria-current]="etape5Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 5</span>
           <span class="progression__nom">Paiement</span>
         </li>
-        <li class="progression__etape">
+        <li class="progression__etape"
+            [class.progression__etape--active]="etape6Active()"
+            [attr.aria-current]="etape6Active() ? 'step' : null">
           <span class="progression__libelle">&#201;tape 6</span>
           <span class="progression__nom">Mon contrat</span>
         </li>

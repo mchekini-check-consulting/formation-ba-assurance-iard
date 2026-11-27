@@ -2,7 +2,7 @@ import { Routes } from '@angular/router';
 import { adminGuard } from './core/guards/admin.guard';
 import { compteConnecteGuard } from './core/guards/compte-connecte.guard';
 import { droitGuard } from './core/guards/droit.guard';
-import { achatRenseigneGuard, besoinsRenseignesGuard, conducteurRenseigneGuard, formuleChoisieAutoGuard, souscripteurEnregistreAutoGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './core/guards/devis-auto.guard';
+import { achatRenseigneGuard, besoinsRenseignesGuard, conducteurRenseigneGuard, contratAutoGenereGuard, formuleChoisieAutoGuard, souscripteurEnregistreAutoGuard, usageRenseigneGuard, vehiculeRenseigneGuard } from './core/guards/devis-auto.guard';
 import {
   formuleChoisieGuard,
   informationsEnregistreesGuard,
@@ -18,7 +18,8 @@ import { DevisAutoConducteur } from './feature/devis-auto-conducteur/devis-auto-
 import { DevisAutoBesoins } from './feature/devis-auto-besoins/devis-auto-besoins';
 import { DevisAutoFormule } from './feature/devis-auto-formule/devis-auto-formule';
 import { DevisAutoInformations } from './feature/devis-auto-informations/devis-auto-informations';
-import { DevisAutoPaiementStub } from './feature/devis-auto-paiement-stub/devis-auto-paiement-stub';
+import { DevisAutoPaiement } from './feature/devis-auto-paiement/devis-auto-paiement';
+import { DevisAutoContratStub } from './feature/devis-auto-contrat-stub/devis-auto-contrat-stub';
 import { DevisAutoUsage } from './feature/devis-auto-usage/devis-auto-usage';
 import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
@@ -221,9 +222,15 @@ export const routes: Routes = [
   },
   {
     path: 'devis-auto/paiement',
-    component: DevisAutoPaiementStub,
+    component: DevisAutoPaiement,
     canActivate: [souscripteurEnregistreAutoGuard, sessionGuard],
-    title: "Étape 5 – Paiement (à venir) – Assur'Easy",
+    title: "Étape 5 – Paiement – Assur'Easy",
+  },
+  {
+    path: 'devis-auto/contrat',
+    component: DevisAutoContratStub,
+    canActivate: [contratAutoGenereGuard, sessionGuard],
+    title: "Étape 6 – Mon contrat – Assur'Easy",
   },
   { path: 'devis/logement', component: DevisLogement, title: "Votre logement – Assur'Easy" },
   {

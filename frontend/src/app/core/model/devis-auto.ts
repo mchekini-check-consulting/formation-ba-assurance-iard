@@ -150,3 +150,51 @@ export interface FormuleAutoChoisie {
   prixAnnuelTtc: number | null;
   versionGrille: string | null;
 }
+
+// US-31 étape 5 : données initiales de l'écran paiement
+export interface OptionPrixAuto {
+  code: string;
+  prixMensuelTtc: number | null;
+}
+
+export interface PaiementAutoInit {
+  souscripteurPrenom: string;
+  souscripteurNom: string;
+  souscripteurAdresse: string;
+  souscripteurCodePostal: string;
+  souscripteurVille: string;
+  souscripteurEmail: string;
+  vehiculeMarque: string;
+  vehiculeModele: string;
+  vehiculePlaque: string;
+  formule: string;
+  options: OptionPrixAuto[];
+  franchise: number | null;
+  prixMensuelTtc: number;
+  prixAnnuelTtc: number;
+  hamonApplicable: boolean;
+  dateFinAncienContrat: string | null;
+  ics: string;
+  creancier: string;
+  titulairePrerempli: string;
+  numeroContratExistant: string | null;
+  documentMandatSepaIdExistant: number | null;
+}
+
+// Résultat de la génération du contrat auto
+export interface ContratAutoGenere {
+  numero: string;
+  statut: string;
+  documentMandatSepaId: number | null;
+  premierPrelevement: string | null;
+  montantMensuel: number | null;
+}
+
+// Résultat de la vérification IBAN (bouchon)
+export interface IbanVerification {
+  valide: boolean;
+  ibanMasque: string | null;
+  bic: string | null;
+  banque: string | null;
+  messageErreur: string | null;
+}
