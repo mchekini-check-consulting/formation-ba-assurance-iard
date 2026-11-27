@@ -28,7 +28,7 @@ import tools.jackson.databind.json.JsonMapper;
 
 /**
  * US-24 : jeu de test commun aux tests des services de déclaration, sur le modèle des données de recette de Camille
- * (référentiel de V36 : mêmes types, délais, garanties et pièces).
+ * (référentiel de V37 : mêmes types, délais, garanties et pièces).
  */
 final class FixturesSinistre {
 
