@@ -120,7 +120,7 @@ assurance:
 
   # US-24 : déclaration de sinistre.
   sinistres:
-    # AC10 : numéro d'assistance 24h/24. PROVISOIRE, numéro fictif À VALIDER PAR LE PO.
+    # AC10 : numéro d'assistance 24h/24 (conservé, décision PO du 27/11/2026).
     numero-assistance: "01 23 45 67 89"
     # RG6 : suppression des brouillons de plus de 30 jours (pièces jointes comprises).
     purge:

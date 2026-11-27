@@ -76,14 +76,13 @@ describe('CarteContrat (US-18, maquette ; AC1, AC2, AC5)', () => {
     expect(regenerer?.classList).toContain('btn--contour');
   });
 
-  it('US-21, RG2 : pas de « Régénérer mon contrat » sur un contrat suspendu', () => {
+  it('US-21, RG2 et US-24, AC1 : ni « Régénérer mon contrat » ni « Déclarer un sinistre » sur un contrat suspendu', () => {
     afficher({ ...CONTRAT_AUTO, statut: 'SUSPENDU' });
 
+    // US-24, AC1 (décision PO du 27/11/2026) : pas de déclaration en ligne pour un contrat suspendu.
     expect(Array.from(carte.querySelectorAll('a')).map((lien) => lien.textContent?.trim())).toEqual([
       'Voir mon contrat',
       'Générer une facture',
-      // US-24, AC1 (décision BA) : un contrat suspendu reste ouvert à la déclaration de sinistre.
-      'Déclarer un sinistre',
     ]);
   });
 

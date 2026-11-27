@@ -154,7 +154,7 @@ comptes de recette d'US-04 (`DONNEES_TEST_MOT_DE_PASSE`). Rejouable sans doublon
 | Compte | Contenu |
 |---|---|
 | `recette.assure1@assureasy.fr` (US-04) | contrat habitation `AE-RECETTE-1` ACTIF : conditions particulières V1 REMPLACE et V2 EN_VIGUEUR, 2 échéances payées et 2 à venir, facture `FAC-RECETTE-0001`, sinistre `SIN-RECETTE-0001` DECLARE (US-24 : renuméroté `SIN-AAAA-XXXXXX`, daté de la veille de sa déclaration, photos manquantes). US-22 : effet un an avant le 26 du mois courant, 3 échéances payées et 1 à venir |
-| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON. US-23 : avenant de H01 sur `objets-valeur` (18,50 → 21,00 €), `A03` avec la protection juridique (47,50 €). US-24 : brouillon (accident sans tiers sur A03) à l'étape 2 ; brouillon expiré pour la purge ; A04 et A07 (Tiers) pour un vol non couvert, A09 (résilié il y a 5 jours) déclarable, A01, A02 et A10 non déclarables |
+| `recette.auto@assureasy.fr` (T-05) | 10 contrats auto `AE-RECETTE-A01` à `A10`, un par statut, chacun avec véhicule, conducteur et option RC ; mandat `AE-RUM-RECETTE-A` ; 4 devis auto (VEHICULE_RENSEIGNE, BESOINS_RENSEIGNES, FORMULE_CHOISIE, RECAP_VALIDE) ; contrat habitation `AE-RECETTE-H01` avec un avenant EN_ATTENTE ; un sinistre BROUILLON. US-23 : avenant de H01 sur `objets-valeur` (18,50 → 21,00 €), `A03` avec la protection juridique (47,50 €). US-24 : brouillon (accident sans tiers sur A03) à l'étape 2 ; brouillon expiré pour la purge ; A04 (Tiers) pour un vol non couvert, A09 (résilié il y a 5 jours) déclarable, A01, A02, A06 (Impayé, avec un brouillon qui ne peut plus être envoyé), A07 (Suspendu) et A10 non déclarables |
 | `recette.prospect@assureasy.fr` (T-05) | prospect sans aucun contrat |
 | `recette.assure2`, `recette.gestionnaire`, `recette.admin` (US-04) | inchangés |
 
@@ -263,11 +263,16 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
   disque, voir IA-241) avec empreinte SHA-256 ; champs `corbeille`, `a_requalifier`, `pieces_manquantes`,
   `nombre_blesses`, `date_arrete_catnat`, `etape` sur `sinistre` ; `date_survenance`, `tiers_implique` et
   `blesses` vides dans un brouillon (aucune présélection), obligatoires à l'envoi ; référentiels `ref_type_sinistre`
-  et `ref_piece_attendue` (RG1, RG10). Décisions BA, **à valider PO** :
-  - **Accès (AC1)** : déclaration possible pour les contrats `ACTIF`, `ACTIF_JUSTIFICATIFS_ATTENDUS`,
-    `AVENANT_EN_ATTENTE`, `IMPAYE`, `SUSPENDU`, `RESILIATION_EN_COURS`, et `RESILIE` si sa date de fin date de
-    moins de 2 ans ; pas pour `EN_ATTENTE_DE_SIGNATURE`, `EN_ATTENTE_EFFET` ni `RENONCE`. Le serveur refuse aussi
-    l'appel direct (422). Depuis le raccourci « Déclarer un sinistre » d'un contrat, ce contrat est celui que le client
+  et `ref_piece_attendue` (RG1, RG10). Décisions BA ; **décisions PO du 27/11/2026** : statuts autorisés, table de
+  couverture validée, jours fériés nationaux conservés, numéro d'assistance conservé, envoi possible avec pièces
+  manquantes validé :
+  - **Accès (AC1, décision PO du 27/11/2026)** : déclaration possible pour les contrats `ACTIF`,
+    `ACTIF_JUSTIFICATIFS_ATTENDUS`, `AVENANT_EN_ATTENTE`, `RESILIATION_EN_COURS`, et `RESILIE` si sa date de fin
+    date de moins de 2 ans ; **pas** pour `IMPAYE` ni `SUSPENDU` (le client appelle l'assistance 24h/24), ni pour
+    `EN_ATTENTE_DE_SIGNATURE`, `EN_ATTENTE_EFFET` ou `RENONCE`. Ces contrats n'ont pas le raccourci « Déclarer un
+    sinistre » et n'apparaissent pas à l'étape 1. Le serveur refuse aussi l'appel direct (422). Un brouillon commencé
+    avant que le contrat devienne Impayé ou Suspendu reste consultable mais ne peut plus être envoyé (422, message
+    avec le numéro d'assistance 24h/24) ; les dossiers déjà déclarés restent consultables. Depuis le raccourci « Déclarer un sinistre » d'un contrat, ce contrat est celui que le client
     a choisi ; depuis la tuile ou « Mes sinistres », aucun contrat n'est présélectionné, même s'il n'y en a qu'un.
   - **Aucune présélection** : contrat, type, boutons radio, cases (RG commune).
   - **Types et pièces (RG1, RG10)** : tables `ref_type_sinistre` (ordre, actif, délai, garanties qui couvrent, gestes
@@ -277,7 +282,8 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
     à l'étape 2, et non des fichiers.
   - **Couverture (AC3, RG4)** : formule du contrat (un avenant d'US-23 ne change pas la formule) et options de
     `contrat_option` **en vigueur à la date du sinistre** (début au plus tard ce jour-là, fin vide ou ce jour-là ou
-    après). Message seulement, jamais bloquant, jamais pour « Autre ». Table type → garanties qui couvrent :
+    après). Message seulement, jamais bloquant, jamais pour « Autre ». Table type → garanties qui couvrent (validée
+    PO le 27/11/2026) :
 
     | Produit | Type | Formules qui couvrent | Option qui couvre aussi |
     |---|---|---|---|
@@ -296,13 +302,13 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
     continue, `hors_periode_contrat` = vrai.
   - **Délai (AC6, RG2, RG3)** : 5 jours ouvrés, 2 pour un vol (auto et habitation), comptés à partir du lendemain de la
     date du sinistre ; jours ouvrés = hors samedis, dimanches et 11 jours fériés nationaux (ni Alsace-Moselle ni
-    outre-mer). Catastrophe naturelle : 30 jours après la date de publication de l'arrêté, demandée (facultative) ; pas
+    outre-mer ; conservés, décision PO du 27/11/2026). Catastrophe naturelle : 30 jours après la date de publication de l'arrêté, demandée (facultative) ; pas
     de message si elle est inconnue. En retard : message neutre et explication du retard obligatoire ; jamais bloquant.
   - **Blessés (AC11)** : oui / non et nombre (1 à 99) seulement, aucun champ médical ; jamais dans les e-mails ni les
     journaux.
   - **Pièces jointes (AC7, AC14 à AC16, RG7)** : PDF, JPG ou PNG contrôlés sur le contenu réel, 10 Mo par fichier,
     20 par dossier ; photo possible sur mobile ; une pièce obligatoire manquante n'empêche pas l'envoi
-    (`pieces_manquantes`), et des pièces peuvent être ajoutées après l'envoi (« Compléter mes justificatifs »). Une
+    (`pieces_manquantes`, validé PO le 27/11/2026), et des pièces peuvent être ajoutées après l'envoi (« Compléter mes justificatifs »). Une
     pièce refusée n'est pas enregistrée (`statut` REFUSEE non utilisé). **Bouchon de stockage** (commentaire du
     20/11/2026) : pas de WireMock dans ce dépôt ; le bouchon est une classe Java qui stocke en base, et un fichier nommé
     `erreur-stockage…` simule l'erreur technique (AC16), seulement avec `DONNEES_TEST_ACTIVES`.
@@ -315,7 +321,8 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
     n'annule pas la déclaration.
   - **Corbeille (RG9, RG11)** : `corbeille` = produit du contrat, remplie à la création ; `a_requalifier` = type
     « Autre ». Pas d'écran gestionnaire (US-35).
-  - **Urgence (AC10)** : numéro d'assistance 24h/24 **fictif** (`assurance.sinistres.numero-assistance`) ; accident
+  - **Urgence (AC10)** : numéro d'assistance 24h/24 (`assurance.sinistres.numero-assistance`, conservé,
+    décision PO du 27/11/2026) ; accident
     auto : « Demander un dépannage » appelle ce numéro en attendant US-47 ; habitation : gestes d'urgence du type
     (`ref_type_sinistre.gestes_urgence`).
   - **Qui déclare (AC13)** : moi-même, conducteur secondaire (auto seulement), un proche ; nom et lien obligatoires
@@ -325,7 +332,9 @@ remplacer par les éléments du PO. US-22 : taux de TSCA provisoires (`assurance
 - **US-24, données de test** (`donnees_recette_us24.sql`, après T-05, US-22 et US-23) : `SIN-RECETTE-0001`
   d'Alice prend un numéro `SIN-AAAA-XXXXXX` et est daté de la veille de sa déclaration (il était déclaré 10 jours
   après, sans explication) ; le brouillon de Camille reprend à l'étape 2, « qui déclare » et « blessés » vidés ;
-  un brouillon expiré (31 jours) est recréé à chaque démarrage pour tester la purge.
+  un brouillon expiré (31 jours) est recréé à chaque démarrage pour tester la purge. Décision PO du 27/11/2026 :
+  `AE-RECETTE-A06` (Impayé) et `A07` (Suspendu) sont des cas « non déclarables » ; un brouillon complet (bris de
+  glace, étape 3) sur A06 est recréé s'il a disparu, pour vérifier que son envoi est refusé.
 
 ---
 

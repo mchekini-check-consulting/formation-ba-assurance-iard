@@ -237,18 +237,12 @@ describe('US-24 : raccourci « Déclarer un sinistre »', () => {
     expect(declarer?.lien).toEqual({ commandes: ['/espace-client/sinistres/declarer'], parametres: { contrat: 'AE-1' } });
   });
 
-  it('AC1 : proposé pour les contrats Actif, Impayé, Suspendu, Résiliation en cours, avenant ou justificatifs attendus', () => {
-    for (const statut of [
-      'ACTIF',
-      'ACTIF_JUSTIFICATIFS_ATTENDUS',
-      'AVENANT_EN_ATTENTE',
-      'IMPAYE',
-      'SUSPENDU',
-      'RESILIATION_EN_COURS',
-    ] as const) {
+  it('AC1 : proposé pour les contrats Actif, Résiliation en cours, avenant ou justificatifs attendus', () => {
+    for (const statut of ['ACTIF', 'ACTIF_JUSTIFICATIFS_ATTENDUS', 'AVENANT_EN_ATTENTE', 'RESILIATION_EN_COURS'] as const) {
       expect(actions(contrat(statut))).toContain('declarerSinistre');
     }
-    for (const statut of ['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'RENONCE'] as const) {
+    // Impayé et Suspendu : décision PO du 27/11/2026.
+    for (const statut of ['EN_ATTENTE_DE_SIGNATURE', 'EN_ATTENTE_EFFET', 'IMPAYE', 'SUSPENDU', 'RENONCE'] as const) {
       expect(actions(contrat(statut))).not.toContain('declarerSinistre');
     }
   });

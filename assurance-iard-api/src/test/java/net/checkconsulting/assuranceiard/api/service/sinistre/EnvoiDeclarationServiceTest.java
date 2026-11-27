@@ -17,6 +17,7 @@ import java.util.Optional;
 import net.checkconsulting.assuranceiard.api.dto.EnvoiSinistreRequest;
 import net.checkconsulting.assuranceiard.api.dto.SinistreEnvoyeResponse;
 import net.checkconsulting.assuranceiard.api.exception.DeclarationDejaEnvoyeeException;
+import net.checkconsulting.assuranceiard.api.exception.DeclarationImpossibleException;
 import net.checkconsulting.assuranceiard.api.exception.DeclarationInvalideException;
 import net.checkconsulting.assuranceiard.api.model.Contrat;
 import net.checkconsulting.assuranceiard.api.model.Sinistre;
@@ -26,6 +27,8 @@ import net.checkconsulting.assuranceiard.api.service.EnvoiSinistre;
 import net.checkconsulting.assuranceiard.api.service.SessionService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.ArgumentCaptor;
 import org.springframework.mail.MailSendException;
 
@@ -146,6 +149,19 @@ class EnvoiDeclarationServiceTest {
 
         assertThat(envoye.statut()).isEqualTo("DECLARE");
         assertThat(envoye.emailEnvoye()).isFalse();
+    }
+
+    @ParameterizedTest
+    @ValueSource(strings = {"IMPAYE", "SUSPENDU"})
+    void ac1UnBrouillonSurUnContratImpayeOuSuspenduNePeutPlusEtreEnvoye(String statut) {
+        a03.setStatut(statut);
+
+        assertThatThrownBy(() -> service.envoyer(42L, SUR_L_HONNEUR))
+                .isInstanceOf(DeclarationImpossibleException.class)
+                .hasMessageContaining("assistance 24h/24 au " + fixtures.proprietes.numeroAssistance());
+        assertThat(sinistre.getStatut()).isEqualTo("BROUILLON");
+        verify(sinistres, never()).save(any());
+        verifyNoInteractions(emails);
     }
 
     @Test

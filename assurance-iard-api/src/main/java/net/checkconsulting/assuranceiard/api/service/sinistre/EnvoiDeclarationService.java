@@ -19,7 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
 /**
  * US-24, AC9 : envoi de la déclaration. Réponses obligatoires et déclaration sur l'honneur vérifiées (RG8), numéro
  * SIN-AAAA-XXXXXX (RG5), statut Déclaré, signalements pour le gestionnaire (hors période AC5, hors délai AC6, pièces
- * manquantes AC7, à requalifier RG11, corbeille RG9). Une pièce obligatoire manquante n'empêche pas l'envoi.
+ * manquantes AC7, à requalifier RG11, corbeille RG9). Une pièce obligatoire manquante n'empêche pas l'envoi (validé
+ * PO le 27/11/2026). Refusé si le contrat n'est plus ouvert à la déclaration (Impayé, Suspendu...), avec le numéro
+ * d'assistance 24h/24.
  * Accusé de réception par e-mail, et information du souscripteur si un proche ou le conducteur secondaire a déclaré
  * (AC13) ; un e-mail qui ne part pas n'annule pas la déclaration.
  */
@@ -40,6 +42,7 @@ public class EnvoiDeclarationService {
     public SinistreEnvoyeResponse envoyer(Long id, EnvoiSinistreRequest demande) {
         Sinistre sinistre = declarations.brouillon(id);
         Contrat contrat = declarations.contratDe(sinistre);
+        declarations.verifierEnvoyable(contrat);
         TypeSinistre type = declarations.typeDuProduit(contrat, sinistre.getType());
         boolean horsDelai = vue.horsDelai(sinistre, type);
         JsonSinistre.Declarant declarant = json.declarant(sinistre.getDeclarantInfos());
