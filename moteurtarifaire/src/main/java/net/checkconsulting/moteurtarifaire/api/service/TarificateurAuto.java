@@ -23,6 +23,7 @@ import net.checkconsulting.moteurtarifaire.api.model.RefFormule;
 import net.checkconsulting.moteurtarifaire.api.model.RefTarif;
 import org.springframework.stereotype.Service;
 
+/** US-29 V9 : options auto avec codes corrects (ASSISTANCE_0KM, VEHICULE_REMPLACEMENT, PROTECTION_CONDUCTEUR). */
 @Slf4j
 @Service
 @RequiredArgsConstructor
