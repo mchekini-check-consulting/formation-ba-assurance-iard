@@ -10,4 +10,5 @@ public interface MandatSepaRepository extends JpaRepository<MandatSepa, Long> {
 
     @LogMetier
     Optional<MandatSepa> findByDossier(DossierSouscription dossier);
+
 }

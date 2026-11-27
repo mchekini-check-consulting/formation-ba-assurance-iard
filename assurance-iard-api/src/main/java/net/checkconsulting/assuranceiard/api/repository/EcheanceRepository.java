@@ -11,4 +11,8 @@ public interface EcheanceRepository extends JpaRepository<Echeance, Long> {
     /** US-22, AC1 : échéances enregistrées d'un contrat (données de test), la plus récente d'abord. */
     @LogMetier
     List<Echeance> findByContratIdOrderByDateEcheanceDescIdDesc(Long contratId);
+
+    /** US-31 étape 5 : échéances d'un contrat auto, par ordre chronologique (PDF + affichage). */
+    @LogMetier
+    List<Echeance> findByContratIdOrderByDateEcheanceAscIdAsc(Long contratId);
 }

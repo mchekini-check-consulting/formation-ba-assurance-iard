@@ -1,0 +1,391 @@
+<iard-devis-auto-layout sousEtape="5"></iard-devis-auto-layout>
+
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      <div class="titre-zone">
+        <h1 class="titre-page serif">Paiement</h1>
+        <p class="sous-titre-page">Votre cotisation est pr&#233;lev&#233;e chaque mois.</p>
+        <p class="mention-obligatoire"><span class="asterisque">*</span> Champs obligatoires</p>
+      </div>
+
+      @if (chargement()) {
+        <p class="chargement" role="status">Chargement&#8230;</p>
+      } @else if (chargementErreur()) {
+        <div class="alerte alerte--bloquant" role="alert">
+          <p>Une erreur est survenue lors du chargement. Veuillez actualiser la page.</p>
+        </div>
+      } @else if (init(); as donnees) {
+
+        <div class="grille-devis">
+          <div class="colonne-principale">
+
+            <!-- Loi Hamon -->
+            @if (donnees.hamonApplicable) {
+              <section class="encadre-hamon" aria-label="Loi Hamon">
+                <p class="encadre-hamon__titre">Nous r&#233;silions votre ancien contrat pour vous</p>
+                <p class="encadre-hamon__texte">
+                  Assur&#39;Easy envoie la demande de r&#233;siliation &#224; votre assureur actuel (loi Hamon).
+                  Elle prend effet un mois apr&#232;s sa r&#233;ception.
+                </p>
+                <p class="encadre-hamon__texte">
+                  Date de d&#233;but propos&#233;e&#160;:
+                  <strong>{{ formaterDate(saisie().dateDebut || donnees.dateFinAncienContrat) }}</strong>,
+                  au lendemain de la fin de votre ancien contrat. Vous restez assur&#233; sans interruption.
+                </p>
+              </section>
+            }
+
+            @if (!contratGenere()) {
+              <form class="formulaire" novalidate aria-label="Informations de paiement" (submit)="genererContrat($event)">
+
+                <!-- Carte Mon prélèvement -->
+                <section class="carte" aria-labelledby="titre-prelevement" id="carte-prelevement">
+                  <h2 id="titre-prelevement" class="carte__titre serif">Mon pr&#233;l&#232;vement</h2>
+
+                  <div class="champ-grille">
+                    <div class="champ">
+                      <label class="libelle" for="date-debut">Date de d&#233;but du contrat <span class="asterisque">*</span></label>
+                      <input
+                        id="date-debut"
+                        class="saisie"
+                        type="date"
+                        [min]="dateMin()"
+                        [max]="dateMax()"
+                        [class.saisie--erreur]="erreur('date-debut')"
+                        [attr.aria-invalid]="erreur('date-debut') ? true : null"
+                        [value]="saisie().dateDebut"
+                        (input)="saisirTexte('dateDebut', $event)"
+                      />
+                      @if (erreur('date-debut'); as message) {
+                        <p class="erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                    <div class="champ">
+                      <label class="libelle" for="titulaire">Titulaire du compte <span class="asterisque">*</span></label>
+                      <input
+                        id="titulaire"
+                        class="saisie"
+                        type="text"
+                        autocomplete="name"
+                        maxlength="140"
+                        [class.saisie--erreur]="erreur('titulaire')"
+                        [attr.aria-invalid]="erreur('titulaire') ? true : null"
+                        [value]="saisie().titulaire"
+                        (input)="saisirTexte('titulaire', $event)"
+                      />
+                      @if (erreur('titulaire'); as message) {
+                        <p class="erreur" role="alert">{{ message }}</p>
+                      }
+                    </div>
+                  </div>
+
+                  <div class="champ">
+                    <label class="libelle" for="iban">IBAN <span class="asterisque">*</span></label>
+                    <input
+                      id="iban"
+                      class="saisie saisie--iban"
+                      type="text"
+                      autocomplete="off"
+                      maxlength="50"
+                      placeholder="FR76 &#8230;"
+                      [readonly]="verifOk()"
+                      [class.saisie--erreur]="erreur('iban') || !!verifErreur()"
+                      [class.saisie--verifie]="verifOk()"
+                      [attr.aria-invalid]="(erreur('iban') || !!verifErreur()) ? true : null"
+                      [value]="verifOk() ? ibanMasqueLocal() : saisie().iban"
+                      (input)="saisirTexte('iban', $event)"
+                      (blur)="onIbanBlur()"
+                    />
+                    @if (verifEnCours()) {
+                      <p class="verif-statut" role="status">V&#233;rification&#8230;</p>
+                    }
+                    @if (verifOk()) {
+                      <div class="verif-ok-ligne">
+                        <p class="verif-ok" role="status">&#10003; {{ bic() }} &#183; {{ banque() }}</p>
+                        <button type="button" class="lien-modifier" (click)="modifierIban()">Modifier</button>
+                      </div>
+                    }
+                    @if (verifErreur(); as msgVerif) {
+                      <p class="erreur" role="alert">{{ msgVerif }}</p>
+                    }
+                    @if (erreur('iban'); as message) {
+                      <p class="erreur" role="alert">{{ message }}</p>
+                    }
+                  </div>
+
+                  <div class="champ" id="jour-prelevement">
+                    <span class="libelle">Jour de pr&#233;l&#232;vement <span class="asterisque">*</span></span>
+                    <div class="choix choix--trois" role="group" aria-label="Jour de pr&#233;l&#232;vement mensuel">
+                      @for (jour of [5, 10, 15]; track jour) {
+                        <button
+                          type="button"
+                          class="choix__option"
+                          [class.choix__option--actif]="saisie().jourPrelevement === jour"
+                          [attr.aria-pressed]="saisie().jourPrelevement === jour"
+                          (click)="choisirJour(jour)"
+                        >Le {{ jour }}</button>
+                      }
+                    </div>
+                    @if (erreur('jour-prelevement'); as message) {
+                      <p class="erreur" role="alert">{{ message }}</p>
+                    }
+                  </div>
+
+                </section>
+
+                <!-- Carte Mandat de prélèvement SEPA -->
+                <section class="carte" aria-labelledby="titre-sepa">
+                  <h2 id="titre-sepa" class="carte__titre serif">Mandat de pr&#233;l&#232;vement SEPA</h2>
+
+                  <div class="sepa-grille">
+                    <div>
+                      <p class="sepa-libelle">Cr&#233;ancier</p>
+                      <p class="sepa-valeur">{{ donnees.creancier }}</p>
+                    </div>
+                    <div>
+                      <p class="sepa-libelle">Identifiant cr&#233;ancier SEPA</p>
+                      <p class="sepa-valeur">{{ donnees.ics }}</p>
+                    </div>
+                    <div>
+                      <p class="sepa-libelle">R&#233;f&#233;rence unique du mandat</p>
+                      <p class="sepa-valeur">G&#233;n&#233;r&#233;e &#224; la cr&#233;ation du contrat</p>
+                    </div>
+                  </div>
+                  <p class="sepa-libelle">Type de paiement&#160;: <strong>R&#233;current, mensuel</strong></p>
+
+                  <p class="sepa-droits">
+                    Remboursement possible d&#39;un pr&#233;l&#232;vement autoris&#233; sous 8 semaines,
+                    sous 13 mois s&#39;il n&#39;a pas &#233;t&#233; autoris&#233;.
+                    &#201;ch&#233;ancier envoy&#233; au moins 14 jours avant le premier pr&#233;l&#232;vement.
+                  </p>
+
+                  <div class="champ-autorisation">
+                    <label class="autorisation__label">
+                      <input
+                        id="autorisation"
+                        class="autorisation__case"
+                        type="checkbox"
+                        [checked]="saisie().autorisationPrelevement"
+                        (change)="toggleAutorisation()"
+                      />
+                      J&#39;autorise Assur&#39;Easy &#224; pr&#233;lever ma cotisation sur ce compte,
+                      selon les conditions du mandat. <span class="asterisque">*</span>
+                    </label>
+                    @if (erreur('autorisation'); as message) {
+                      <p class="erreur" role="alert">{{ message }}</p>
+                    }
+                  </div>
+
+                  <!-- Échéancier -->
+                  @if (echeancierVisible()) {
+                    <div class="echeancier" aria-label="Aper&#231;u de l&#39;&#233;ch&#233;ancier">
+                      <ul class="echeancier__liste">
+                        @for (ligne of (echeancierDeplie() ? echeancier() : echeancier().slice(0, 3)); track ligne.date.getTime()) {
+                          <li class="echeancier__ligne">
+                            <span>{{ formaterDateObj(ligne.date) }}</span>
+                            <span>{{ formaterPrix(ligne.montant) }}</span>
+                          </li>
+                        }
+                      </ul>
+                      @if (!echeancierDeplie()) {
+                        <button type="button" class="lien-echeancier" (click)="echeancierDeplie.set(true)">
+                          Voir les 12 &#233;ch&#233;ances
+                        </button>
+                      }
+                      <p class="echeancier__total">
+                        Total annuel&#160;: <strong>{{ formaterPrix(donnees.prixAnnuelTtc) }}</strong>
+                      </p>
+                    </div>
+                  } @else if (saisie().autorisationPrelevement) {
+                    <p class="echeancier__invite">Compl&#233;tez vos informations de pr&#233;l&#232;vement pour voir votre &#233;ch&#233;ancier.</p>
+                  }
+                </section>
+
+                <!-- Encadré Résilier mon contrat -->
+                <section class="encadre-resilier" aria-label="R&#233;siliation">
+                  <p class="encadre-resilier__titre">R&#233;silier mon contrat</p>
+                  <p class="encadre-resilier__texte">
+                    Vous pourrez r&#233;silier chaque ann&#233;e &#224; l&#39;&#233;ch&#233;ance, ou &#224; tout moment apr&#232;s un an, sans frais.
+                  </p>
+                </section>
+
+                <!-- Carte Récapitulatif -->
+                <section class="carte" aria-labelledby="titre-recap">
+                  <h2 id="titre-recap" class="carte__titre serif">R&#233;capitulatif</h2>
+
+                  <dl class="recap-liste">
+                    <div class="recap-liste__ligne">
+                      <div>
+                        <dt class="recap-liste__libelle">V&#233;hicule</dt>
+                        <dd class="recap-liste__valeur">{{ donnees.vehiculeMarque }} {{ donnees.vehiculeModele }}@if (donnees.vehiculePlaque) { &#183; {{ donnees.vehiculePlaque }} }</dd>
+                      </div>
+                      <a class="lien-modifier" routerLink="/devis-auto/vehicule">Modifier</a>
+                    </div>
+                    <div class="recap-liste__separateur"></div>
+                    <div class="recap-liste__ligne">
+                      <div>
+                        <dt class="recap-liste__libelle">Conducteur principal</dt>
+                        <dd class="recap-liste__valeur">
+                          @if (donnees.conducteurAnneePermis) {
+                            Permis depuis {{ donnees.conducteurAnneePermis }}
+                            @if (donnees.conducteurBonusMalus !== null) {
+                              &#183; bonus-malus {{ formaterBonusMalus(donnees.conducteurBonusMalus) }}
+                            }
+                          } @else {
+                            &mdash;
+                          }
+                        </dd>
+                      </div>
+                      <a class="lien-modifier" routerLink="/devis-auto/conducteur">Modifier</a>
+                    </div>
+                    <div class="recap-liste__separateur"></div>
+                    <div class="recap-liste__ligne">
+                      <div>
+                        <dt class="recap-liste__libelle">Formule</dt>
+                        <dd class="recap-liste__valeur">{{ recapFormule(donnees) }}</dd>
+                      </div>
+                      <a class="lien-modifier" routerLink="/devis-auto/formule">Modifier</a>
+                    </div>
+                    <div class="recap-liste__separateur"></div>
+                    <div class="recap-liste__ligne">
+                      <div>
+                        <dt class="recap-liste__libelle">Souscripteur</dt>
+                        <dd class="recap-liste__valeur">{{ donnees.souscripteurPrenom }} {{ donnees.souscripteurNom }} &#183; {{ donnees.souscripteurVille }}</dd>
+                      </div>
+                      <a class="lien-modifier" routerLink="/devis-auto/informations">Modifier</a>
+                    </div>
+                    <div class="recap-liste__separateur"></div>
+                    <div class="recap-liste__ligne">
+                      <div>
+                        <dt class="recap-liste__libelle">Paiement</dt>
+                        <dd class="recap-liste__valeur">{{ recapPaiement() }}</dd>
+                      </div>
+                      @if (recapPaiement() === 'À compléter') {
+                        <button type="button" class="lien-modifier" (click)="focusPaiement()">Compléter</button>
+                      }
+                    </div>
+                  </dl>
+                </section>
+
+                @if (erreurServeur(); as msg) {
+                  <div class="alerte alerte--bloquant" role="alert"><p>{{ msg }}</p></div>
+                }
+                @if (erreurEnvoi()) {
+                  <div class="alerte alerte--bloquant" role="alert">
+                    <p>Une erreur technique est survenue. Veuillez r&#233;essayer.</p>
+                  </div>
+                }
+
+                <div class="actions">
+                  <a class="lien-retour" routerLink="/devis-auto/informations">&#8592; Retour &#224; mes informations</a>
+                  <div class="actions-droite">
+                    @if (!saisie().autorisationPrelevement) {
+                      <p class="aide-bouton">Cochez l&#39;autorisation de pr&#233;l&#232;vement pour g&#233;n&#233;rer votre contrat.</p>
+                    }
+                    <button
+                      class="bouton-principal"
+                      type="submit"
+                      [disabled]="envoi() || !saisie().autorisationPrelevement"
+                    >
+                      @if (envoi()) { G&#233;n&#233;ration&#8230; } @else { G&#233;n&#233;rer mon contrat }
+                    </button>
+                  </div>
+                </div>
+
+              </form>
+            }
+
+            <!-- Bilan après génération -->
+            @if (contratGenere(); as contrat) {
+              <section class="carte carte--succes" aria-labelledby="titre-bilan">
+                <h2 id="titre-bilan" class="carte__titre">&#10003; Votre contrat a &#233;t&#233; cr&#233;&#233;</h2>
+                <dl class="bilan">
+                  <div class="bilan__ligne">
+                    <dt class="bilan__libelle">Num&#233;ro de contrat</dt>
+                    <dd class="bilan__valeur"><strong>{{ contrat.numero }}</strong></dd>
+                  </div>
+                  <div class="bilan__ligne">
+                    <dt class="bilan__libelle">Statut</dt>
+                    <dd class="bilan__valeur">En attente de signature</dd>
+                  </div>
+                  @if (contrat.premierPrelevement) {
+                    <div class="bilan__ligne">
+                      <dt class="bilan__libelle">Premier pr&#233;l&#232;vement</dt>
+                      <dd class="bilan__valeur">{{ formaterDate(contrat.premierPrelevement) }} &#8212; {{ formaterPrix(contrat.montantMensuel) }}</dd>
+                    </div>
+                  }
+                </dl>
+                @if (contrat.documentMandatSepaId) {
+                  <a class="lien-document" [routerLink]="['/espace-client/documents', contrat.documentMandatSepaId]">
+                    &#8595; T&#233;l&#233;charger le mandat SEPA et l&#39;&#233;ch&#233;ancier (PDF)
+                  </a>
+                }
+                <p class="bilan__email">Un e-mail avec le mandat SEPA et l&#39;&#233;ch&#233;ancier vous a &#233;t&#233; envoy&#233;.</p>
+              </section>
+              <div class="actions">
+                <a class="bouton-principal" routerLink="/devis-auto/contrat">Continuer &#8594; Mon contrat</a>
+              </div>
+            }
+
+          </div>
+
+          <!-- Colonne droite : Ma cotisation -->
+          <aside class="encart-devis" aria-label="Ma cotisation">
+            <div class="encart-devis__conteneur">
+              <p class="encart-devis__titre serif">Ma cotisation</p>
+
+              <div class="encart-devis__vehicule">
+                <p class="encart-devis__vehicule-nom">{{ donnees.vehiculeMarque }} {{ donnees.vehiculeModele }}</p>
+                @if (donnees.vehiculePlaque) {
+                  <p class="encart-devis__vehicule-plaque">{{ donnees.vehiculePlaque }}</p>
+                }
+              </div>
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__ligne encart-devis__ligne--formule">
+                <span>Formule {{ nomFormule(donnees.formule) }}</span>
+                <span class="ligne-prix">{{ formaterPrix(prixFormuleSeule(donnees)) }}/mois</span>
+              </div>
+
+              @for (option of donnees.options; track option.code) {
+                <div class="encart-devis__ligne encart-devis__ligne--option">
+                  <span>+ {{ libelleOption(option.code) }}</span>
+                  <span class="ligne-prix">+{{ formaterPrix(option.prixMensuelTtc) }}</span>
+                </div>
+              }
+
+              <div class="encart-devis__ligne encart-devis__ligne--franchise">
+                <span>Franchise</span>
+                @if (donnees.franchise !== null) {
+                  <span>{{ formaterFranchise(donnees.franchise) }}</span>
+                } @else {
+                  <span>sans objet</span>
+                }
+              </div>
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__total">
+                <div class="encart-devis__total-label">
+                  <p>Total TTC</p>
+                </div>
+                <div class="encart-devis__prix">
+                  <strong>{{ formaterPrix(donnees.prixMensuelTtc) }}</strong>
+                  <span>/mois</span>
+                </div>
+              </div>
+              <p class="encart-devis__annuel-phrase">
+                Soit {{ formaterPrixAnnuel(donnees) }}&#160;€ par an, sans frais de fractionnement.
+              </p>
+            </div>
+          </aside>
+
+        </div>
+      }
+
+    </div>
+  </div>
+</main>
