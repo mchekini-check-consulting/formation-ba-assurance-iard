@@ -1,11 +1,11 @@
--- Annule V36 (US-24) : référentiels des sinistres, contenu des pièces jointes et champs ajoutés au sinistre.
+-- Annule V37 (US-24) : référentiels des sinistres, contenu des pièces jointes et champs ajoutés au sinistre.
 -- S'arrête sans rien modifier si une pièce jointe dépasse 5 Mo (l'ancienne contrainte ne pourrait pas être rétablie).
 -- Les pièces jointes stockées en base perdent leur contenu : elles redeviennent de simples descriptions.
 BEGIN;
 DO $$
 BEGIN
     IF EXISTS (SELECT 1 FROM piece_jointe WHERE taille_octets > 5242880) THEN
-        RAISE EXCEPTION 'Annulation V36 impossible : des pièces jointes dépassent 5 Mo';
+        RAISE EXCEPTION 'Annulation V37 impossible : des pièces jointes dépassent 5 Mo';
     END IF;
 END $$;
 DROP TABLE ref_piece_attendue;
@@ -33,5 +33,5 @@ UPDATE piece_jointe SET cle_stockage = NULL WHERE cle_stockage LIKE 'base:piece_
 ALTER TABLE piece_jointe DROP COLUMN empreinte;
 ALTER TABLE piece_jointe DROP CONSTRAINT ck_piece_jointe_taille;
 ALTER TABLE piece_jointe ADD CONSTRAINT ck_piece_jointe_taille CHECK (taille_octets BETWEEN 1 AND 5242880);
-DELETE FROM flyway_schema_history WHERE version = '36';
+DELETE FROM flyway_schema_history WHERE version = '37';
 COMMIT;

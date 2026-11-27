@@ -1,5 +1,5 @@
 -- US-24 : déclarer un sinistre habitation ou auto. Complète T-05 (V26), sans modifier les migrations existantes.
--- Annulation : db/annulation/U36__declaration_sinistre.sql.
+-- Annulation : db/annulation/U37__declaration_sinistre.sql.
 --
 -- 1. Pièces jointes : 10 Mo au plus (RG7, décision BA du 26/11/2026 ; T-05 contrôlait 5 Mo), empreinte SHA-256 et
 --    contenu conservé en base (jamais sur le disque, voir IA-241), comme les documents de T-03.
