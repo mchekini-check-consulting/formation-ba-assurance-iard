@@ -22,7 +22,9 @@ public class DonneesContratRepository {
 
     private static final String CONTRAT = """
             SELECT c.id, c.numero, c.produit, c.formule,
-                   co.civilite, co.prenom, co.nom,
+                   COALESCE(sa.civilite, co.civilite) AS civilite,
+                   COALESCE(sa.prenom,  co.prenom)   AS prenom,
+                   COALESCE(sa.nom,     co.nom)       AS nom,
                    c.type_logement, c.surface, c.adresse_logement, c.code_postal, c.ville,
                    v.immatriculation, v.marque, v.modele, v.version,
                    cd.coefficient_bonus_malus, cd.est_souscripteur,
@@ -31,6 +33,7 @@ public class DonneesContratRepository {
                    rh.ancien_assureur, rh.ancien_numero
             FROM contrat c
             JOIN compte co ON co.id = c.compte_id
+            LEFT JOIN souscripteur_auto sa ON sa.devis_auto_id = c.devis_auto_id
             LEFT JOIN mandat_sepa m ON m.id = c.mandat_sepa_id
             LEFT JOIN vehicule v ON v.id = c.vehicule_id
             LEFT JOIN conducteur cd ON cd.id = c.conducteur_principal_id

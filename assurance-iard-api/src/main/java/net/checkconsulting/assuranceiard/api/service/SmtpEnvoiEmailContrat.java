@@ -20,6 +20,7 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
 
     private static final DateTimeFormatter FORMAT_DATE =
             DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+    private static final String MIME_PDF = "application/pdf";
 
     private final JavaMailSender mailSender;
 
@@ -62,10 +63,41 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
                     + "L'équipe Assur'Easy");
 
             helper.addAttachment("mandat-sepa-echeancier-" + numeroContrat + ".pdf",
-                    () -> new java.io.ByteArrayInputStream(pdfMandatSepa), "application/pdf");
+                    () -> new java.io.ByteArrayInputStream(pdfMandatSepa), MIME_PDF);
             mailSender.send(message);
         } catch (MessagingException erreur) {
             throw new IllegalStateException("Erreur construction e-mail mandat SEPA", erreur);
+        }
+    }
+
+    @Override
+    public void envoyerConfirmationSignature(String destinataire, String prenom, String nom, String numeroContrat,
+            byte[] pdfConditionsParticulieres, byte[] pdfMemoVehicule) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(mailFrom);
+            helper.setTo(destinataire);
+            helper.setSubject("Votre contrat auto est signé – Assur'Easy");
+            helper.setText(
+                    "Bonjour " + prenom + " " + nom + ",\n\n"
+                    + "Félicitations ! Votre contrat auto n° " + numeroContrat + " est maintenant signé.\n\n"
+                    + "Vous trouverez ci-joint :\n"
+                    + "  • vos Conditions Particulières\n"
+                    + "  • votre Mémo véhicule assuré\n\n"
+                    + "Pensez à déposer vos justificatifs dans votre espace client pour activer votre couverture.\n\n"
+                    + "L'équipe Assur'Easy");
+            if (pdfConditionsParticulieres != null) {
+                helper.addAttachment("conditions-particulieres-" + numeroContrat + ".pdf",
+                        () -> new java.io.ByteArrayInputStream(pdfConditionsParticulieres), MIME_PDF);
+            }
+            if (pdfMemoVehicule != null) {
+                helper.addAttachment("memo-vehicule-" + numeroContrat + ".pdf",
+                        () -> new java.io.ByteArrayInputStream(pdfMemoVehicule), MIME_PDF);
+            }
+            mailSender.send(message);
+        } catch (MessagingException erreur) {
+            throw new IllegalStateException("Erreur construction e-mail confirmation signature", erreur);
         }
     }
 }

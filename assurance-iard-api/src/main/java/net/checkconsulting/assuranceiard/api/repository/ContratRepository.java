@@ -1,5 +1,6 @@
 package net.checkconsulting.assuranceiard.api.repository;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -45,6 +46,11 @@ public interface ContratRepository extends JpaRepository<Contrat, Long> {
     /** US-31 étape 5 : contrat auto généré depuis ce devis (idempotence). */
     @LogMetier
     Optional<Contrat> findByDevisAutoId(Long devisAutoId);
+
+    /** US-33 : contrats en attente d'effet dont la date d'effet est atteinte. */
+    @LogMetier
+    @Query("SELECT c FROM Contrat c WHERE c.statut = 'EN_ATTENTE_EFFET' AND c.dateEffet <= :date")
+    List<Contrat> enAttenteEffetAvant(@Param("date") LocalDate date);
 
     /** RG1 : prochain numéro de séquence pour l'année donnée. */
     @LogMetier

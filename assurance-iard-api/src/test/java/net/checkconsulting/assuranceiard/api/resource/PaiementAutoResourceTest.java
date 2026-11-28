@@ -19,6 +19,7 @@ import net.checkconsulting.assuranceiard.api.dto.PaiementAutoInitResponse;
 import net.checkconsulting.assuranceiard.api.exception.GestionErreurs;
 import net.checkconsulting.assuranceiard.api.exception.SessionInvalideException;
 import net.checkconsulting.assuranceiard.api.service.PaiementAutoService;
+import net.checkconsulting.assuranceiard.api.service.SignatureAutoService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -53,6 +54,9 @@ class PaiementAutoResourceTest {
 
     @MockitoBean
     private PaiementAutoService paiementAutoService;
+
+    @MockitoBean
+    private SignatureAutoService signatureAutoService;
 
     private ResultActions verifierIban(String corps) throws Exception {
         return mockMvc.perform(post("/v1/devis/auto/iban/verifier")

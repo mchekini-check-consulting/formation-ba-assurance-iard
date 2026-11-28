@@ -1,0 +1,367 @@
+<iard-devis-auto-layout sousEtape="6"></iard-devis-auto-layout>
+
+<main id="contenu" class="fond-beige">
+  <div class="conteneur">
+    <div class="contenu-etape">
+
+      @if (etape() === 'chargement') {
+        <p class="chargement" role="status">Chargement de votre contrat&#8230;</p>
+      }
+
+      @if (etape() === 'erreur-chargement') {
+        <div class="alerte alerte--bloquant" role="alert">
+          <p>Impossible de charger votre contrat. Veuillez r&#233;essayer ou retourner &#224; l&#8217;&#233;tape pr&#233;c&#233;dente.</p>
+          <a routerLink="/devis-auto/paiement" class="lien-retour">&#8592; Retour au paiement</a>
+        </div>
+      }
+
+      @if ((etape() === 'lecture' || etape() === 'code-envoye') && contrat(); as c) {
+
+        <div class="titre-zone">
+          <h1 class="titre-page serif">Relire et signer mon contrat</h1>
+          <div class="sous-titre-zone">
+            <p class="sous-titre-page">Contrat n&#176;&#160;{{ c.numero }}</p>
+            <iard-badge-statut [statut]="c.statut"></iard-badge-statut>
+          </div>
+          <p class="mention-obligatoire">* Champs obligatoires</p>
+        </div>
+
+        <div class="grille-devis">
+
+          <!-- ═══ Colonne principale ═══ -->
+          <div class="colonne-principale">
+
+            <!-- Aperçu du contrat -->
+            <section class="carte" aria-labelledby="titre-recap">
+              <h2 id="titre-recap" class="carte__titre serif">Aper&#231;u du contrat</h2>
+
+              <dl class="recap-liste">
+
+                <div class="recap-liste__ligne">
+                  <dt class="recap-liste__libelle">Souscripteur</dt>
+                  <dd class="recap-liste__valeur">{{ abrevierCivilite(c.civilite) }} {{ c.prenom | titlecase }} {{ c.nom | titlecase }}</dd>
+                </div>
+
+                @if (c.vehiculeMarque) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">V&#233;hicule assur&#233;</dt>
+                    <div class="recap-liste__valeur-col">
+                      <dd class="recap-liste__valeur">{{ c.vehiculeMarque }} {{ c.vehiculeModele }}</dd>
+                      @if (c.vehiculeVersion) {
+                        <dd class="recap-liste__detail">{{ c.vehiculeVersion }}</dd>
+                      }
+                      @if (c.vehiculeImmatriculation) {
+                        <dd class="recap-liste__detail recap-liste__detail--plaque">{{ c.vehiculeImmatriculation }}</dd>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (c.nomConducteur) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Conducteur principal</dt>
+                    <div class="recap-liste__valeur-col">
+                      <dd class="recap-liste__valeur">{{ c.nomConducteur | titlecase }}</dd>
+                      @if (c.coefficientBonusMalus != null) {
+                        <dd class="recap-liste__detail">Bonus&#8209;malus&#160;: {{ c.coefficientBonusMalus | number:'1.2-2':'fr-FR' }}</dd>
+                      }
+                    </div>
+                  </div>
+                }
+
+                <div class="recap-liste__separateur"></div>
+                <div class="recap-liste__ligne">
+                  <dt class="recap-liste__libelle">Formule</dt>
+                  <dd class="recap-liste__valeur">{{ formuleLibelle(c.formule) }}</dd>
+                </div>
+
+                <div class="recap-liste__separateur"></div>
+                <div class="recap-liste__ligne">
+                  <dt class="recap-liste__libelle">Options</dt>
+                  @if (c.options.length === 0) {
+                    <dd class="recap-liste__valeur recap-liste__valeur--doux">Aucune</dd>
+                  } @else {
+                    <div class="recap-liste__valeur-col">
+                      @for (opt of c.options; track opt) {
+                        <dd class="recap-liste__valeur">{{ optionLibelle(opt) }}</dd>
+                      }
+                    </div>
+                  }
+                </div>
+
+                @if (c.franchise != null) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Franchise</dt>
+                    <dd class="recap-liste__valeur">{{ c.franchise | number:'1.0-0':'fr-FR' }}&#160;&#8364;</dd>
+                  </div>
+                }
+
+                @if (c.cotisationMensuelle != null) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Cotisation</dt>
+                    <div class="recap-liste__valeur-col">
+                      <dd class="recap-liste__valeur">{{ c.cotisationMensuelle | number:'1.2-2':'fr-FR' }}&#160;&#8364;&#160;/ mois</dd>
+                      @if (c.cotisationAnnuelle != null) {
+                        <dd class="recap-liste__detail">Soit {{ c.cotisationAnnuelle | number:'1.2-2':'fr-FR' }}&#160;&#8364; par an</dd>
+                      }
+                    </div>
+                  </div>
+                }
+
+                @if (c.dateEffet) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Date d&#8217;effet</dt>
+                    <dd class="recap-liste__valeur">{{ c.dateEffet | date:'dd/MM/yyyy':'':'fr-FR' }}</dd>
+                  </div>
+                }
+
+                @if (c.jourPrelevement != null) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Pr&#233;l&#232;vement</dt>
+                    <dd class="recap-liste__valeur">Le&#160;{{ c.jourPrelevement }} du mois@if (c.ibanMasque) {&#160;&#183;&#160;{{ c.ibanMasque }}}</dd>
+                  </div>
+                }
+
+                @if (c.ancienAssureur) {
+                  <div class="recap-liste__separateur"></div>
+                  <div class="recap-liste__ligne">
+                    <dt class="recap-liste__libelle">Ancien contrat</dt>
+                    <div class="recap-liste__valeur-col">
+                      <dd class="recap-liste__valeur">{{ c.ancienAssureur }}</dd>
+                      @if (c.ancienNumeroContrat) {
+                        <dd class="recap-liste__detail">N&#176;&#160;{{ c.ancienNumeroContrat }}</dd>
+                      }
+                    </div>
+                  </div>
+                }
+
+              </dl>
+
+              @if (c.conditionsGeneralesId || c.ipidId || c.ficheConseilId || c.mandatSepaId) {
+                <div class="recap-liste__separateur"></div>
+                <div class="docs-liens">
+                  @if (c.conditionsGeneralesId) {
+                    <a [routerLink]="['/espace-client/documents', c.conditionsGeneralesId]" target="_blank" class="lien-document">Conditions g&#233;n&#233;rales</a>
+                  }
+                  @if (c.ipidId) {
+                    <a [routerLink]="['/espace-client/documents', c.ipidId]" target="_blank" class="lien-document">Document d&#8217;information</a>
+                  }
+                  @if (c.ficheConseilId) {
+                    <a [routerLink]="['/espace-client/documents', c.ficheConseilId]" target="_blank" class="lien-document">Fiche conseil</a>
+                  }
+                  @if (c.mandatSepaId) {
+                    <a [routerLink]="['/espace-client/documents', c.mandatSepaId]" target="_blank" class="lien-document">Mandat SEPA</a>
+                  }
+                </div>
+              }
+
+            </section>
+
+            <!-- Exclusions -->
+            @if (c.exclusions?.length) {
+              <div class="encadre-exclusions" role="note" aria-label="Exclusions de votre formule">
+                <p class="encadre-exclusions__titre">Principales exclusions de votre formule</p>
+                <ul class="encadre-exclusions__liste">
+                  @for (ex of c.exclusions; track ex) {
+                    <li>{{ ex }}</li>
+                  }
+                </ul>
+              </div>
+            }
+
+            <!-- Signature &#8211; envoi du code -->
+            @if (etape() === 'lecture') {
+              <section class="carte" aria-labelledby="titre-signature">
+                <h2 id="titre-signature" class="carte__titre serif">Signature &#233;lectronique</h2>
+
+                <div class="champ-autorisation">
+                  <label class="autorisation__label" for="accepter-cg">
+                    <input
+                      id="accepter-cg"
+                      type="checkbox"
+                      class="autorisation__case"
+                      [checked]="cgAcceptees()"
+                      (change)="cgAcceptees.set(!cgAcceptees())"
+                    />
+                    <span>
+                      J&#8217;ai lu et j&#8217;accepte mon contrat, les conditions g&#233;n&#233;rales,
+                      le mandat SEPA et ma fiche conseil.&#160;<abbr title="champ obligatoire">*</abbr>
+                    </span>
+                  </label>
+                </div>
+
+                <div class="actions">
+                  <a routerLink="/espace-client/contrats" class="lien-retour">Finaliser plus tard</a>
+                  <div class="actions-droite">
+                    @if (messageErreur()) {
+                      <p class="erreur" role="alert">{{ messageErreur() }}</p>
+                    }
+                    <button
+                      class="bouton-secondaire"
+                      [disabled]="!cgAcceptees() || envoi()"
+                      (click)="envoyerCode()"
+                    >
+                      @if (envoi()) { Envoi en cours&#8230; } @else { Recevoir mon code }
+                    </button>
+                  </div>
+                </div>
+                <p class="eidas">
+                  Conform&#233;ment au r&#232;glement eIDAS (n&#176;&#160;910/2014), votre
+                  signature &#233;lectronique a la m&#234;me valeur juridique qu&#8217;une signature manuscrite.
+                </p>
+              </section>
+            }
+
+            <!-- Signature &#8211; saisie du code -->
+            @if (etape() === 'code-envoye') {
+              <section class="carte" aria-labelledby="titre-code">
+                <h2 id="titre-code" class="carte__titre serif">Saisir le code de signature</h2>
+                <p class="aide">
+                  Un code &#224; 6 chiffres a &#233;t&#233; envoy&#233; &#224; <strong>{{ emailMasque() }}</strong>.
+                  Il est valable 10&#160;minutes.
+                </p>
+
+                <div class="champ">
+                  <label class="libelle" for="code-signature">Code de signature</label>
+                  <input
+                    id="code-signature"
+                    type="text"
+                    inputmode="numeric"
+                    maxlength="6"
+                    placeholder="000000"
+                    autocomplete="one-time-code"
+                    class="saisie saisie--code"
+                    [value]="code()"
+                    (input)="mettreAJourCode($event)"
+                  />
+                </div>
+
+                <p class="aide">
+                  Vous n&#8217;avez pas re&#231;u le code&#160;?
+                  <button class="lien-bouton" type="button" (click)="renvoyerCode()">Renvoyer un code</button>
+                </p>
+
+                <div class="actions">
+                  <span></span>
+                  <div class="actions-droite">
+                    @if (messageErreur()) {
+                      <p class="erreur" role="alert">{{ messageErreur() }}</p>
+                    }
+                    <button
+                      class="bouton-principal"
+                      [disabled]="code().length !== 6 || envoi()"
+                      (click)="signer()"
+                    >
+                      @if (envoi()) { V&#233;rification&#8230; } @else { Signer mon contrat }
+                    </button>
+                  </div>
+                </div>
+              </section>
+            }
+
+          </div>
+
+          <!-- ═══ Colonne droite : Ma cotisation ═══ -->
+          <aside class="encart-devis" aria-label="Ma cotisation">
+            <div class="encart-devis__conteneur">
+              <p class="encart-devis__titre serif">Ma cotisation</p>
+
+              @if (c.vehiculeMarque) {
+                <div class="encart-devis__vehicule">
+                  <p class="encart-devis__vehicule-nom">{{ c.vehiculeMarque }} {{ c.vehiculeModele }}</p>
+                  @if (c.vehiculeImmatriculation) {
+                    <p class="encart-devis__vehicule-plaque">{{ c.vehiculeImmatriculation }}</p>
+                  }
+                </div>
+              }
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__ligne encart-devis__ligne--formule">
+                <span>{{ formuleLibelle(c.formule) }}</span>
+              </div>
+              @if (c.options.length === 0) {
+                <div class="encart-devis__ligne encart-devis__ligne--option">
+                  <span>Aucune option</span>
+                </div>
+              } @else {
+                @for (opt of c.options; track opt) {
+                  <div class="encart-devis__ligne encart-devis__ligne--option">
+                    <span>+ {{ optionLibelle(opt) }}</span>
+                  </div>
+                }
+              }
+              <div class="encart-devis__ligne encart-devis__ligne--franchise">
+                <span>Franchise</span>
+                <span>+0,00&#160;&#8364;</span>
+              </div>
+
+              <div class="encart-devis__separateur"></div>
+
+              <div class="encart-devis__total">
+                <div class="encart-devis__total-label"><p>Total TTC</p></div>
+                <div class="encart-devis__prix">
+                  @if (c.cotisationMensuelle != null) {
+                    <strong>{{ c.cotisationMensuelle | number:'1.2-2':'fr-FR' }}&#160;&#8364;</strong>
+                  }
+                  <span>/mois</span>
+                </div>
+              </div>
+              @if (c.cotisationAnnuelle != null) {
+                <p class="encart-devis__annuel-phrase">
+                  Soit {{ c.cotisationAnnuelle | number:'1.2-2':'fr-FR' }}&#160;&#8364; par an.
+                </p>
+              }
+
+              <div class="encart-devis__separateur"></div>
+              <p class="encart-devis__note-prel">
+                Aucun pr&#233;l&#232;vement tant que le contrat n&#8217;est pas sign&#233;.
+              </p>
+            </div>
+          </aside>
+
+        </div>
+      }
+
+      <!-- ═══ Confirmation apr&#232;s signature ═══ -->
+      @if (etape() === 'signe' && contratSigne(); as cs) {
+        <section class="confirmation" aria-live="polite" aria-labelledby="titre-confirme">
+          <div class="confirmation__icone" aria-hidden="true">&#10003;</div>
+          <h1 id="titre-confirme" class="confirmation__titre serif">Votre voiture est assur&#233;e&#160;!</h1>
+          <p class="confirmation__texte">
+            Votre contrat n&#176;&#160;<strong>{{ cs.numero }}</strong>
+            @if (cs.dateEffet) {
+              est actif &#224; partir du <strong>{{ cs.dateEffet | date:'dd/MM/yyyy':'':'fr-FR' }}</strong>.
+            } @else {
+              a bien &#233;t&#233; sign&#233;.
+            }
+            Vous allez recevoir vos Conditions Particuli&#232;res et votre M&#233;mo v&#233;hicule par e-mail.
+          </p>
+
+          @if (cs.justificatifsAttendus?.length > 0) {
+            <div class="justificatifs">
+              <h2>Documents &#224; d&#233;poser</h2>
+              <p>Pour activer votre couverture, d&#233;posez les pi&#232;ces suivantes dans votre espace client&#160;:</p>
+              <ul>
+                @for (j of cs.justificatifsAttendus; track j) {
+                  <li>{{ j }}</li>
+                }
+              </ul>
+            </div>
+          }
+
+          <a routerLink="/espace-client/contrats" class="bouton-principal">
+            Acc&#233;der &#224; mes contrats
+          </a>
+        </section>
+      }
+
+    </div>
+  </div>
+</main>

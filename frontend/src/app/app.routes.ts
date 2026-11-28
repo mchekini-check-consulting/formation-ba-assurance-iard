@@ -19,7 +19,7 @@ import { DevisAutoBesoins } from './feature/devis-auto-besoins/devis-auto-besoin
 import { DevisAutoFormule } from './feature/devis-auto-formule/devis-auto-formule';
 import { DevisAutoInformations } from './feature/devis-auto-informations/devis-auto-informations';
 import { DevisAutoPaiement } from './feature/devis-auto-paiement/devis-auto-paiement';
-import { DevisAutoContratStub } from './feature/devis-auto-contrat-stub/devis-auto-contrat-stub';
+import { DevisAutoContrat } from './feature/devis-auto-contrat/devis-auto-contrat';
 import { DevisAutoUsage } from './feature/devis-auto-usage/devis-auto-usage';
 import { DevisAutoVehicule } from './feature/devis-auto-vehicule/devis-auto-vehicule';
 import { DevisBesoins } from './feature/devis-besoins/devis-besoins';
@@ -272,7 +272,7 @@ export const routes: Routes = [
   },
   {
     path: 'devis-auto/contrat',
-    component: DevisAutoContratStub,
+    component: DevisAutoContrat,
     canActivate: [contratAutoGenereGuard, sessionGuard],
     title: "Étape 6 – Mon contrat – Assur'Easy",
   },

@@ -27,7 +27,7 @@ class ModelesDocumentsTest {
             new DocumentsProperties.Assureur("Assur'Easy SA", "10 rue de la Recette", "RCS fictif", "ACPR"),
             Map.of("confort", List.of("Dégâts des eaux", "Vol"), "TIERS", List.of("Responsabilité civile"),
                     "INTER", List.of("Bris de glace"), "TR", List.of("Tous accidents")),
-            "Exclusions : voir les conditions générales.", null, null);
+            "Exclusions : voir les conditions générales.", null, null, null);
 
     private final DonneesContratRepository contrats = mock(DonneesContratRepository.class);
     private final DocumentRepository documents = mock(DocumentRepository.class);
@@ -201,6 +201,6 @@ class ModelesDocumentsTest {
         assertThat(REGLAGES.reprise().lot()).isEqualTo(50);
         assertThat(REGLAGES.garantiesDe(null)).isEmpty();
         assertThat(REGLAGES.garantiesDe("inconnue")).isEmpty();
-        assertThat(new DocumentsProperties(null, null, null, null, null).garanties()).isEmpty();
+        assertThat(new DocumentsProperties(null, null, null, null, null, null).garanties()).isEmpty();
     }
 }

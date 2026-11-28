@@ -192,6 +192,40 @@ export interface ContratAutoGenere {
   montantMensuel: number | null;
 }
 
+// US-33 : détail du contrat auto pour l'écran de signature (étape 6)
+export interface ContratAutoDetail {
+  numero: string;
+  statut: string;
+  civilite: string | null;
+  prenom: string;
+  nom: string;
+  vehiculeMarque: string | null;
+  vehiculeModele: string | null;
+  vehiculeVersion: string | null;
+  vehiculeImmatriculation: string | null;
+  coefficientBonusMalus: number | null;
+  nomConducteur: string | null;
+  formule: string | null;
+  options: string[];
+  franchise: number | null;
+  cotisationMensuelle: number | null;
+  cotisationAnnuelle: number | null;
+  dateEffet: string | null;
+  jourPrelevement: number | null;
+  ibanMasque: string | null;
+  rum: string | null;
+  ancienAssureur: string | null;
+  ancienNumeroContrat: string | null;
+  conditionsParticulieresId: number | null;
+  memoVehiculeId: number | null;
+  mandatSepaId: number | null;
+  conditionsGeneralesId: number | null;
+  ipidId: number | null;
+  ficheConseilId: number | null;
+  justificatifsAttendus: string[];
+  exclusions: string[];
+}
+
 // Résultat de la vérification IBAN (bouchon)
 export interface IbanVerification {
   valide: boolean;
