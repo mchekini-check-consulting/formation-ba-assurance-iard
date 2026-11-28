@@ -14,4 +14,8 @@ public interface EnvoiEmailContrat {
      */
     void envoyerMandatSepa(String destinataire, String prenom, String nom, String numeroContrat,
             LocalDate premierPrelevement, BigDecimal montantMensuel, byte[] pdfMandatSepa);
+
+    /** US-33 : confirmation de signature — envoie les CP et le mémo véhicule en PJ. */
+    void envoyerConfirmationSignature(String destinataire, String prenom, String nom, String numeroContrat,
+            byte[] pdfConditionsParticulieres, byte[] pdfMemoVehicule);
 }

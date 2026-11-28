@@ -68,4 +68,35 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
             throw new IllegalStateException("Erreur construction e-mail mandat SEPA", erreur);
         }
     }
+
+    @Override
+    public void envoyerConfirmationSignature(String destinataire, String prenom, String nom, String numeroContrat,
+            byte[] pdfConditionsParticulieres, byte[] pdfMemoVehicule) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
+            helper.setFrom(mailFrom);
+            helper.setTo(destinataire);
+            helper.setSubject("Votre contrat auto est signé – Assur'Easy");
+            helper.setText(
+                    "Bonjour " + prenom + " " + nom + ",\n\n"
+                    + "Félicitations ! Votre contrat auto n° " + numeroContrat + " est maintenant signé.\n\n"
+                    + "Vous trouverez ci-joint :\n"
+                    + "  • vos Conditions Particulières\n"
+                    + "  • votre Mémo véhicule assuré\n\n"
+                    + "Pensez à déposer vos justificatifs dans votre espace client pour activer votre couverture.\n\n"
+                    + "L'équipe Assur'Easy");
+            if (pdfConditionsParticulieres != null) {
+                helper.addAttachment("conditions-particulieres-" + numeroContrat + ".pdf",
+                        () -> new java.io.ByteArrayInputStream(pdfConditionsParticulieres), "application/pdf");
+            }
+            if (pdfMemoVehicule != null) {
+                helper.addAttachment("memo-vehicule-" + numeroContrat + ".pdf",
+                        () -> new java.io.ByteArrayInputStream(pdfMemoVehicule), "application/pdf");
+            }
+            mailSender.send(message);
+        } catch (MessagingException erreur) {
+            throw new IllegalStateException("Erreur construction e-mail confirmation signature", erreur);
+        }
+    }
 }

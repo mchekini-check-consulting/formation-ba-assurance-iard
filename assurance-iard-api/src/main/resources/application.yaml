@@ -98,6 +98,28 @@ assurance:
       TR: ["Responsabilité civile", "Défense pénale et recours", "Vol et incendie", "Bris de glace",
            "Dommages tous accidents"]
     exclusions: "Les exclusions communes et propres à chaque garantie figurent dans les conditions générales."
+    exclusions-par-formule:
+      TIERS:
+        - "la conduite sans permis valable"
+        - "les dommages causés volontairement"
+        - "un usage différent de celui déclaré"
+        - "l'usure ou le défaut d'entretien"
+        - "le vol sans effraction ou avec les clés dans le véhicule"
+        - "pour les garanties dommages, la conduite sous alcool ou stupéfiants"
+      INTER:
+        - "la conduite sans permis valable"
+        - "les dommages causés volontairement"
+        - "un usage différent de celui déclaré"
+        - "l'usure ou le défaut d'entretien"
+        - "le vol sans effraction ou avec les clés dans le véhicule"
+        - "pour les garanties dommages, la conduite sous alcool ou stupéfiants"
+      TR:
+        - "la conduite sans permis valable"
+        - "les dommages causés volontairement"
+        - "un usage différent de celui déclaré"
+        - "l'usure ou le défaut d'entretien"
+        - "le vol sans effraction ou avec les clés dans le véhicule"
+        - "pour les garanties dommages, la conduite sous alcool ou stupéfiants"
     taille-max: 5MB
     reprise:
       active: ${DOCUMENTS_REPRISE_ACTIVE:true}

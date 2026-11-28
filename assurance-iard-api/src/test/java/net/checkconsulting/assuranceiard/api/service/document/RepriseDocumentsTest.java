@@ -33,7 +33,7 @@ class RepriseDocumentsTest {
     private final CatalogueModeles catalogue = mock(CatalogueModeles.class);
 
     private RepriseDocuments reprise(boolean active) {
-        DocumentsProperties reglages = new DocumentsProperties(null, null, null, null,
+        DocumentsProperties reglages = new DocumentsProperties(null, null, null, null, null,
                 new DocumentsProperties.Reprise(active, Duration.ofMinutes(5), Duration.ofMinutes(1), 20));
         return new RepriseDocuments(documents, service, catalogue, reglages, TransactionOperations.withoutTransaction());
     }

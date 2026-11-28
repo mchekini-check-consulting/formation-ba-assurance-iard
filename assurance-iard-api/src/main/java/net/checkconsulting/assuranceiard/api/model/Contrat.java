@@ -109,4 +109,8 @@ public class Contrat {
     /** US-31 étape 5 : devis auto source du contrat (idempotence à la génération). */
     @Column(name = "devis_auto_id")
     private Long devisAutoId;
+
+    /** US-33 : date et heure de la signature électronique. */
+    @Column(name = "signe_le")
+    private Instant signeLe;
 }

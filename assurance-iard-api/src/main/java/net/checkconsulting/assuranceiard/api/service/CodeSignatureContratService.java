@@ -61,7 +61,9 @@ public class CodeSignatureContratService {
     }
 
     private String envoyerCodePour(Contrat contrat) {
-        String email = contrat.getDossier().getCompte().getEmail();
+        String email = contrat.getDossier() != null
+                ? contrat.getDossier().getCompte().getEmail()
+                : contrat.getCompte().getEmail();
         codeRepository.deleteByContrat(contrat);
         String code = Jetons.nouveauCode();
         CodeSignatureContrat csc = new CodeSignatureContrat();
