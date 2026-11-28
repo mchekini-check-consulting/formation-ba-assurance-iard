@@ -39,7 +39,6 @@ import net.checkconsulting.assuranceiard.api.service.document.MemoVehiculeALaSig
 import net.checkconsulting.assuranceiard.api.service.document.ModeleConditionsParticulieresAuto;
 import net.checkconsulting.assuranceiard.api.service.fva.FvaService;
 import net.checkconsulting.assuranceiard.api.service.hamon.HamonService;
-import net.checkconsulting.assuranceiard.api.utils.MasqueEmail;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
@@ -337,10 +336,6 @@ public class SignatureAutoService {
         } catch (Exception e) {
             return null;
         }
-    }
-
-    private String emailDu(Compte compte) {
-        return MasqueEmail.masquer(compte.getEmail());
     }
 
     private void executerApresCommit(Runnable action) {
