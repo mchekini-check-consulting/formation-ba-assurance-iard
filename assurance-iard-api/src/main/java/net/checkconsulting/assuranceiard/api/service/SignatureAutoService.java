@@ -213,37 +213,12 @@ public class SignatureAutoService {
         Long memoId = idDoc(docs, TypeDocument.MEMO_VEHICULE.name());
         Long mandatId = idDoc(docs, TypeDocument.MANDAT_SEPA.name());
 
-        String refProduit = donnees.produit() != null ? donnees.produit() : "";
-        String refFormule = donnees.formule() != null ? donnees.formule() : "";
-        String refDevis = contrat.getDevisAutoId() != null ? String.valueOf(contrat.getDevisAutoId()) : "";
-
-        Long cgId = documents.enVigueur(0L, TypeDocument.CONDITIONS_GENERALES.name(), refProduit)
-                .map(Document::getId).orElse(null);
-        Long ipidId = documents.enVigueur(0L, TypeDocument.IPID.name(), refFormule)
-                .map(Document::getId).orElse(null);
-        Long ficheConseilId = !refDevis.isEmpty()
-                ? documents.enVigueur(0L, TypeDocument.FICHE_CONSEIL.name(), refDevis)
-                        .map(Document::getId).orElse(null)
-                : null;
-
-        List<String> justificatifs = new ArrayList<>(JUSTIFICATIFS_AUTO);
-        if (Boolean.TRUE.equals(contrat.getResiliationHamon())) {
-            justificatifs.add(JUSTIFICATIF_RIB);
-        }
-
         DonneesContrat.Souscripteur souscripteur = donnees.souscripteur();
         DonneesContrat.Vehicule vehicule = donnees.vehicule();
         DonneesContrat.Conducteur conducteur = donnees.conducteur();
         DonneesContrat.Tarif tarif = donnees.tarif();
         DonneesContrat.Paiement paiement = donnees.paiement();
         DonneesContrat.AncienContrat ancien = donnees.ancienContrat();
-
-        String nomConducteur = null;
-        if (conducteur != null && Boolean.TRUE.equals(conducteur.estSouscripteur()) && souscripteur != null) {
-            nomConducteur = souscripteur.prenom() + " " + souscripteur.nom();
-        }
-
-        List<String> exclusions = documentsProps.exclusionsDe(donnees.formule());
 
         return new ContratAutoResponse(
                 donnees.numero(),
@@ -254,7 +229,7 @@ public class SignatureAutoService {
                 vehicule != null ? vehicule.version() : null,
                 vehicule != null ? vehicule.immatriculation() : null,
                 conducteur != null ? conducteur.coefficientBonusMalus() : null,
-                nomConducteur,
+                nomConducteur(conducteur, souscripteur),
                 donnees.formule(),
                 options(donnees),
                 tarif != null ? tarif.franchise() : null,
@@ -267,9 +242,42 @@ public class SignatureAutoService {
                 ancien != null ? ancien.assureur() : null,
                 ancien != null ? ancien.numero() : null,
                 cpId, memoId, mandatId,
-                cgId, ipidId, ficheConseilId,
-                justificatifs,
-                exclusions);
+                cgId(donnees), ipidId(donnees), ficheConseilId(contrat.getDevisAutoId()),
+                justificatifsAuto(contrat),
+                documentsProps.exclusionsDe(donnees.formule()));
+    }
+
+    private Long cgId(DonneesContrat donnees) {
+        String ref = donnees.produit() != null ? donnees.produit() : "";
+        return documents.enVigueur(0L, TypeDocument.CONDITIONS_GENERALES.name(), ref)
+                .map(Document::getId).orElse(null);
+    }
+
+    private Long ipidId(DonneesContrat donnees) {
+        String ref = donnees.formule() != null ? donnees.formule() : "";
+        return documents.enVigueur(0L, TypeDocument.IPID.name(), ref)
+                .map(Document::getId).orElse(null);
+    }
+
+    private Long ficheConseilId(Long devisAutoId) {
+        if (devisAutoId == null) return null;
+        return documents.enVigueur(0L, TypeDocument.FICHE_CONSEIL.name(), String.valueOf(devisAutoId))
+                .map(Document::getId).orElse(null);
+    }
+
+    private List<String> justificatifsAuto(Contrat contrat) {
+        List<String> justificatifs = new ArrayList<>(JUSTIFICATIFS_AUTO);
+        if (Boolean.TRUE.equals(contrat.getResiliationHamon())) {
+            justificatifs.add(JUSTIFICATIF_RIB);
+        }
+        return justificatifs;
+    }
+
+    private String nomConducteur(DonneesContrat.Conducteur conducteur, DonneesContrat.Souscripteur souscripteur) {
+        if (conducteur == null || !Boolean.TRUE.equals(conducteur.estSouscripteur()) || souscripteur == null) {
+            return null;
+        }
+        return souscripteur.prenom() + " " + souscripteur.nom();
     }
 
     @SuppressWarnings("PMD.AvoidCatchingGenericException")

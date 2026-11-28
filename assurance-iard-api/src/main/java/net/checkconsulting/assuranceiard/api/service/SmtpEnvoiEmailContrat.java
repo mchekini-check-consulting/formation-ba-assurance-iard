@@ -20,6 +20,7 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
 
     private static final DateTimeFormatter FORMAT_DATE =
             DateTimeFormatter.ofPattern("dd/MM/yyyy", Locale.FRANCE);
+    private static final String MIME_PDF = "application/pdf";
 
     private final JavaMailSender mailSender;
 
@@ -62,7 +63,7 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
                     + "L'équipe Assur'Easy");
 
             helper.addAttachment("mandat-sepa-echeancier-" + numeroContrat + ".pdf",
-                    () -> new java.io.ByteArrayInputStream(pdfMandatSepa), "application/pdf");
+                    () -> new java.io.ByteArrayInputStream(pdfMandatSepa), MIME_PDF);
             mailSender.send(message);
         } catch (MessagingException erreur) {
             throw new IllegalStateException("Erreur construction e-mail mandat SEPA", erreur);
@@ -88,11 +89,11 @@ public class SmtpEnvoiEmailContrat implements EnvoiEmailContrat {
                     + "L'équipe Assur'Easy");
             if (pdfConditionsParticulieres != null) {
                 helper.addAttachment("conditions-particulieres-" + numeroContrat + ".pdf",
-                        () -> new java.io.ByteArrayInputStream(pdfConditionsParticulieres), "application/pdf");
+                        () -> new java.io.ByteArrayInputStream(pdfConditionsParticulieres), MIME_PDF);
             }
             if (pdfMemoVehicule != null) {
                 helper.addAttachment("memo-vehicule-" + numeroContrat + ".pdf",
-                        () -> new java.io.ByteArrayInputStream(pdfMemoVehicule), "application/pdf");
+                        () -> new java.io.ByteArrayInputStream(pdfMemoVehicule), MIME_PDF);
             }
             mailSender.send(message);
         } catch (MessagingException erreur) {
